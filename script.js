@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async function fetchFinancialData() {
             try {
-                const response = await fetch(`${BACKEND_URL}/api/finances`);
+                const response = await fetch(`https://dashboard-dpp-backend.onrender.com/api/finances`);
                 const data = await response.json();
 
                 let totalPemasukan = 0;
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchHealthData() {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/health`);
+            const response = await fetch(`https://dashboard-dpp-backend.onrender.com/api/health`);
             const data = await response.json();
             console.log('📦 Data Kesehatan diterima dari backend:', data);
 
