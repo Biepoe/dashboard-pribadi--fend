@@ -54,10 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 let totalPengeluaran = 0;
 
                 data.forEach(item => {
-                    const jumlah = parseFloat(item.Jumlah) || 0;
-                    if (item['Tipe'] === 'Pemasukan') {
+                    const jumlah = parseFloat(item.Nominal) || 0;
+                    if (item['Jenis Transaksi'] === 'Pemasukan') {
                         totalPemasukan += jumlah;
-                    } else if (item['Tipe'] === 'Pengeluaran') {
+                    } else if (item['Jenis Transaksi'] === 'Pengeluaran') {
                         totalPengeluaran += jumlah;
                     }
                 });
