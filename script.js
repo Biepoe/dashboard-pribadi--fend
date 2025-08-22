@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
         // =========================================================
-        // MEMANGGIL SEMUA FUNGSI
+        // MEMANGGIL SEMUA FUNGS
         // =========================================================
         fetchFinancialData();
         setInterval(fetchFinancialData, 5000);

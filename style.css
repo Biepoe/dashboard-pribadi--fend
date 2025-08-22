@@ -314,7 +314,7 @@ body {
     fill: #f44336; /* Merah */
 }
 
-/* Menghilangkan border karena sekarang hanya ada satu kolom */
+/* Menghilangkan border karena sekarang hany ada satu kolom */
 #activity-timeline {
     border-right: none;
     padding-right: 0;
