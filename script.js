@@ -169,29 +169,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-        // =========================================================
-        // BAGIAN GRAFIK (CHART)
-        // =========================================================
-        const ctx = document.getElementById('activityChart');
-        if (ctx) {
-            activityChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-                    datasets: [{
-                        label: 'Aktivitas (jam)',
-                        data: [0, 0, 0, 0, 0, 0, 0], // Data awal kosong
-                        backgroundColor: '#667eea',
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, stacked: true }, x: { stacked: true }},
-                    plugins: { legend: { position: 'bottom' }}
-                }
+    // HAPUS FUNGSI LAMA (getActivityIcon, fetchActivityData, updateActivityHistory)
+// GANTI DENGAN FUNGSI BARU INI
+
+    async function fetchActivityData() {
+        try {
+            const response = await fetch(`https://dashboard-dpp-backend.onrender.com/api/activities`);
+            const data = await response.json();
+            console.log('📦 Data Aktivitas diterima dari backend:', data);
+
+            const timelineContainer = document.getElementById('activity-timeline');
+            if (!timelineContainer) return;
+
+            // Filter aktivitas untuk hari ini
+            const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const todayActivities = data.filter(item => item['Kapan ngelakuinnya?'] === today);
+
+            // Kosongkan kontainer
+            timelineContainer.innerHTML = '';
+
+            if (todayActivities.length === 0) {
+                timelineContainer.innerHTML = '<p class="placeholder">Belum ada aktivitas tercatat hari ini.</p>';
+                return;
+            }
+
+            // Urutkan berdasarkan waktu mulai
+            todayActivities.sort((a, b) => (a['Waktunya?'] > b['Waktunya?']) ? 1 : -1);
+
+            todayActivities.forEach(item => {
+                // Kita tidak lagi menggunakan ikon, hanya teks
+                const timelineItem = `
+                <div class="timeline-item">
+                    <div class="timeline-time">${item['Waktunya?'] || ''}</div>
+                    <div class="timeline-content">
+                        <span class="timeline-text">${item.Aktivitas || '-'}</span>
+                    </div>
+                </div>
+            `;
+                timelineContainer.innerHTML += timelineItem;
             });
-        }
+
+        } catch (error)
+        console.error('Gagal mengambil data aktivitas:', error);
+    }
+}
 
         // =========================================================
         // MEMANGGIL SEMUA FUNGSI
@@ -200,5 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(fetchFinancialData, 5000);
         fetchHealthData();
         setInterval(fetchHealthData, 5000);
+        fetchActivityData();
+        setInterval(fetchActivityData, 5000);
         // Nanti kita akan panggil fungsi untuk data aktivitas di sini
     });

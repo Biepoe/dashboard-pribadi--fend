@@ -313,3 +313,14 @@ body {
 .body-sick {
     fill: #f44336; /* Merah */
 }
+
+/* Menghilangkan border karena sekarang hanya ada satu kolom */
+#activity-timeline {
+    border-right: none;
+    padding-right: 0;
+}
+
+/* Membuat timeline memenuhi seluruh lebar kartu */
+.full-timeline {
+    width: 100%;
+}
