@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${BACKEND_URL}/api/finances`);
                 const data = await response.json();
 
+                console.log('Data Finances diterima dari backend:', data);
+
                 let totalPemasukan = 0;
                 let totalPengeluaran = 0;
 
