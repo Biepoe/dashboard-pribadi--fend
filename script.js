@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // =========================================================
         // BAGIAN PENGAMBILAN DATA (FETCH)
         // =========================================================
-        const BACKEND_URL = 'http://localhost:3001';
+        const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
         let activityChart = null;
 
         async function fetchFinancialData() {
