@@ -55,14 +55,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 let totalPemasukan = 0;
                 let totalPengeluaran = 0;
 
-                data.forEach(item => {
-                    const jumlah = parseFloat(item.Nominal.replace(/[^0-9]/g, '')) || 0;
-                    if (item['Tipe'] === 'Pemasukan') {
-                        totalPemasukan += jumlah;
-                    } else if (item['Tipe'] === 'Pengeluaran') {
-                        totalPengeluaran += jumlah;
-                    }
-                });
+                // GANTI SELURUH BLOK forEach DENGAN INI
+
+data.forEach((item, index) => {
+    console.log(`--- Memproses Baris ke-${index} ---`);
+
+    const jenisTransaksi = item['Jenis Transaksi'];
+    const nominalString = item.Nominal;
+    
+    console.log(`Mencoba membaca:`, { jenis: jenisTransaksi, nominal: nominalString });
+
+    if (!nominalString) {
+        console.log('HASIL: Nominal kosong, dilewati.');
+        return; // Lanjut ke item berikutnya
+    }
+    
+    // Membersihkan string dari karakter aneh
+    const nominalBersih = nominalString.replace(/[^0-9]/g, '');
+    const jumlah = parseFloat(nominalBersih) || 0;
+
+    console.log(`Setelah dibersihkan:`, { stringBersih: nominalBersih, angkaHasil: jumlah });
+
+    if (jenisTransaksi === 'Pemasukan') {
+        totalPemasukan += jumlah;
+        console.log(`Ditemukan Pemasukan. Total Pemasukan sekarang: ${totalPemasukan}`);
+    } else if (jenisTransaksi === 'Pengeluaran') {
+        totalPengeluaran += jumlah;
+        console.log(`Ditemukan Pengeluaran. Total Pengeluaran sekarang: ${totalPengeluaran}`);
+    } else {
+        console.log(`HASIL: Jenis Transaksi tidak dikenal: "${jenisTransaksi}"`);
+    }
+    console.log('---------------------------------');
+});
 
                 const sisaSaldo = totalPemasukan - totalPengeluaran;
 
