@@ -183,7 +183,7 @@ data.forEach((item, index) => {
             // --- 4. Update Tanggal (dengan fungsi parseDate yang baru) ---
             const healthDateEl = document.getElementById('health-date');
             const latestDate = parseDate(latestRecord['Tanggal Kejadian']);
-            if (latestDate && !isNaN(latestDate)) {
+            if (latestDate && !isNaN(latestDate)) {    
                 healthDateEl.textContent = latestDate.toLocaleDateString('id-ID', { weekday: 'long' });
             } else {
                 healthDateEl.textContent = "Tanggal Tidak Valid";
@@ -195,49 +195,38 @@ data.forEach((item, index) => {
         }
     }
 
-        // GANTI SEMUA FUNGSI AKTIVITAS LAMA DENGAN FUNGSI BARU INI
-
-async function fetchActivityData() {
+        // api buat activity
+        async function fetchActivityData() {
     try {
         const response = await fetch(`${BACKEND_URL}/api/activities`);
         const data = await response.json();
         console.log('📦 Data Aktivitas diterima dari backend:', data);
 
-        const listContainer = document.getElementById('activity-log-list');
-        if (!listContainer) return;
+        const timelineContainer = document.getElementById('activity-timeline');
+        if (!timelineContainer) return;
 
         // Kosongkan kontainer
-        listContainer.innerHTML = '';
+        timelineContainer.innerHTML = '';
 
         if (!data || data.length === 0) {
-            listContainer.innerHTML = '<li class="placeholder">Belum ada aktivitas tercatat.</li>';
+            timelineContainer.innerHTML = '<p class="placeholder">Belum ada aktivitas tercatat hari ini.</p>';
             return;
         }
 
-        // Ambil 10 data terakhir dan balik urutannya (terbaru di atas)
-        const recentData = data.slice(-10).reverse();
+        // Urutkan berdasarkan waktu mulai
+        todayActivities.sort((a, b) => (a['Waktu Mulai'] > b['Waktu Mulai']) ? 1 : -1);
 
-        recentData.forEach(item => {
-            const listItem = document.createElement('li');
-            listItem.className = 'activity-log-item';
-
-            // Format tanggal agar lebih mudah dibaca (opsional)
-            const tanggal = item['Tanggal Kejadian'] || '';
-            const waktu = item['Waktu Mulai'] || '';
-            const aktivitas = item.Aktivitas || '-';
-            const notes = item.Notes || '';
-
-            listItem.innerHTML = `
-                <div class="activity-log-time">
-                    <span class="date">${tanggal}</span>
-                    <span class="time">${waktu}</span>
-                </div>
-                <div class="activity-log-details">
-                    <span class="title">${aktivitas}</span>
-                    <span class="notes">${notes}</span>
+        todayActivities.forEach(item => {
+            // Kita tidak lagi menggunakan ikon, hanya teks
+            const timelineItem = `
+                <div class="timeline-item">
+                    <div class="timeline-time">${item['Waktu Mulai'] || ''}</div>
+                    <div class="timeline-content">
+                        <span class="timeline-text">${item.Aktivitas || '-'}</span>
+                    </div>
                 </div>
             `;
-            listContainer.appendChild(listItem);
+            timelineContainer.innerHTML += timelineItem;
         });
 
     } catch (error) {
