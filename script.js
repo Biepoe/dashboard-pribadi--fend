@@ -195,30 +195,56 @@ data.forEach((item, index) => {
         }
     }
 
-        // =========================================================
-        // BAGIAN GRAFIK (CHART)
-        // =========================================================
-        const ctx = document.getElementById('activityChart');
-        if (ctx) {
-            activityChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-                    datasets: [{
-                        label: 'Aktivitas (jam)',
-                        data: [0, 0, 0, 0, 0, 0, 0], // Data awal kosong
-                        backgroundColor: '#667eea',
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, stacked: true }, x: { stacked: true }},
-                    plugins: { legend: { position: 'bottom' }}
-                }
-            });
+        // GANTI SEMUA FUNGSI AKTIVITAS LAMA DENGAN FUNGSI BARU INI
+
+async function fetchActivityData() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/activities`);
+        const data = await response.json();
+        console.log('📦 Data Aktivitas diterima dari backend:', data);
+
+        const listContainer = document.getElementById('activity-log-list');
+        if (!listContainer) return;
+
+        // Kosongkan kontainer
+        listContainer.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            listContainer.innerHTML = '<li class="placeholder">Belum ada aktivitas tercatat.</li>';
+            return;
         }
 
+        // Ambil 10 data terakhir dan balik urutannya (terbaru di atas)
+        const recentData = data.slice(-10).reverse();
+
+        recentData.forEach(item => {
+            const listItem = document.createElement('li');
+            listItem.className = 'activity-log-item';
+
+            // Format tanggal agar lebih mudah dibaca (opsional)
+            const tanggal = item['Tanggal Kejadian'] || '';
+            const waktu = item['Waktu Mulai'] || '';
+            const aktivitas = item.Aktivitas || '-';
+            const notes = item.Notes || '';
+
+            listItem.innerHTML = `
+                <div class="activity-log-time">
+                    <span class="date">${tanggal}</span>
+                    <span class="time">${waktu}</span>
+                </div>
+                <div class="activity-log-details">
+                    <span class="title">${aktivitas}</span>
+                    <span class="notes">${notes}</span>
+                </div>
+            `;
+            listContainer.appendChild(listItem);
+        });
+
+    } catch (error) {
+        console.error('Gagal mengambil data aktivitas:', error);
+    }
+}
+    
         // =========================================================
         // MEMANGGIL SEMUA FUNGSI
         // =========================================================
