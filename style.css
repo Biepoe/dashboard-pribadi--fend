@@ -225,66 +225,67 @@ body {
     gap: 20px;
 }
 
-/* Kontainer untuk grafik agar ukurannya pas */
-.activity-chart-container {
-    flex: 2; /* Mengambil 2/3 lebar */
-    position: relative;
-    height: 250px;
+/* TAMBAHKAN INI DI BAGIAN BAWAH style.css */
+
+.activity-log-container {
+    width: 100%;
 }
 
-/* Kontainer untuk riwayat */
-.activity-history {
-    flex: 1; /* Mengambil 1/3 lebar */
-    border-left: 1px solid #eef2f7;
-    padding-left: 20px;
-}
-
-.activity-history h4 {
-    font-weight: 600;
-    margin-bottom: 12px;
-}
-
-/* Styling untuk daftar riwayat aktivitas */
-.activity-history ul {
+#activity-log-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.activity-history li {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    font-size: 14px;
-    border-bottom: 1px dashed #eef2f7;
+#activity-log-list .placeholder {
+    color: #999;
+    text-align: center;
+    padding: 20px 0;
 }
 
-.activity-history li:last-child {
+.activity-log-item {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #eef2f7;
+    gap: 15px;
+}
+
+.activity-log-item:last-child {
     border-bottom: none;
 }
 
-.activity-title {
-    color: #333;
+.activity-log-time {
+    flex-basis: 120px; /* Lebar tetap untuk kolom waktu */
+    flex-shrink: 0;
+    text-align: right;
+    color: #777;
+    font-size: 14px;
 }
 
-.activity-time {
+.activity-log-time .date {
     font-weight: 500;
-    color: #555;
+    display: block;
 }
 
-/* Penyesuaian untuk layar kecil (HP) */
-@media (max-width: 768px) {
-    .card-body {
-        /* Tata letak diubah jadi vertikal di HP */
-        flex-direction: column;
-    }
-    .activity-history {
-        border-left: none;
-        border-top: 1px solid #eef2f7;
-        padding-left: 0;
-        padding-top: 20px;
-        margin-top: 20px;
-    }
+.activity-log-time .time {
+    font-size: 13px;
+}
+
+.activity-log-details {
+    border-left: 2px solid #667eea;
+    padding-left: 15px;
+}
+
+.activity-log-details .title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+    display: block;
+}
+
+.activity-log-details .notes {
+    font-size: 14px;
+    color: #555;
 }
 
 /* TAMBAHKAN DI BAGIAN BAWAH style.css */
