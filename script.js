@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let totalPengeluaran = 0;
 
                 data.forEach(item => {
-                    const jumlah = parseFloat(item.Nominal.replace(/[^0-9]/g, '' || 0;
+                    const jumlah = parseFloat(item.Nominal.replace(/[^0-9]/g, '')) || 0;
                     if (item['Tipe'] === 'Pemasukan') {
                         totalPemasukan += jumlah;
                     } else if (item['Tipe'] === 'Pengeluaran') {
