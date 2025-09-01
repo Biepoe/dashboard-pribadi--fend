@@ -252,5 +252,7 @@ async function fetchActivityData() {
         setInterval(fetchFinancialData, 5000);
         fetchHealthData();
         setInterval(fetchHealthData, 5000);
-        // Nanti kita akan panggil fungsi untuk data aktivitas di sini
+        fetchActivityData();
+        setInterval(fetchActivityData, 5000);
+    
     });
