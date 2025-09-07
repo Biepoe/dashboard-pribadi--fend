@@ -214,15 +214,15 @@ data.forEach((item, index) => {
         }
 
         // Urutkan berdasarkan waktu mulai
-        todayActivities.sort((a, b) => (a['Waktu Mulai'] > b['Waktu Mulai']) ? 1 : -1);
+        todayActivities.sort((a, b) => (a['Waktunya?'] > b['Waktunya?']) ? 1 : -1);
 
         todayActivities.forEach(item => {
             // Kita tidak lagi menggunakan ikon, hanya teks
             const timelineItem = `
                 <div class="timeline-item">
-                    <div class="timeline-time">${item['Waktu Mulai'] || ''}</div>
+                    <div class="timeline-time">${item['Waktunya?'] || ''}</div>
                     <div class="timeline-content">
-                        <span class="timeline-text">${item.Aktivitas || '-'}</span>
+                        <span class="timeline-text">${item.Kamu emang ngapain? || '-'}</span>
                     </div>
                 </div>
             `;
