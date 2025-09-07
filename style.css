@@ -200,19 +200,6 @@ body {
     color: #667eea;
 }
 
-/* Responsif untuk layar kecil (HP) */
-@media (max-width: 768px) {
-    .main-content {
-        grid-template-columns: 1fr 1fr;
-    }
-    /* Biarkan kontrol tetap 3 kolom atau ubah jika perlu */
-    .footer-controls {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    .control-item span {
-        font-size: 12px;
-    }
-}
 
 /* Membuat kartu baru jadi full-width */
 .card.full-width {
@@ -313,4 +300,127 @@ body {
 /* Warna saat sakit */
 .body-sick {
     fill: #f44336; /* Merah */
+}
+
+/* --- MEDIA QUERIES UNTUK TAMPILAN MOBILE --- */
+@media (max-width: 768px) {
+    body {
+        padding: 10px; /* Kurangi padding di body */
+    }
+
+    .container {
+        flex-direction: column; /* Tumpuk card secara vertikal */
+        gap: 15px; /* Kurangi jarak antar card */
+    }
+
+    .card {
+        width: 100%; /* Buat card memenuhi lebar layar */
+        padding: 15px; /* Sesuaikan padding card */
+    }
+
+    .hero-card {
+        min-height: auto; /* Hapus min-height agar tidak terlalu tinggi */
+        padding: 20px;
+    }
+
+    .hero-card h1 {
+        font-size: 24px; /* Kecilkan ukuran font hero */
+    }
+
+    .hero-card .date-time-container {
+        flex-direction: row; /* Biarkan tanggal dan waktu sejajar */
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .hero-card .date-display,
+    .hero-card .time-display {
+        padding: 8px 15px; /* Sesuaikan padding pill tanggal/waktu */
+        font-size: 14px;
+    }
+
+    /* Status Keuangan & Kesehatan */
+    .status-card-grid {
+        grid-template-columns: 1fr; /* Tumpuk status card secara vertikal */
+        gap: 15px;
+    }
+
+    .status-finance-card,
+    .status-health-card {
+        flex-direction: column; /* Tumpuk elemen di dalam card status */
+        align-items: flex-start; /* Rata kiri */
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .status-finance-card .circle-progress {
+        margin-right: 0; /* Hapus margin kanan */
+        margin-bottom: 10px; /* Beri margin bawah */
+    }
+
+    .status-finance-details {
+        width: 100%; /* Ambil lebar penuh */
+    }
+
+    /* Activity Journal */
+    .activity-log-item {
+        flex-direction: column; /* Tumpuk waktu dan detail */
+        gap: 5px;
+        padding: 10px 0;
+    }
+    .activity-log-time {
+        text-align: left; /* Rata kiri waktu */
+        flex-basis: auto; /* Hapus lebar tetap */
+    }
+    .activity-log-details {
+        border-left: none; /* Hapus border kiri */
+        padding-left: 0;
+        border-top: 2px solid #667eea; /* Ganti dengan border atas */
+        padding-top: 8px;
+    }
+
+    /* Navigation Bar */
+    .navigation-bar {
+        height: 60px; /* Tinggi bar navigasi */
+        padding: 0 10px;
+        gap: 5px; /* Kurangi jarak antar ikon */
+    }
+
+    .nav-item {
+        padding: 8px; /* Sesuaikan padding nav item */
+    }
+
+    .nav-item i {
+        font-size: 18px; /* Kecilkan ikon */
+        margin-bottom: 2px;
+    }
+
+    .nav-item span {
+        font-size: 10px; /* Kecilkan teks ikon */
+        display: block; /* Pastikan teks di bawah ikon */
+    }
+}
+
+/* --- MEDIA QUERIES UNTUK LAYAR YANG SANGAT KECIL (misal: iPhone SE) --- */
+@media (max-width: 480px) {
+    .card-header h2 {
+        font-size: 18px;
+    }
+    .hero-card h1 {
+        font-size: 20px;
+    }
+    .hero-card p {
+        font-size: 14px;
+    }
+    .hero-card .date-display,
+    .hero-card .time-display {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+    .activity-log-details .title {
+        font-size: 15px;
+    }
+    .activity-log-details .notes {
+        font-size: 13px;
+    }
 }
