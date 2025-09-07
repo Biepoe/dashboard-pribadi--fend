@@ -196,37 +196,50 @@ data.forEach((item, index) => {
     }
 
         // api buat activity
-        async function fetchActivityData() {
+        // GANTI SELURUH FUNGSI fetchActivityData DENGAN KODE INI
+
+async function fetchActivityData() {
     try {
         const response = await fetch(`${BACKEND_URL}/api/activities`);
         const data = await response.json();
         console.log('📦 Data Aktivitas diterima dari backend:', data);
 
-        const timelineContainer = document.getElementById('activity-timeline');
-        if (!timelineContainer) return;
+        const listContainer = document.getElementById('activity-log-list');
+        if (!listContainer) return;
 
         // Kosongkan kontainer
-        timelineContainer.innerHTML = '';
+        listContainer.innerHTML = '';
 
         if (!data || data.length === 0) {
-            timelineContainer.innerHTML = '<p class="placeholder">Belum ada aktivitas tercatat hari ini.</p>';
+            listContainer.innerHTML = '<li class="placeholder">Belum ada aktivitas tercatat.</li>';
             return;
         }
 
-        // Urutkan berdasarkan waktu mulai
-        todayActivities.sort((a, b) => (a['Waktunya?'] > b['Waktunya?']) ? 1 : -1);
+        // Ambil 10 data terakhir dan balik urutannya (terbaru di atas)
+        const recentData = data.slice(-10).reverse();
 
-        todayActivities.forEach(item => {
-            // Kita tidak lagi menggunakan ikon, hanya teks
-            const timelineItem = `
-                <div class="timeline-item">
-                    <div class="timeline-time">${item['Waktunya?'] || ''}</div>
-                    <div class="timeline-content">
-                        <span class="timeline-text">${item.Kamu emang ngapain? || '-'}</span>
-                    </div>
+        recentData.forEach(item => {
+            const listItem = document.createElement('li');
+            listItem.className = 'activity-log-item';
+
+            // --- PERBAIKAN DI SINI ---
+            // Menggunakan nama kolom dari Google Sheet-mu
+            const tanggal = item['Kapan ngelakuinnya?'] || '';
+            const waktu = item['Waktunya?'] || '';
+            const aktivitas = item['Kamu emang ngapain?'] || '-';
+            const notes = item.Notes || ''; // Kolom Notes juga bisa dipakai
+
+            listItem.innerHTML = `
+                <div class="activity-log-time">
+                    <span class="date">${tanggal}</span>
+                    <span class="time">${waktu}</span>
+                </div>
+                <div class="activity-log-details">
+                    <span class="title">${aktivitas}</span>
+                    <span class="notes">${notes}</span>
                 </div>
             `;
-            timelineContainer.innerHTML += timelineItem;
+            listContainer.appendChild(listItem);
         });
 
     } catch (error) {
