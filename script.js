@@ -82,7 +82,7 @@ async function fetchFinancialData() {
         
         const totalSaldo = totalPemasukan - totalPengeluaran;
 
-        // Fungsi untuk format ke Rupiah
+        // KODE YANG BENAR
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', minimumFractionDigits: 0
         }).format(angka);
