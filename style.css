@@ -424,3 +424,42 @@ body {
         font-size: 13px;
     }
 }
+
+/* TAMBAHKAN INI DI BAGIAN BAWAH style.css */
+
+.stat-details {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.finance-summary {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed #eef2f7;
+}
+
+.finance-breakdown {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.finance-breakdown span {
+    font-weight: 500;
+    float: right; /* Membuat angka rata kanan */
+}
+
+.finance-total {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eef2f7;
+}
+
+.finance-total span {
+    float: right;
+    color: #4caf50;
+    font-size: 18px;
+}
