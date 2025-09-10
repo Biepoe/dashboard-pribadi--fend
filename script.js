@@ -100,56 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
 }
        
 
-                // GANTI SELURUH BLOK forEach DENGAN INI
-
-data.forEach((item, index) => {
-    console.log(`--- Memproses Baris ke-${index} ---`);
-
-    const jenisTransaksi = item['Jenis Transaksi'];
-    const nominalString = item.Nominal;
-    
-    console.log(`Mencoba membaca:`, { jenis: jenisTransaksi, nominal: nominalString });
-
-    if (!nominalString) {
-        console.log('HASIL: Nominal kosong, dilewati.');
-        return; // Lanjut ke item berikutnya
-    }
-    
-    // Membersihkan string dari karakter aneh
-    const nominalBersih = nominalString.replace(/[^0-9]/g, '');
-    const jumlah = parseFloat(nominalBersih) || 0;
-
-    console.log(`Setelah dibersihkan:`, { stringBersih: nominalBersih, angkaHasil: jumlah });
-
-    if (jenisTransaksi === 'Pemasukan') {
-        totalPemasukan += jumlah;
-        console.log(`Ditemukan Pemasukan. Total Pemasukan sekarang: ${totalPemasukan}`);
-    } else if (jenisTransaksi === 'Pengeluaran') {
-        totalPengeluaran += jumlah;
-        console.log(`Ditemukan Pengeluaran. Total Pengeluaran sekarang: ${totalPengeluaran}`);
-    } else {
-        console.log(`HASIL: Jenis Transaksi tidak dikenal: "${jenisTransaksi}"`);
-    }
-    console.log('---------------------------------');
-});
-
-                const sisaSaldo = totalPemasukan - totalPengeluaran;
-
-                const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-
-                document.getElementById('pemasukan-value').textContent = formatRupiah(totalPemasukan);
-                document.getElementById('pengeluaran-value').textContent = formatRupiah(totalPengeluaran);
-                document.getElementById('sisa-saldo-value').textContent = formatRupiah(sisaSaldo);
-
-            } catch (error) {
-                console.error('Gagal mengambil data keuangan:', error);
-                document.getElementById('pengeluaran-value').textContent = 'Error';
-                document.getElementById('pemasukan-value').textContent = 'Error';
-                document.getElementById('sisa-saldo-value').textContent = 'Error';
-            }
-        }
-
-
     // GANTI SELURUH FUNGSI fetchHealthData DENGAN VERSI BARU INI
 
 // Fungsi baru untuk mengubah format tanggal DD/MM/YYYY menjadi objek Date yang valid
