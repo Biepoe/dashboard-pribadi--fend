@@ -45,9 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
         let activityChart = null;
 
-        // GANTI SELURUH FUNGSI fetchFinancialData DENGAN VERSI BARU INI
-
-async function fetchFinancialData() {
+       // bagian finance
+    async function fetchFinancialData() {
     try {
         const response = await fetch(`${BACKEND_URL}/api/finances`);
         const data = await response.json();
@@ -82,7 +81,7 @@ async function fetchFinancialData() {
         
         const totalSaldo = totalPemasukan - totalPengeluaran;
 
-        // KODE YANG BENAR
+        // Fungsi untuk format ke Rupiah
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', minimumFractionDigits: 0
         }).format(angka);
@@ -97,9 +96,9 @@ async function fetchFinancialData() {
 
     } catch (error) {
         console.error('Gagal mengambil data keuangan:', error);
-        // Bisa ditambahkan handling error untuk semua elemen jika perlu
     }
 }
+       
 
                 // GANTI SELURUH BLOK forEach DENGAN INI
 
