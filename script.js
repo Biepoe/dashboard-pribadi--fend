@@ -45,15 +45,61 @@ document.addEventListener('DOMContentLoaded', () => {
         const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
         let activityChart = null;
 
-        async function fetchFinancialData() {
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/finances`);
-                const data = await response.json();
+        // GANTI SELURUH FUNGSI fetchFinancialData DENGAN VERSI BARU INI
 
-                console.log('Data Finances diterima dari backend:', data);
+async function fetchFinancialData() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/finances`);
+        const data = await response.json();
+        console.log('📦 Data Keuangan diterima dari backend:', data);
 
-                let totalPemasukan = 0;
-                let totalPengeluaran = 0;
+        // Siapkan variabel untuk semua kalkulasi
+        let totalPemasukan = 0;
+        let totalPengeluaran = 0;
+        let saldoBank = 0;
+        let saldoEwallet = 0;
+        let saldoCash = 0;
+
+        data.forEach(item => {
+            const jumlah = parseFloat(item.Nominal) || 0;
+            const sumberDana = item['Sumber Dana'] ? item['Sumber Dana'].toLowerCase() : '';
+
+            // Kalkulasi Pemasukan & Pengeluaran Total
+            if (item['Jenis Transaksi'] === 'Pemasukan') {
+                totalPemasukan += jumlah;
+                // Tambahkan pemasukan ke sumber dana yang sesuai
+                if (sumberDana === 'bank') saldoBank += jumlah;
+                if (sumberDana === 'e-wallet') saldoEwallet += jumlah;
+                if (sumberDana === 'cash') saldoCash += jumlah;
+            } else if (item['Jenis Transaksi'] === 'Pengeluaran') {
+                totalPengeluaran += jumlah;
+                // Kurangi pengeluaran dari sumber dana yang sesuai
+                if (sumberDana === 'bank') saldoBank -= jumlah;
+                if (sumberDana === 'e-wallet') saldoEwallet -= jumlah;
+                if (sumberDana === 'cash') saldoCash -= jumlah;
+            }
+        });
+        
+        const totalSaldo = totalPemasukan - totalPengeluaran;
+
+        // Fungsi untuk format ke Rupiah
+        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', {
+            style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+        }).format(angka);
+        
+        // Update semua elemen di HTML
+        document.getElementById('pemasukan-value').textContent = formatRupiah(totalPemasukan);
+        document.getElementById('pengeluaran-value').textContent = formatRupiah(totalPengeluaran);
+        document.getElementById('saldo-bank').textContent = formatRupiah(saldoBank);
+        document.getElementById('saldo-ewallet').textContent = formatRupiah(saldoEwallet);
+        document.getElementById('saldo-cash').textContent = formatRupiah(saldoCash);
+        document.getElementById('sisa-saldo-value').textContent = formatRupiah(totalSaldo);
+
+    } catch (error) {
+        console.error('Gagal mengambil data keuangan:', error);
+        // Bisa ditambahkan handling error untuk semua elemen jika perlu
+    }
+}
 
                 // GANTI SELURUH BLOK forEach DENGAN INI
 
