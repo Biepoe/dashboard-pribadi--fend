@@ -1,0 +1,98 @@
+/* TAMBAHKAN INI DI BAGIAN BAWAH style.css */
+
+/* --- Layout Grid Halaman Keuangan --- */
+.finance-grid-container {
+    display: grid;
+    grid-template-columns: 1.2fr 1.5fr 1fr;
+    gap: 20px;
+}
+
+.finance-col-left, .finance-col-middle, .finance-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- Kartu Akun (BSI & ShopeePay) --- */
+.account-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.account-card {
+    border-radius: 16px;
+    padding: 20px;
+    color: white;
+    position: relative;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.account-card.bank {
+    background: linear-gradient(45deg, #005266, #008080);
+}
+.account-card.ewallet {
+    background: linear-gradient(45deg, #FF6B00, #FF8C00);
+}
+.card-title { font-size: 16px; font-weight: 500; }
+.card-balance { font-size: 28px; font-weight: 600; letter-spacing: 1px; }
+.card-logo {
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+    height: 30px;
+    opacity: 0.8;
+}
+
+/* --- Tabel Riwayat Transaksi --- */
+.transaction-table { width: 100%; border-collapse: collapse; }
+.transaction-table th, .transaction-table td {
+    padding: 8px 4px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.transaction-table th { font-weight: 600; }
+.transaction-table td:nth-child(3) { text-align: right; font-weight: 500; }
+
+/* --- Info Saldo --- */
+.finance-summary p, .finance-breakdown p, .finance-total p {
+    display: flex;
+    justify-content: space-between;
+}
+.finance-summary span, .finance-breakdown span, .finance-total span {
+    font-weight: 600;
+}
+
+/* --- Wadah Grafik --- */
+.chart-container {
+    height: 200px; /* Beri tinggi agar grafik muncul */
+    position: relative;
+}
+
+/* --- Daftar Tagihan (Payables) --- */
+.payables-list { list-style: none; padding: 0; }
+.payable-item { display: flex; align-items: center; font-size: 14px; padding: 8px 0; }
+.payable-item input[type="checkbox"] { margin-right: 12px; }
+.payable-item label { flex-grow: 1; }
+.payable-item .amount { font-weight: 600; }
+.payable-item input[type="checkbox"]:checked + label {
+    text-decoration: line-through;
+    color: #999;
+}
+
+/* --- Responsif untuk Halaman Keuangan --- */
+@media (max-width: 900px) {
+    .finance-grid-container {
+        grid-template-columns: 1fr 1fr; /* Jadi 2 kolom untuk tablet */
+    }
+    .finance-col-right {
+        grid-column: 1 / -1; /* Kolom kanan pindah ke bawah, full width */
+    }
+}
+@media (max-width: 768px) {
+    .finance-grid-container {
+        grid-template-columns: 1fr; /* Jadi 1 kolom untuk HP */
+    }
+}
