@@ -241,6 +241,103 @@ async function fetchActivityData() {
         console.error('Gagal mengambil data aktivitas:', error);
     }
 }
+
+// Bagian Keuangan html dan css anjay
+
+// Cek jika kita berada di halaman keuangan
+if (document.body.id === 'halaman-keuangan') {
+    
+// Fungsi baru untuk mengambil data tagihan (Payables)
+async function fetchPayablesData() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/payables`);
+        const data = await response.json();
+        const payablesList = document.getElementById('payables-list');
+        payablesList.innerHTML = ''; // Kosongkan list
+
+        data.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'payable-item';
+            const isLunas = item.Status === 'Lunas';
+            li.innerHTML = `
+                <input type="checkbox" id="${item['Nama Tagihan']}" ${isLunas ? 'checked' : ''}>
+                <label for="${item['Nama Tagihan']}">${item['Nama Tagihan']}</label>
+                <span class="amount">Rp ${parseInt(item.Jumlah).toLocaleString('id-ID')}</span>
+            `;
+            payablesList.appendChild(li);
+        });
+    } catch (error) {
+        console.error('Gagal mengambil data tagihan:', error);
+    }
+}
+
+// Perbarui fungsi fetchFinancialData agar bisa mengisi riwayat transaksi & grafik
+// Ganti fungsi fetchFinancialData-mu dengan versi ini
+async function fetchFinancialData() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/finances`);
+        const data = await response.json();
+        
+        // ... (Semua logika kalkulasi saldomu yang sudah ada tetap di sini) ...
+
+        // --- UPDATE TAMPILAN ---
+        // ... (semua document.getElementById untuk saldo tetap di sini) ...
+        document.getElementById('card-balance-bank').textContent = formatRupiah(saldoBank);
+        document.getElementById('card-balance-ewallet').textContent = formatRupiah(saldoEwallet);
+
+        // --- BARU: Mengisi Riwayat Transaksi ---
+        const transactionTableBody = document.querySelector('#transaction-table tbody');
+        transactionTableBody.innerHTML = '';
+        const recentTransactions = data.slice(-7).reverse(); // Ambil 7 transaksi terakhir
+
+        recentTransactions.forEach(item => {
+            const row = document.createElement('tr');
+            const jenis = item['Jenis Transaksi'];
+            const nominal = parseInt(item.Nominal).toLocaleString('id-ID');
+            row.innerHTML = `
+                <td>${item.Deskripsi}</td>
+                <td>${jenis}</td>
+                <td style="color: ${jenis === 'Pemasukan' ? '#4caf50' : '#f44336'}">${jenis === 'Pemasaran' ? '+' : '-'} Rp ${nominal}</td>
+            `;
+            transactionTableBody.appendChild(row);
+        });
+
+        // --- BARU: Membuat Grafik ---
+        createMonthlyChart(data);
+
+    } catch (error) {
+        console.error('Gagal mengambil data keuangan:', error);
+    }
+}
+
+// Fungsi baru untuk membuat grafik
+function createMonthlyChart(data) {
+    const ctx = document.getElementById('monthlyEarningsChart');
+    if (!ctx) return;
+
+    // Logika untuk mengolah data bulanan (bisa disempurnakan nanti)
+    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep'];
+    const incomeData = [1000, 1200, 1100, 1300, 1500, 1400, 1600, 1550, 1700]; // Data dummy
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Pemasukan',
+                data: incomeData,
+                borderColor: '#667eea',
+                tension: 0.4,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
     
         // =========================================================
         // MEMANGGIL SEMUA FUNGSI
@@ -251,5 +348,7 @@ async function fetchActivityData() {
         setInterval(fetchHealthData, 5000);
         fetchActivityData();
         setInterval(fetchActivityData, 5000);
+        fetchPayablesData();
+        setInterval(fetchPayablesData, 10000);
     
     });
