@@ -1,4 +1,6 @@
-
+/* =================================
+   GAYA DASAR & LAYOUT UTAMA
+   ================================= */
 * {
     margin: 0;
     padding: 0;
@@ -9,24 +11,140 @@ body {
     font-family: 'Poppins', sans-serif;
     background-color: #f4f7fa;
     color: #333;
+}
+
+/* =================================
+   SIDEBAR & NAVIGASI
+   ================================= */
+.hamburger-btn {
+    display: none; /* Default sembunyi, diatur di media query */
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1001;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: #ffffff;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    min-height: 100vh;
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sidebar-header h3 {
+    font-weight: 600;
+}
+
+.close-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+}
+
+.sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: #f5f5f5;
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: #e9e7fd;
+    color: #667eea;
+    border-right: 3px solid #667eea;
+}
+
+.sidebar-nav .nav-link i {
+    width: 20px;
+    margin-right: 15px;
+    text-align: center;
+}
+
+.bottom-nav {
+    display: none; /* Default sembunyi, diatur di media query */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background-color: #ffffff;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.08);
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+}
+
+.bottom-nav .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #999;
+    font-size: 12px;
+}
+
+.bottom-nav .nav-item i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.bottom-nav .nav-item.active {
+    color: #667eea;
+}
+
+/* =================================
+   KONTEN UTAMA & KARTU
+   ================================= */
+.main-container {
+    transition: margin-left 0.3s ease-in-out;
+    margin-left: 250px; /* Ruang untuk sidebar di desktop */
     padding: 20px;
 }
 
-/* Container Utama Dashboard */
 .dashboard-container {
     width: 100%;
-    max-width: 800px;
-    background-color: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    padding: 24px;
+    max-width: 900px; /* Sedikit lebih lebar untuk tampilan desktop */
+    margin: 0 auto;
 }
 
-/* Header */
 .header {
     background: linear-gradient(90deg, #667eea, #764ba2);
     color: white;
@@ -52,24 +170,25 @@ body {
     font-size: 14px;
     align-items: center;
 }
+
 .header-info svg {
     vertical-align: middle;
     margin-right: 6px;
 }
 
-/* Konten Utama (Grid Layout) */
 .main-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
 
-/* Gaya Kartu (Card) */
 .card {
     background-color: #fdfdfd;
     border: 1px solid #eef2f7;
     border-radius: 16px;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .card-header {
@@ -91,341 +210,14 @@ body {
     font-weight: 500;
     padding: 4px 12px;
     border-radius: 20px;
+    flex-shrink: 0;
 }
 
-.card-body.large-chart {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.chart-placeholder {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: #f4f7fa;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border: 5px solid #667eea;
-    border-left-color: #eef2f7;
-    border-bottom-color: #eef2f7;
-    transform: rotate(45deg);
-}
-.chart-placeholder.temp-chart {
-    border-color: #4caf50;
-    border-left-color: #eef2f7;
-    border-bottom-color: #eef2f7;
-}
-
-.chart-placeholder p {
-    transform: rotate(-45deg);
-    font-size: 20px;
-    font-weight: 700;
-}
-.chart-placeholder span {
-    transform: rotate(-45deg);
-    font-size: 10px;
-    color: #888;
-}
-
-.stat-details p {
-    font-size: 14px;
-    margin-bottom: 8px;
-}
-.stat-details p:last-child {
-    margin-bottom: 0;
-}
-
-
-/* GANTI BAGIAN FOOTER CONTROLS DI style.css */
-
-/* Footer Controls */
-.footer-controls {
-    display: grid;
-    /* Ubah menjadi 3 kolom */
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-top: 24px;
-}
-
-.control-item {
-    background-color: #f4f7fa;
-    border-radius: 12px;
-    padding: 20px 16px;
-    text-align: center;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    /* Perubahan untuk link */
-    text-decoration: none;
-    color: #333;
-    /* Mengatur tata letak ikon dan teks */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px; /* Jarak antara ikon dan teks */
-}
-
-.control-item:hover {
-    background-color: #e8eff7;
-    transform: translateY(-2px); /* Efek sedikit terangkat saat disentuh mouse */
-}
-
-.control-item.active {
-    background-color: #e9e7fd;
-    border-color: #667eea;
-    color: #667eea;
-}
-
-/* Ukuran ikon di dalam tombol */
-.control-item svg {
-    width: 28px;
-    height: 28px;
-}
-
-.control-item span {
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.2;
-}
-
-/* Mengembalikan warna span saat tidak aktif */
-.control-item span {
-    color: #555;
-}
-
-.control-item.active span {
-    color: #667eea;
-}
-
-
-/* Membuat kartu baru jadi full-width */
-.card.full-width {
-    grid-column: 1 / -1; /* Menyuruh item ini untuk span dari kolom 1 sampai akhir */
-}
-
-/* Mengatur layout di dalam kartu aktivitas */
 .card-body {
     display: flex;
     gap: 20px;
+    flex-grow: 1;
 }
-
-/* TAMBAHKAN INI DI BAGIAN BAWAH style.css */
-
-.activity-log-container {
-    width: 100%;
-}
-
-#activity-log-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-#activity-log-list .placeholder {
-    color: #999;
-    text-align: center;
-    padding: 20px 0;
-}
-
-.activity-log-item {
-    display: flex;
-    padding: 12px 0;
-    border-bottom: 1px solid #eef2f7;
-    gap: 15px;
-}
-
-.activity-log-item:last-child {
-    border-bottom: none;
-}
-
-.activity-log-time {
-    flex-basis: 120px; /* Lebar tetap untuk kolom waktu */
-    flex-shrink: 0;
-    text-align: right;
-    color: #777;
-    font-size: 14px;
-}
-
-.activity-log-time .date {
-    font-weight: 500;
-    display: block;
-}
-
-.activity-log-time .time {
-    font-size: 13px;
-}
-
-.activity-log-details {
-    border-left: 2px solid #667eea;
-    padding-left: 15px;
-}
-
-.activity-log-details .title {
-    font-weight: 600;
-    font-size: 16px;
-    color: #333;
-    display: block;
-}
-
-.activity-log-details .notes {
-    font-size: 14px;
-    color: #555;
-}
-
-/* TAMBAHKAN DI BAGIAN BAWAH style.css */
-
-.body-vector-container {
-    width: 100px;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-#body-vector {
-    width: 60px;
-    height: auto;
-    transition: all 0.3s ease;
-}
-
-/* Warna default (normal) */
-.body-normal {
-    fill: #4caf50; /* Hijau */
-}
-
-/* Warna saat sakit */
-.body-sick {
-    fill: #f44336; /* Merah */
-}
-
-/* --- MEDIA QUERIES UNTUK TAMPILAN MOBILE --- */
-@media (max-width: 768px) {
-    body {
-        padding: 10px; /* Kurangi padding di body */
-    }
-
-    .container {
-        flex-direction: column; /* Tumpuk card secara vertikal */
-        gap: 15px; /* Kurangi jarak antar card */
-    }
-
-    .card {
-        width: 100%; /* Buat card memenuhi lebar layar */
-        padding: 15px; /* Sesuaikan padding card */
-    }
-
-    .hero-card {
-        min-height: auto; /* Hapus min-height agar tidak terlalu tinggi */
-        padding: 20px;
-    }
-
-    .hero-card h1 {
-        font-size: 24px; /* Kecilkan ukuran font hero */
-    }
-
-    .hero-card .date-time-container {
-        flex-direction: row; /* Biarkan tanggal dan waktu sejajar */
-        gap: 10px;
-        margin-top: 15px;
-    }
-
-    .hero-card .date-display,
-    .hero-card .time-display {
-        padding: 8px 15px; /* Sesuaikan padding pill tanggal/waktu */
-        font-size: 14px;
-    }
-
-    /* Status Keuangan & Kesehatan */
-    .status-card-grid {
-        grid-template-columns: 1fr; /* Tumpuk status card secara vertikal */
-        gap: 15px;
-    }
-
-    .status-finance-card,
-    .status-health-card {
-        flex-direction: column; /* Tumpuk elemen di dalam card status */
-        align-items: flex-start; /* Rata kiri */
-        gap: 10px;
-        padding: 15px;
-    }
-
-    .status-finance-card .circle-progress {
-        margin-right: 0; /* Hapus margin kanan */
-        margin-bottom: 10px; /* Beri margin bawah */
-    }
-
-    .status-finance-details {
-        width: 100%; /* Ambil lebar penuh */
-    }
-
-    /* Activity Journal */
-    .activity-log-item {
-        flex-direction: column; /* Tumpuk waktu dan detail */
-        gap: 5px;
-        padding: 10px 0;
-    }
-    .activity-log-time {
-        text-align: left; /* Rata kiri waktu */
-        flex-basis: auto; /* Hapus lebar tetap */
-    }
-    .activity-log-details {
-        border-left: none; /* Hapus border kiri */
-        padding-left: 0;
-        border-top: 2px solid #667eea; /* Ganti dengan border atas */
-        padding-top: 8px;
-    }
-
-    /* Navigation Bar */
-    .navigation-bar {
-        height: 60px; /* Tinggi bar navigasi */
-        padding: 0 10px;
-        gap: 5px; /* Kurangi jarak antar ikon */
-    }
-
-    .nav-item {
-        padding: 8px; /* Sesuaikan padding nav item */
-    }
-
-    .nav-item i {
-        font-size: 18px; /* Kecilkan ikon */
-        margin-bottom: 2px;
-    }
-
-    .nav-item span {
-        font-size: 10px; /* Kecilkan teks ikon */
-        display: block; /* Pastikan teks di bawah ikon */
-    }
-}
-
-/* --- MEDIA QUERIES UNTUK LAYAR YANG SANGAT KECIL (misal: iPhone SE) --- */
-@media (max-width: 480px) {
-    .card-header h2 {
-        font-size: 18px;
-    }
-    .hero-card h1 {
-        font-size: 20px;
-    }
-    .hero-card p {
-        font-size: 14px;
-    }
-    .hero-card .date-display,
-    .hero-card .time-display {
-        font-size: 13px;
-        padding: 6px 10px;
-    }
-    .activity-log-details .title {
-        font-size: 15px;
-    }
-    .activity-log-details .notes {
-        font-size: 13px;
-    }
-}
-
-/* TAMBAHKAN INI DI BAGIAN BAWAH style.css */
 
 .stat-details {
     display: flex;
@@ -433,33 +225,95 @@ body {
     width: 100%;
 }
 
-.finance-summary {
-    display: flex;
-    justify-content: space-between;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-    border-bottom: 1px dashed #eef2f7;
-}
+/* --- Gaya Spesifik Kartu --- */
+/* Keuangan */
+.finance-summary { display: flex; justify-content: space-between; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #eef2f7; }
+.finance-breakdown { font-size: 14px; color: #555; line-height: 1.6; }
+.finance-breakdown span { font-weight: 500; float: right; }
+.finance-total { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eef2f7; }
+.finance-total span { float: right; color: #4caf50; font-size: 18px; }
 
-.finance-breakdown {
-    font-size: 14px;
-    color: #555;
-    line-height: 1.6;
-}
+/* Kesehatan */
+.body-vector-container { width: 100px; height: 100px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+#body-vector { width: 60px; height: auto; transition: all 0.3s ease; }
+.body-normal { fill: #4caf50; }
+.body-sick { fill: #f44336; }
 
-.finance-breakdown span {
-    font-weight: 500;
-    float: right; /* Membuat angka rata kanan */
-}
+/* Aktivitas */
+.card.full-width { grid-column: 1 / -1; }
+.activity-log-container { width: 100%; }
+#activity-log-list { list-style: none; padding: 0; margin: 0; }
+#activity-log-list .placeholder { color: #999; text-align: center; padding: 20px 0; }
+.activity-log-item { display: flex; padding: 12px 0; border-bottom: 1px solid #eef2f7; gap: 15px; }
+.activity-log-item:last-child { border-bottom: none; }
+.activity-log-time { flex-basis: 120px; flex-shrink: 0; text-align: right; color: #777; font-size: 14px; }
+.activity-log-time .date { font-weight: 500; display: block; }
+.activity-log-time .time { font-size: 13px; }
+.activity-log-details { border-left: 2px solid #667eea; padding-left: 15px; }
+.activity-log-details .title { font-weight: 600; font-size: 16px; color: #333; display: block; }
+.activity-log-details .notes { font-size: 14px; color: #555; }
 
-.finance-total {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #eef2f7;
+/* --- Tombol Navigasi Form --- */
+.footer-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
 }
+.control-item { background-color: #f4f7fa; border-radius: 12px; padding: 20px 16px; text-align: center; border: 2px solid transparent; cursor: pointer; transition: all 0.2s ease-in-out; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.control-item:hover { background-color: #e8eff7; transform: translateY(-2px); }
+.control-item.active { background-color: #e9e7fd; border-color: #667eea; color: #667eea; }
+.control-item svg { width: 28px; height: 28px; }
+.control-item span { font-size: 14px; font-weight: 500; line-height: 1.2; color: #555; }
+.control-item.active span { color: #667eea; }
 
-.finance-total span {
-    float: right;
-    color: #4caf50;
-    font-size: 18px;
+/* =================================
+   RESPONSIVE UNTUK MOBILE
+   ================================= */
+@media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+    .main-container {
+        margin-left: 0;
+        padding: 15px;
+        padding-bottom: 85px; /* Ruang untuk nav bawah */
+    }
+    .dashboard-container {
+        padding: 0;
+    }
+    .header {
+        border-radius: 0;
+    }
+    .main-content {
+        grid-template-columns: 1fr; /* <- FIX UTAMA: 1 kolom di mobile */
+    }
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 1002;
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .close-btn, .hamburger-btn {
+        display: block;
+    }
+    .bottom-nav {
+        display: flex;
+    }
+    .activity-log-item {
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-start;
+    }
+    .activity-log-time {
+        text-align: left;
+    }
+    .activity-log-details {
+        border-left: none;
+        padding-left: 0;
+    }
+    .footer-controls {
+        grid-template-columns: 1fr;
+    }
 }
