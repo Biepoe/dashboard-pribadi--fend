@@ -244,8 +244,7 @@ async function fetchActivityData() {
 
 // Bagian Keuangan html dan css anjay
 
-// Cek jika kita berada di halaman keuangan
-if (document.body.id === 'halaman-keuangan') {
+
     
 // Fungsi baru untuk mengambil data tagihan (Payables)
 async function fetchPayablesData() {
