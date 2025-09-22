@@ -1,92 +1,29 @@
 // =========================================================
-// SCRIPT.JS (VERSI FINAL, LENGKAP, DAN BERSIH DENGAN AJAX)
+// SCRIPT.JS (VERSI FINAL & LENGKAP)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
-    const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
-
+    const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com'; // Pastikan URL ini benar
+    
     // =========================================================
-    // 1. SISTEM NAVIGASI AJAX (TANPA RELOAD)
+    // 1. INISIALISASI & ROUTING HALAMAN
     // =========================================================
     
-    // Fungsi untuk menjalankan skrip inisialisasi setelah konten baru dimuat
-    function runPageInit() {
-        const bodyId = document.body.id;
-        if (bodyId === 'halaman-beranda') {
-            initBeranda();
-        } else if (bodyId === 'halaman-keuangan') {
-            initKeuangan();
-        }
-        // Tambahkan else if untuk halaman lain jika perlu
-    }
+    // Logika untuk Sidebar Mobile (Sama untuk semua halaman)
+    const sidebar = document.getElementById('sidebar');
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const closeBtn = document.getElementById('close-btn');
+    if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => sidebar.classList.add('open'));
+    if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'));
 
-    // Fungsi untuk memuat konten halaman baru
-    async function loadPage(url) {
-        const contentWrapper = document.getElementById('content-wrapper');
-        try {
-            if (!contentWrapper) {
-                console.error('Wadah #content-wrapper tidak ditemukan!');
-                return;
-            }
-            contentWrapper.style.transition = 'opacity 0.3s ease-out';
-            contentWrapper.style.opacity = '0.5';
-
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Halaman tidak ditemukan (${response.status})`);
-            
-            const text = await response.text();
-            
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            const newContentWrapper = doc.getElementById('content-wrapper');
-
-            if (!newContentWrapper) {
-                console.error('Gagal menemukan #content-wrapper di file HTML yang baru.');
-                contentWrapper.style.opacity = '1';
-                return;
-            }
-
-            const newContent = newContentWrapper.innerHTML;
-            const newTitle = doc.title;
-            const newBodyId = doc.body.id;
-            
-            document.title = newTitle;
-            document.body.id = newBodyId;
-            contentWrapper.innerHTML = newContent;
-            
-            // Jalankan kembali fungsi inisialisasi untuk konten baru
-            runPageInit();
-            
-            contentWrapper.style.opacity = '1';
-            history.pushState({ path: url }, '', url);
-
-        } catch (error) {
-            console.error('Gagal memuat halaman:', error);
-            if (contentWrapper) contentWrapper.style.opacity = '1';
-        }
-    }
-
-    // Tambahkan event listener ke semua link navigasi
-    function initNavListeners() {
-        document.body.addEventListener('click', (e) => {
-            const link = e.target.closest('.sidebar-nav a, .bottom-nav a');
-            if (!link) return;
-
-            const url = link.href;
-            if (!url || !url.endsWith('.html')) return;
-            
-            e.preventDefault();
-            if (url === window.location.href.split('#')[0]) return;
-
-            loadPage(url);
-            
-            document.querySelectorAll('.sidebar-nav a, .bottom-nav a').forEach(l => l.classList.remove('active'));
-            document.querySelectorAll(`a[href="${link.getAttribute('href')}"]`).forEach(activeLink => {
-                activeLink.classList.add('active');
-            });
-        });
+    // Panggil fungsi sesuai halaman yang aktif
+    const bodyId = document.body.id;
+    if (bodyId === 'halaman-beranda') {
+        initBeranda();
+    } else if (bodyId === 'halaman-keuangan') {
+        initKeuangan();
     }
 
     // =========================================================
@@ -97,16 +34,21 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Memuat data untuk Halaman Beranda...');
         setDate();
         setTime();
-        const timeInterval = setInterval(setTime, 1000); // Simpan interval untuk dibersihkan
+        setInterval(setTime, 1000);
         fetchFinancialData();
         fetchHealthData();
         fetchActivityData();
+        setInterval(fetchFinancialData, 15000);
+        setInterval(fetchHealthData, 15000);
+        setInterval(fetchActivityData, 15000);
     }
 
     function initKeuangan() {
         console.log('Memuat data untuk Halaman Keuangan...');
         fetchFinancialDataForFinancePage();
         fetchPayablesData();
+        setInterval(fetchFinancialDataForFinancePage, 15000);
+        setInterval(fetchPayablesData, 15000);
     }
 
     // =========================================================
@@ -375,20 +317,5 @@ document.addEventListener('DOMContentLoaded', () => {
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         });
     }
-    
-    // =========================================================
-    // 4. EKSEKUSI AWAL
-    // =========================================================
-    
-    function initSidebarListeners() {
-        const sidebar = document.getElementById('sidebar');
-        const hamburgerBtn = document.getElementById('hamburger-btn');
-        const closeBtn = document.getElementById('close-btn');
-        if (hamburgerBtn) hamburgerBtn.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('open'); });
-        if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'); });
-    }
 
-    initSidebarListeners();
-    initNavListeners();
-    runPageInit(); // Jalankan fungsi init untuk halaman yang pertama kali dimuat
 });
