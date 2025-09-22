@@ -18,42 +18,55 @@ document.addEventListener('DOMContentLoaded', () => {
         // Tambahkan else if untuk halaman lain jika perlu
     }
 
-    // Fungsi untuk memuat konten halaman baru
-    async function loadPage(url) {
-        const contentWrapper = document.getElementById('content-wrapper');
-        try {
-            if (!contentWrapper) return;
-            contentWrapper.style.transition = 'opacity 0.3s ease-out';
-            contentWrapper.style.opacity = '0.5';
-
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Halaman tidak ditemukan');
-            const text = await response.text();
-            
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            const newContent = doc.getElementById('content-wrapper').innerHTML;
-            const newTitle = doc.title;
-            const newBodyId = doc.body.id;
-            
-            document.title = newTitle;
-            document.body.id = newBodyId;
-            contentWrapper.innerHTML = newContent;
-            
-            // Re-run script inisialisasi untuk konten baru
-            runPageInit();
-            
-            // Re-attach sidebar listeners karena elemennya mungkin baru
-            initSidebarListeners();
-            
-            contentWrapper.style.opacity = '1';
-            history.pushState({ path: url }, '', url);
-
-        } catch (error) {
-            console.error('Gagal memuat halaman:', error);
-            if (contentWrapper) contentWrapper.style.opacity = '1';
+   async function loadPage(url) {
+    const contentWrapper = document.getElementById('content-wrapper');
+    try {
+        if (!contentWrapper) {
+            console.error('Wadah #content-wrapper tidak ditemukan!');
+            return;
         }
+        contentWrapper.style.transition = 'opacity 0.3s ease-out';
+        contentWrapper.style.opacity = '0.5';
+
+        console.log(`▶️ 1. Memulai fetch untuk URL: ${url}`);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Halaman tidak ditemukan (${response.status})`);
+
+        const text = await response.text();
+        console.log(`✅ 2. Berhasil fetch, HTML diterima.`);
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const newContentWrapper = doc.getElementById('content-wrapper');
+
+        if (!newContentWrapper) {
+            console.error('Gagal menemukan #content-wrapper di file HTML yang baru.');
+            contentWrapper.style.opacity = '1'; // Kembalikan opacity
+            return;
+        }
+
+        const newContent = newContentWrapper.innerHTML;
+        const newTitle = doc.title;
+        const newBodyId = doc.body.id;
+
+        console.log(`🔄 3. Siap mengganti konten dengan konten dari halaman '${newBodyId}'.`);
+
+        document.title = newTitle;
+        document.body.id = newBodyId;
+        contentWrapper.innerHTML = newContent;
+
+        runPageInit();
+        initSidebarListeners();
+
+        contentWrapper.style.opacity = '1';
+        history.pushState({ path: url }, '', url);
+        console.log(`✅ 4. Halaman berhasil diganti.`);
+
+    } catch (error) {
+        console.error('Gagal memuat halaman:', error);
+        if (contentWrapper) contentWrapper.style.opacity = '1';
     }
+}
 
     // Tambahkan event listener ke semua link navigasi
     function initNavListeners() {
