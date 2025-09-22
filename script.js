@@ -1,13 +1,16 @@
+// =========================================================
+// SCRIPT.JS (VERSI FINAL, LENGKAP, DAN BERSIH)
+// =========================================================
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
-    const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com'; // Pastikan URL ini benar
-    
+    const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
+
     // =========================================================
     // 1. SISTEM NAVIGASI AJAX (TANPA RELOAD)
     // =========================================================
     
-    // Fungsi untuk menjalankan skrip inisialisasi setelah konten baru dimuat
     function runPageInit() {
         const bodyId = document.body.id;
         if (bodyId === 'halaman-beranda') {
@@ -18,57 +21,39 @@ document.addEventListener('DOMContentLoaded', () => {
         // Tambahkan else if untuk halaman lain jika perlu
     }
 
-   async function loadPage(url) {
-    const contentWrapper = document.getElementById('content-wrapper');
-    try {
-        if (!contentWrapper) {
-            console.error('Wadah #content-wrapper tidak ditemukan!');
-            return;
+    async function loadPage(url) {
+        const contentWrapper = document.getElementById('content-wrapper');
+        try {
+            if (!contentWrapper) return;
+            contentWrapper.style.transition = 'opacity 0.3s ease-out';
+            contentWrapper.style.opacity = '0.5';
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Halaman tidak ditemukan');
+            const text = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const newContent = doc.getElementById('content-wrapper').innerHTML;
+            const newTitle = doc.title;
+            const newBodyId = doc.body.id;
+            
+            document.title = newTitle;
+            document.body.id = newBodyId;
+            contentWrapper.innerHTML = newContent;
+            
+            runPageInit();
+            initSidebarListeners();
+            
+            contentWrapper.style.opacity = '1';
+            history.pushState({ path: url }, '', url);
+
+        } catch (error) {
+            console.error('Gagal memuat halaman:', error);
+            if (contentWrapper) contentWrapper.style.opacity = '1';
         }
-        contentWrapper.style.transition = 'opacity 0.3s ease-out';
-        contentWrapper.style.opacity = '0.5';
-
-        console.log(`▶️ 1. Memulai fetch untuk URL: ${url}`);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Halaman tidak ditemukan (${response.status})`);
-
-        const text = await response.text();
-        console.log(`✅ 2. Berhasil fetch, HTML diterima.`);
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, 'text/html');
-        const newContentWrapper = doc.getElementById('content-wrapper');
-
-        if (!newContentWrapper) {
-            console.error('Gagal menemukan #content-wrapper di file HTML yang baru.');
-            contentWrapper.style.opacity = '1'; // Kembalikan opacity
-            return;
-        }
-
-        const newContent = newContentWrapper.innerHTML;
-        const newTitle = doc.title;
-        const newBodyId = doc.body.id;
-
-        console.log(`🔄 3. Siap mengganti konten dengan konten dari halaman '${newBodyId}'.`);
-
-        document.title = newTitle;
-        document.body.id = newBodyId;
-        contentWrapper.innerHTML = newContent;
-
-        runPageInit();
-        initSidebarListeners();
-
-        contentWrapper.style.opacity = '1';
-        history.pushState({ path: url }, '', url);
-        console.log(`✅ 4. Halaman berhasil diganti.`);
-
-    } catch (error) {
-        console.error('Gagal memuat halaman:', error);
-        if (contentWrapper) contentWrapper.style.opacity = '1';
     }
-}
 
-    // Tambahkan event listener ke semua link navigasi
     function initNavListeners() {
         document.body.addEventListener('click', (e) => {
             const link = e.target.closest('.sidebar-nav a, .bottom-nav a');
@@ -110,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 3. DEFINISI SEMUA FUNGSI (LENGKAP)
+    // 3. DEFINISI SEMUA FUNGSI
     // =========================================================
     
     // --- Fungsi Helper (Alat Bantu) ---
@@ -142,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = now.getDate();
             const month = monthNames[now.getMonth()];
             const year = now.getFullYear();
-            const calendarIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+            const calendarIcon = '<svg xmlns="http://www.w.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
             dateElement.innerHTML = `${calendarIcon} ${day}, ${date} ${month} ${year}`;
         }
     }
@@ -154,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const hours = padZero(now.getHours());
             const minutes = padZero(now.getMinutes());
             const seconds = padZero(now.getSeconds());
-            const clockIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+            const clockIcon = '<svg xmlns="http://www.w.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
             timeElement.innerHTML = `${clockIcon} ${hours}:${minutes}:${seconds}`;
         }
     }
@@ -380,6 +365,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. EKSEKUSI AWAL
     // =========================================================
     
+    function initSidebarListeners() {
+        const sidebar = document.getElementById('sidebar');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const closeBtn = document.getElementById('close-btn');
+        if (hamburgerBtn) hamburgerBtn.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('open'); });
+        if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'); });
+    }
+
+    initSidebarListeners();
     initNavListeners();
-    runPageInit(); // Jalankan fungsi init untuk halaman yang pertama kali dimuat
+    runPageInit();
 });
