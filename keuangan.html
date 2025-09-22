@@ -12,117 +12,120 @@
 </head>
 <body id="halaman-keuangan">
 
-<button class="hamburger-btn" id="hamburger-btn"><i class="fas fa-bars"></i></button>
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h3>Poez.Board</h3>
-        <button class="close-btn" id="close-btn">&times;</button>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Beranda</a>
-        <a href="keuangan.html" class="nav-link active"><i class="fas fa-wallet"></i> Keuangan</a>
-        <a href="kesehatan.html" class="nav-link"><i class="fas fa-heartbeat"></i> Kesehatan</a>
-        <a href="personal.html" class="nav-link"><i class="fas fa-user"></i> Personal</a>
-    </nav>
-</aside>
+    <button class="hamburger-btn" id="hamburger-btn"><i class="fas fa-bars"></i></button>
 
-<div class="main-container" id="main-container">
-    <div class="dashboard-container">
-        <header class="header">
-            <h1>Dasbor Keuangan</h1>
-            <p>Analisis detail keuangan dan transaksimu.</p>
-        </header>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Poez.Board</h3>
+            <button class="close-btn" id="close-btn">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Beranda</a>
+            <a href="keuangan.html" class="nav-link active"><i class="fas fa-wallet"></i> Keuangan</a>
+            <a href="kesehatan.html" class="nav-link"><i class="fas fa-heartbeat"></i> Kesehatan</a>
+            <a href="personal.html" class="nav-link"><i class="fas fa-user"></i> Personal</a>
+        </nav>
+    </aside>
 
-        <main class="finance-grid-container">
-            <div class="finance-col-left">
-                <div class="account-cards-container">
-                    <div class="account-card bank">
-                        <span class="card-title">BSI</span>
-                        <span class="card-balance" id="card-balance-bank">Rp 0</span>
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/Bank_Syariah_Indonesia.svg" class="card-logo" alt="Mastercard">
-                    </div>
-                    <div class="account-card ewallet">
-                        <span class="card-title">ShopeePay</span>
-                        <span class="card-balance" id="card-balance-ewallet">Rp 0</span>
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Shopee.svg" class="card-logo" alt="Shopee">
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Riwayat Transaksi</h2>
-                    </div>
-                    <div class="card-body">
-                        <table class="transaction-table" id="transaction-table">
-                            <thead>
-                            <tr>
-                                <th>Deskripsi</th>
-                                <th>Jenis</th>
-                                <th>Jumlah</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <div class="main-container" id="main-container">
+        <div class="dashboard-container">
+            
+            <div id="content-wrapper">
+                <header class="header">
+                    <h1>Dasbor Keuangan</h1>
+                    <p>Analisis detail keuangan dan transaksimu.</p>
+                </header>
 
-            <div class="finance-col-middle">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Info Saldo</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="stat-details">
-                            <div class="finance-summary">
-                                <p>Pemasukan:</p> <span id="pemasukan-value">Rp 0</span>
-                                <p>Pengeluaran:</p> <span id="pengeluaran-value">Rp 0</span>
+                <main class="finance-grid-container">
+                    <div class="finance-col-left">
+                        <div class="account-cards-container">
+                            <div class="account-card bank">
+                                <span class="card-title">BSI</span>
+                                <span class="card-balance" id="card-balance-bank">Rp 0</span>
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/a/a0/Bank_Syariah_Indonesia.svg" class="card-logo" alt="BSI Logo">
                             </div>
-                            <div class="finance-breakdown">
-                                <p>Saldo di Bank:</p> <span id="saldo-bank">Rp 0</span>
-                                <p>Saldo di E-wallet:</p> <span id="saldo-ewallet">Rp 0</span>
-                                <p>Saldo Cash:</p> <span id="saldo-cash">Rp 0</span>
+                            <div class="account-card ewallet">
+                                <span class="card-title">ShopeePay</span>
+                                <span class="card-balance" id="card-balance-ewallet">Rp 0</span>
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Shopee.svg" class="card-logo" alt="Shopee Logo">
                             </div>
-                            <div class="finance-total">
-                                <p>Total Saldo:</p> <span id="sisa-saldo-value">Rp 0</span>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Riwayat Transaksi</h2>
+                            </div>
+                            <div class="card-body">
+                                <table class="transaction-table" id="transaction-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Deskripsi</th>
+                                            <th>Jenis</th>
+                                            <th>Jumlah</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Grafik Bulanan</h2>
-                    </div>
-                    <div class="card-body chart-container">
-                        <canvas id="monthlyEarningsChart"></canvas>
-                    </div>
-                </div>
-            </div>
 
-            <div class="finance-col-right">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Tagihan (Payables)</h2>
+                    <div class="finance-col-middle">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Info Saldo</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="stat-details">
+                                    <div class="finance-summary">
+                                        <p>Pemasukan:</p> <span id="pemasukan-value">Rp 0</span>
+                                        <p>Pengeluaran:</p> <span id="pengeluaran-value">Rp 0</span>
+                                    </div>
+                                    <div class="finance-breakdown">
+                                        <p>Saldo di Bank:</p> <span id="saldo-bank">Rp 0</span>
+                                        <p>Saldo di E-wallet:</p> <span id="saldo-ewallet">Rp 0</span>
+                                        <p>Saldo Cash:</p> <span id="saldo-cash">Rp 0</span>
+                                    </div>
+                                    <div class="finance-total">
+                                        <p>Total Saldo:</p> <span id="sisa-saldo-value">Rp 0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Grafik Bulanan</h2>
+                            </div>
+                            <div class="card-body chart-container">
+                                <canvas id="monthlyEarningsChart"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <ul class="payables-list" id="payables-list">
-                        </ul>
+
+                    <div class="finance-col-right">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Tagihan (Payables)</h2>
+                            </div>
+                            <div class="card-body">
+                                <ul class="payables-list" id="payables-list">
+                                    </ul>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </main>
             </div>
-        </main>
+            </div>
     </div>
-</div>
 
-<nav class="bottom-nav">
-    <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>Beranda</span></a>
-    <a href="keuangan.html" class="nav-item active"><i class="fas fa-wallet"></i><span>Keuangan</span></a>
-    <a href="kesehatan.html" class="nav-item"><i class="fas fa-heartbeat"></i><span>Kesehatan</span></a>
-    <a href="personal.html" class="nav-item"><i class="fas fa-user"></i><span>Personal</span></a>
-</nav>
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>Beranda</span></a>
+        <a href="keuangan.html" class="nav-item active"><i class="fas fa-wallet"></i><span>Keuangan</span></a>
+        <a href="kesehatan.html" class="nav-item"><i class="fas fa-heartbeat"></i><span>Kesehatan</span></a>
+        <a href="personal.html" class="nav-item"><i class="fas fa-user"></i><span>Personal</span></a>
+    </nav>
 
-<script src="utils.js"></script>
-<script src="script.js"></script>
-
+    <script src="script.js"></script>
+    
 </body>
 </html>
