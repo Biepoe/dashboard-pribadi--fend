@@ -2,24 +2,78 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com'; // Pastikan URL ini benar
-    const bodyId = document.body.id;
-
+    
     // =========================================================
-    // 1. INISIALISASI & ROUTING HALAMAN
+    // 1. SISTEM NAVIGASI AJAX (TANPA RELOAD)
     // =========================================================
     
-    // Logika untuk Sidebar Mobile
-    const sidebar = document.getElementById('sidebar');
-    const hamburgerBtn = document.getElementById('hamburger-btn');
-    const closeBtn = document.getElementById('close-btn');
-    if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => sidebar.classList.add('open'));
-    if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'));
+    // Fungsi untuk menjalankan skrip inisialisasi setelah konten baru dimuat
+    function runPageInit() {
+        const bodyId = document.body.id;
+        if (bodyId === 'halaman-beranda') {
+            initBeranda();
+        } else if (bodyId === 'halaman-keuangan') {
+            initKeuangan();
+        }
+        // Tambahkan else if untuk halaman lain jika perlu
+    }
 
-    // Panggil fungsi sesuai halaman yang aktif
-    if (bodyId === 'halaman-beranda') {
-        initBeranda();
-    } else if (bodyId === 'halaman-keuangan') {
-        initKeuangan();
+    // Fungsi untuk memuat konten halaman baru
+    async function loadPage(url) {
+        const contentWrapper = document.getElementById('content-wrapper');
+        try {
+            if (!contentWrapper) return;
+            contentWrapper.style.transition = 'opacity 0.3s ease-out';
+            contentWrapper.style.opacity = '0.5';
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Halaman tidak ditemukan');
+            const text = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const newContent = doc.getElementById('content-wrapper').innerHTML;
+            const newTitle = doc.title;
+            const newBodyId = doc.body.id;
+            
+            document.title = newTitle;
+            document.body.id = newBodyId;
+            contentWrapper.innerHTML = newContent;
+            
+            // Re-run script inisialisasi untuk konten baru
+            runPageInit();
+            
+            // Re-attach sidebar listeners karena elemennya mungkin baru
+            initSidebarListeners();
+            
+            contentWrapper.style.opacity = '1';
+            history.pushState({ path: url }, '', url);
+
+        } catch (error) {
+            console.error('Gagal memuat halaman:', error);
+            if (contentWrapper) contentWrapper.style.opacity = '1';
+        }
+    }
+
+    // Tambahkan event listener ke semua link navigasi
+    function initNavListeners() {
+        document.body.addEventListener('click', (e) => {
+            const link = e.target.closest('.sidebar-nav a, .bottom-nav a');
+            if (!link) return;
+
+            const url = link.href;
+            if (!url || !url.endsWith('.html')) return;
+            
+            e.preventDefault();
+            if (url === window.location.href) return;
+
+            loadPage(url);
+            
+            document.querySelectorAll('.sidebar-nav a, .bottom-nav a').forEach(l => l.classList.remove('active'));
+            document.querySelectorAll(`a[href="${link.getAttribute('href')}"]`).forEach(activeLink => {
+                activeLink.classList.add('active');
+            });
+        });
     }
 
     // =========================================================
@@ -34,23 +88,36 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchFinancialData();
         fetchHealthData();
         fetchActivityData();
-        setInterval(fetchFinancialData, 15000);
-        setInterval(fetchHealthData, 15000);
-        setInterval(fetchActivityData, 15000);
     }
 
     function initKeuangan() {
         console.log('Memuat data untuk Halaman Keuangan...');
         fetchFinancialDataForFinancePage();
         fetchPayablesData();
-        setInterval(fetchFinancialDataForFinancePage, 15000);
-        setInterval(fetchPayablesData, 15000);
     }
 
     // =========================================================
-    // 3. DEFINISI SEMUA FUNGSI
+    // 3. DEFINISI SEMUA FUNGSI (LENGKAP)
     // =========================================================
+    
+    // --- Fungsi Helper (Alat Bantu) ---
+    function padZero(num) {
+        return num < 10 ? '0' + num : num;
+    }
 
+    function parseDate(dateString) {
+        if (!dateString) return null;
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return new Date(dateString);
+    }
+
+    const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', {
+        style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+    }).format(angka);
+    
     // --- Fungsi Jam & Tanggal ---
     function setDate() {
         const dateElement = document.getElementById('current-date');
@@ -78,8 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
             timeElement.innerHTML = `${clockIcon} ${hours}:${minutes}:${seconds}`;
         }
     }
-
-    // --- Fungsi Fetch Data (Beranda) ---
+    
+    // --- Fungsi Fetch (Beranda) ---
     async function fetchFinancialData() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/finances`);
@@ -117,88 +184,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fungsi baru untuk mengubah format tanggal DD/MM/YYYY menjadi objek Date yang valid
-    function parseDate(dateString) {
-        if (!dateString) return null;
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-            // parts[2] = YYYY, parts[1] = MM, parts[0] = DD
-            // Bulan di JavaScript dimulai dari 0 (Januari=0, Februari=1, dst.)
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-        }
-        return new Date(dateString); // Fallback untuk format lain
-    }
-
-
     async function fetchHealthData() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/health`);
             const data = await response.json();
-            console.log('📦 Data Kesehatan diterima dari backend:', data);
 
-            if (!data || data.length === 0) return; // Keluar jika tidak ada data
+            if (!data || data.length === 0) return;
 
-            // --- Cari data relevan ---
-            const latestRecord = data[data.length - 1]; // Catatan paling baru untuk status & obat
-            // Catatan terakhir yang ADA DATA TIDURNYA
+            const latestRecord = data[data.length - 1];
             const lastSleepRecord = [...data].reverse().find(item => item['Waktu Tidur'] && item['Waktu Bangun']);
-
-            // --- 1. Update Kondisi Tubuh & Warna Vektor (dari catatan terakhir) ---
+            const lastMedicineRecord = [...data].reverse().find(item => item['Obat/Suplemen']);
+            
             const bodyVector = document.getElementById('body-vector');
             const bodyStatusEl = document.getElementById('body-status');
             const kondisiTubuh = latestRecord['Kondisi Tubuh'] || 'Sehat';
 
             bodyStatusEl.textContent = kondisiTubuh;
-            if (kondisiTubuh === 'Sakit') {
-                bodyVector.className = 'body-sick';
-            } else {
-                bodyVector.className = 'body-normal';
-            }
+            bodyVector.className = (kondisiTubuh === 'Sakit') ? 'body-sick' : 'body-normal';
 
-            // --- 2. Hitung & Update Durasi Tidur (dari catatan tidur terakhir) ---
             const sleepDurationEl = document.getElementById('sleep-duration');
             if (lastSleepRecord) {
-                const waktuTidur = lastSleepRecord['Waktu Tidur'];
-                const waktuBangun = lastSleepRecord['Waktu Bangun'];
-
-                const [jamTidur, menitTidur] = waktuTidur.split(':').map(Number);
-                const [jamBangun, menitBangun] = waktuBangun.split(':').map(Number);
-
+                const [jamTidur, menitTidur] = lastSleepRecord['Waktu Tidur'].split(':').map(Number);
+                const [jamBangun, menitBangun] = lastSleepRecord['Waktu Bangun'].split(':').map(Number);
                 const tglTidur = new Date(2025, 1, 1, jamTidur, menitTidur);
                 let tglBangun = new Date(2025, 1, 1, jamBangun, menitBangun);
-
-                if (tglBangun < tglTidur) {
-                    tglBangun.setDate(tglBangun.getDate() + 1);
-                }
-
+                if (tglBangun < tglTidur) tglBangun.setDate(tglBangun.getDate() + 1);
                 const selisihMenit = (tglBangun - tglTidur) / 1000 / 60;
-                const jam = Math.floor(selisihMenit / 60);
-                const menit = selisihMenit % 60;
-
-                sleepDurationEl.textContent = `${jam} Jam ${menit} Menit`;
+                sleepDurationEl.textContent = `${Math.floor(selisihMenit / 60)} Jam ${selisihMenit % 60} Menit`;
             } else {
                 sleepDurationEl.textContent = '- Jam - Menit';
             }
 
-            // --- 3. Update Obat Terakhir Diminum ---
-            const lastMedicineEl = document.getElementById('last-medicine');
-            // Kita cari dari data terakhir ke awal yang kolom obatnya tidak kosong
-            const lastMedicineRecord = [...data].reverse().find(item => item['Obat/Suplemen yang dikonsumsi']);
-            if (lastMedicineRecord) {
-                lastMedicineEl.textContent = lastMedicineRecord['Obat/Suplemen yang dikonsumsi'];
-            } else {
-                lastMedicineEl.textContent = '-';
-            }
-
-            // --- 4. Update Tanggal (dengan fungsi parseDate yang baru) ---
+            document.getElementById('last-medicine').textContent = lastMedicineRecord ? lastMedicineRecord['Obat/Suplemen'] : '-';
+            
             const healthDateEl = document.getElementById('health-date');
             const latestDate = parseDate(latestRecord['Tanggal Kejadian']);
-            if (latestDate && !isNaN(latestDate)) {    
-                healthDateEl.textContent = latestDate.toLocaleDateString('id-ID', { weekday: 'long' });
-            } else {
-                healthDateEl.textContent = "Tanggal Tidak Valid";
-            }
-
+            healthDateEl.textContent = (latestDate && !isNaN(latestDate)) ? latestDate.toLocaleDateString('id-ID', { weekday: 'long' }) : "Tanggal Tidak Valid";
 
         } catch (error) {
             console.error('Gagal mengambil data kesehatan:', error);
@@ -206,55 +227,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchActivityData() {
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/activities`);
-        const data = await response.json();
-        console.log('📦 Data Aktivitas diterima dari backend:', data);
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/activities`);
+            const data = await response.json();
 
-        const listContainer = document.getElementById('activity-log-list');
-        if (!listContainer) return;
+            const listContainer = document.getElementById('activity-log-list');
+            if (!listContainer) return;
 
-        // Kosongkan kontainer
-        listContainer.innerHTML = '';
+            listContainer.innerHTML = '';
+            if (!data || data.length === 0) {
+                listContainer.innerHTML = '<li class="placeholder">Belum ada aktivitas tercatat.</li>';
+                return;
+            }
 
-        if (!data || data.length === 0) {
-            listContainer.innerHTML = '<li class="placeholder">Belum ada aktivitas tercatat.</li>';
-            return;
+            const recentData = data.slice(-10).reverse();
+            recentData.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.className = 'activity-log-item';
+                listItem.innerHTML = `
+                    <div class="activity-log-time">
+                        <span class="date">${item['Kapan ngelakuinnya?'] || ''}</span>
+                        <span class="time">${item['Waktunya?'] || ''}</span>
+                    </div>
+                    <div class="activity-log-details">
+                        <span class="title">${item['Kamu emang ngapain?'] || '-'}</span>
+                        <span class="notes">${item.Notes || ''}</span>
+                    </div>`;
+                listContainer.appendChild(listItem);
+            });
+        } catch (error) {
+            console.error('Gagal mengambil data aktivitas:', error);
         }
-
-        // Ambil 10 data terakhir dan balik urutannya (terbaru di atas)
-        const recentData = data.slice(-10).reverse();
-
-        recentData.forEach(item => {
-            const listItem = document.createElement('li');
-            listItem.className = 'activity-log-item';
-
-            // --- PERBAIKAN DI SINI ---
-            // Menggunakan nama kolom dari Google Sheet-mu
-            const tanggal = item['Kapan ngelakuinnya?'] || '';
-            const waktu = item['Waktunya?'] || '';
-            const aktivitas = item['Kamu emang ngapain?'] || '-';
-            const notes = item.Notes || ''; // Kolom Notes juga bisa dipakai
-
-            listItem.innerHTML = `
-                <div class="activity-log-time">
-                    <span class="date">${tanggal}</span>
-                    <span class="time">${waktu}</span>
-                </div>
-                <div class="activity-log-details">
-                    <span class="title">${aktivitas}</span>
-                    <span class="notes">${notes}</span>
-                </div>
-            `;
-            listContainer.appendChild(listItem);
-        });
-
-    } catch (error) {
-        console.error('Gagal mengambil data aktivitas:', error);
     }
-}
-
-
 
     // --- Fungsi Fetch Data (Halaman Keuangan) ---
     async function fetchFinancialDataForFinancePage() {
@@ -359,21 +363,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Fungsi Helper (Alat Bantu) ---
-    function padZero(num) {
-        return num < 10 ? '0' + num : num;
-    }
-
-    function parseDate(dateString) {
-        if (!dateString) return null;
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-            return new Date(parts[2], parts[1] - 1, parts[0]);
-        }
-        return new Date(dateString);
-    }
-
-    const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', {
-        style: 'currency', currency: 'IDR', minimumFractionDigits: 0
-    }).format(angka);
+    // =========================================================
+    // 4. EKSEKUSI AWAL
+    // =========================================================
+    
+    initNavListeners();
+    runPageInit(); // Jalankan fungsi init untuk halaman yang pertama kali dimuat
 });
