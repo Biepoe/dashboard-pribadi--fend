@@ -1,77 +1,29 @@
 // =========================================================
-// SCRIPT.JS (VERSI FINAL, LENGKAP, DAN BERSIH)
+// SCRIPT.JS (VERSI FINAL & LENGKAP)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
-    const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
-
+    const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com'; // Pastikan URL ini benar
+    
     // =========================================================
-    // 1. SISTEM NAVIGASI AJAX (TANPA RELOAD)
+    // 1. INISIALISASI & ROUTING HALAMAN
     // =========================================================
     
-    function runPageInit() {
-        const bodyId = document.body.id;
-        if (bodyId === 'halaman-beranda') {
-            initBeranda();
-        } else if (bodyId === 'halaman-keuangan') {
-            initKeuangan();
-        }
-        // Tambahkan else if untuk halaman lain jika perlu
-    }
+    // Logika untuk Sidebar Mobile (Sama untuk semua halaman)
+    const sidebar = document.getElementById('sidebar');
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const closeBtn = document.getElementById('close-btn');
+    if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => sidebar.classList.add('open'));
+    if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'));
 
-    async function loadPage(url) {
-        const contentWrapper = document.getElementById('content-wrapper');
-        try {
-            if (!contentWrapper) return;
-            contentWrapper.style.transition = 'opacity 0.3s ease-out';
-            contentWrapper.style.opacity = '0.5';
-
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Halaman tidak ditemukan');
-            const text = await response.text();
-            
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            const newContent = doc.getElementById('content-wrapper').innerHTML;
-            const newTitle = doc.title;
-            const newBodyId = doc.body.id;
-            
-            document.title = newTitle;
-            document.body.id = newBodyId;
-            contentWrapper.innerHTML = newContent;
-            
-            runPageInit();
-            initSidebarListeners();
-            
-            contentWrapper.style.opacity = '1';
-            history.pushState({ path: url }, '', url);
-
-        } catch (error) {
-            console.error('Gagal memuat halaman:', error);
-            if (contentWrapper) contentWrapper.style.opacity = '1';
-        }
-    }
-
-    function initNavListeners() {
-        document.body.addEventListener('click', (e) => {
-            const link = e.target.closest('.sidebar-nav a, .bottom-nav a');
-            if (!link) return;
-
-            const url = link.href;
-            if (!url || !url.endsWith('.html')) return;
-            
-            e.preventDefault();
-            if (url === window.location.href) return;
-
-            loadPage(url);
-            
-            document.querySelectorAll('.sidebar-nav a, .bottom-nav a').forEach(l => l.classList.remove('active'));
-            document.querySelectorAll(`a[href="${link.getAttribute('href')}"]`).forEach(activeLink => {
-                activeLink.classList.add('active');
-            });
-        });
+    // Panggil fungsi sesuai halaman yang aktif
+    const bodyId = document.body.id;
+    if (bodyId === 'halaman-beranda') {
+        initBeranda();
+    } else if (bodyId === 'halaman-keuangan') {
+        initKeuangan();
     }
 
     // =========================================================
@@ -86,16 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchFinancialData();
         fetchHealthData();
         fetchActivityData();
+        setInterval(fetchFinancialData, 15000);
+        setInterval(fetchHealthData, 15000);
+        setInterval(fetchActivityData, 15000);
     }
 
     function initKeuangan() {
         console.log('Memuat data untuk Halaman Keuangan...');
         fetchFinancialDataForFinancePage();
         fetchPayablesData();
+        setInterval(fetchFinancialDataForFinancePage, 15000);
+        setInterval(fetchPayablesData, 15000);
     }
 
     // =========================================================
-    // 3. DEFINISI SEMUA FUNGSI
+    // 3. DEFINISI SEMUA FUNGSI (LENGKAP)
     // =========================================================
     
     // --- Fungsi Helper (Alat Bantu) ---
@@ -127,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = now.getDate();
             const month = monthNames[now.getMonth()];
             const year = now.getFullYear();
-            const calendarIcon = '<svg xmlns="http://www.w.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+            const calendarIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
             dateElement.innerHTML = `${calendarIcon} ${day}, ${date} ${month} ${year}`;
         }
     }
@@ -139,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const hours = padZero(now.getHours());
             const minutes = padZero(now.getMinutes());
             const seconds = padZero(now.getSeconds());
-            const clockIcon = '<svg xmlns="http://www.w.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+            const clockIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
             timeElement.innerHTML = `${clockIcon} ${hours}:${minutes}:${seconds}`;
         }
     }
@@ -361,19 +318,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================
-    // 4. EKSEKUSI AWAL
-    // =========================================================
-    
-    function initSidebarListeners() {
-        const sidebar = document.getElementById('sidebar');
-        const hamburgerBtn = document.getElementById('hamburger-btn');
-        const closeBtn = document.getElementById('close-btn');
-        if (hamburgerBtn) hamburgerBtn.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('open'); });
-        if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'); });
-    }
-
-    initSidebarListeners();
-    initNavListeners();
-    runPageInit();
 });
