@@ -10,121 +10,124 @@
 </head>
 <body id="halaman-beranda">
 
-<button class="hamburger-btn" id="hamburger-btn">
-    <i class="fas fa-bars"></i>
-</button>
+    <button class="hamburger-btn" id="hamburger-btn">
+        <i class="fas fa-bars"></i>
+    </button>
 
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h3>Poez.Board</h3>
-        <button class="close-btn" id="close-btn">&times;</button>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Poez.Board</h3>
+            <button class="close-btn" id="close-btn">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-link active"><i class="fas fa-home"></i> Beranda</a>
+            <a href="keuangan.html" class="nav-link"><i class="fas fa-wallet"></i> Keuangan</a>
+            <a href="kesehatan.html" class="nav-link"><i class="fas fa-heartbeat"></i> Kesehatan</a>
+            <a href="personal.html" class="nav-link"><i class="fas fa-user"></i> Personal</a>
+        </nav>
+    </aside>
+
+    <div class="main-container" id="main-container">
+        <div class="dashboard-container">
+            
+            <div id="content-wrapper">
+                <header class="header">
+                    <div class="header-text">
+                        <h1>Hallooww, Biepoe</h1>
+                        <p>Ini adalah Dasbor Kehidupan-mu!</p>
+                    </div>
+                    <div class="header-info">
+                       <span id="current-date"></span>
+                       <span id="current-time"></span>
+                    </div>
+                </header>
+
+                <main class="main-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Status Keuangan</h2>
+                            <span class="pill-info">Bulan Ini</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-details">
+                                <div class="finance-summary">
+                                    <p><strong>Pemasukan:</strong> <span id="pemasukan-value">Rp 0</span></p>
+                                    <p><strong>Pengeluaran:</strong> <span id="pengeluaran-value">Rp 0</span></p>
+                                </div>
+                                <div class="finance-breakdown">
+                                    <p>Sisa di Bank: <span id="saldo-bank">Rp 0</span></p>
+                                    <p>Sisa di E-wallet: <span id="saldo-ewallet">Rp 0</span></p>
+                                    <p>Sisa Cash: <span id="saldo-cash">Rp 0</span></p>
+                                </div>
+                                <div class="finance-total">
+                                    <p><strong>Total Saldo:</strong> <span id="sisa-saldo-value">Rp 0</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Status Kesehatan</h2>
+                            <span class="pill-info" id="health-date">Hari Ini</span>
+                        </div>
+                        <div class="card-body large-chart">
+                            <div class="body-vector-container">
+                                <svg id="body-vector" class="body-normal" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M24,2A10,10,0,1,0,34,12,10,10,0,0,0,24,2Z"/>
+                                    <path d="M42.3,23.32,38.5,22a2,2,0,0,0-2.32,1.29L32.6,30.5h-1a13.3,13.3,0,0,0-4.6-9.15V13a1,1,0,0,0-1-1H22a1,1,0,0,0-1,1v8.35A13.3,13.3,0,0,0,16.4,30.5h-1L11.82,23.29A2,2,0,0,0,9.5,22l-3.8,1.32a2,2,0,0,0-1.29,2.32L6,32v9a2,2,0,0,0,2,2h4a1,1,0,0,0,1-1V35h3.6a8.41,8.41,0,0,0,7.4,5h2a8.41,8.41,0,0,0,7.4-5H35v7a1,1,0,0,0,1,1h4a2,2,0,0,0,2-2V32l1.59-6.36A2,2,0,0,0,42.3,23.32Z"/>
+                                </svg>
+                            </div>
+                            <div class="stat-details">
+                                <p><strong>Kondisi Tubuh:</strong> <span id="body-status">Normal</span></p>
+                                <p><strong>Durasi Tidur:</strong> <span id="sleep-duration">- Jam - Menit</span></p>
+                                <p><strong>Obat Terakhir:</strong> <span id="last-medicine">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h2>Activity Journal</h2>
+                            <span class="pill-info">10 Aktivitas Terakhir</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-log-container">
+                                <ul id="activity-log-list">
+                                    <li class="placeholder">Memuat riwayat aktivitas...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <footer class="footer-controls">
+                    <a href="https://forms.gle/httjDhDdwGRoyDfW8" class="control-item" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.9 6.2a1 1 0 0 0-1.2-1.2l-6.2 2-2.3-2.3A1 1 0 0 0 9.8 6l-6 6a1 1 0 0 0 0 1.4l7.4 7.4a1 1 0 0 0 1.4 0l11.3-11.3zM15 12l-5 5"></path></svg>
+                        <span>Medical Record Tracker</span>
+                    </a>
+                    <a href="https://forms.gle/mVkUTBiFc9fsDBnX7" class="control-item active" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        <span>Finance Log</span>
+                    </a>
+                    <a href="https://forms.gle/UMc55hPzmrxsGe2j6" class="control-item" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H8.5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path><path d="M9 7h6"></path><path d="M9 11h6"></path><path d="M9 15h4"></path></svg>
+                        <span>Activity Journal</span>
+                    </a>
+                </footer>
+            </div>
+            </div>
     </div>
-    <nav class="sidebar-nav">
-        <a href="index.html" class="nav-link active"><i class="fas fa-home"></i> Beranda</a>
-        <a href="keuangan.html" class="nav-link"><i class="fas fa-wallet"></i> Keuangan</a>
-        <a href="kesehatan.html" class="nav-link"><i class="fas fa-heartbeat"></i> Kesehatan</a>
-        <a href="personal.html" class="nav-link"><i class="fas fa-user"></i> Personal</a>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item active"><i class="fas fa-home"></i><span>Beranda</span></a>
+        <a href="keuangan.html" class="nav-item"><i class="fas fa-wallet"></i><span>Keuangan</span></a>
+        <a href="kesehatan.html" class="nav-item"><i class="fas fa-heartbeat"></i><span>Kesehatan</span></a>
+        <a href="personal.html" class="nav-item"><i class="fas fa-user"></i><span>Personal</span></a>
     </nav>
-</aside>
 
-<div class="main-container" id="main-container">
-    <div class="dashboard-container">
-        <header class="header">
-            <div class="header-text">
-                <h1>Hallooww, Biepoe</h1>
-                <p>Ini adalah Dasbor Kehidupan-mu!</p>
-            </div>
-            <div class="header-info">
-                <span id="current-date"></span>
-                <span id="current-time"></span>
-            </div>
-        </header>
-
-        <main class="main-content">
-            <div class="card">
-                <div class="card-header">
-                    <h2>Status Keuangan</h2>
-                    <span class="pill-info">Bulan Ini</span>
-                </div>
-                <div class="card-body">
-                    <div class="stat-details">
-                        <div class="finance-summary">
-                            <p><strong>Pemasukan:</strong> <span id="pemasukan-value">Rp 0</span></p>
-                            <p><strong>Pengeluaran:</strong> <span id="pengeluaran-value">Rp 0</span></p>
-                        </div>
-                        <div class="finance-breakdown">
-                            <p>Sisa di Bank: <span id="saldo-bank">Rp 0</span></p>
-                            <p>Sisa di E-wallet: <span id="saldo-ewallet">Rp 0</span></p>
-                            <p>Sisa Cash: <span id="saldo-cash">Rp 0</span></p>
-                        </div>
-                        <div class="finance-total">
-                            <p><strong>Total Saldo:</strong> <span id="sisa-saldo-value">Rp 0</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2>Status Kesehatan</h2>
-                    <span class="pill-info" id="health-date">Hari Ini</span>
-                </div>
-                <div class="card-body large-chart">
-                    <div class="body-vector-container">
-                        <svg id="body-vector" class="body-normal" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M24,2A10,10,0,1,0,34,12,10,10,0,0,0,24,2Z"/>
-                            <path d="M42.3,23.32,38.5,22a2,2,0,0,0-2.32,1.29L32.6,30.5h-1a13.3,13.3,0,0,0-4.6-9.15V13a1,1,0,0,0-1-1H22a1,1,0,0,0-1,1v8.35A13.3,13.3,0,0,0,16.4,30.5h-1L11.82,23.29A2,2,0,0,0,9.5,22l-3.8,1.32a2,2,0,0,0-1.29,2.32L6,32v9a2,2,0,0,0,2,2h4a1,1,0,0,0,1-1V35h3.6a8.41,8.41,0,0,0,7.4,5h2a8.41,8.41,0,0,0,7.4-5H35v7a1,1,0,0,0,1,1h4a2,2,0,0,0,2-2V32l1.59-6.36A2,2,0,0,0,42.3,23.32Z"/>
-                        </svg>
-                    </div>
-                    <div class="stat-details">
-                        <p><strong>Kondisi Tubuh:</strong> <span id="body-status">Normal</span></p>
-                        <p><strong>Durasi Tidur:</strong> <span id="sleep-duration">- Jam - Menit</span></p>
-                        <p><strong>Obat Terakhir:</strong> <span id="last-medicine">-</span></p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card full-width">
-                <div class="card-header">
-                    <h2>Activity Journal</h2>
-                    <span class="pill-info">10 Aktivitas Terakhir</span>
-                </div>
-                <div class="card-body">
-                    <div class="activity-log-container">
-                        <ul id="activity-log-list">
-                            <li class="placeholder">Memuat riwayat aktivitas...</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <footer class="footer-controls">
-            <a href="https://forms.gle/httjDhDdwGRoyDfW8" class="control-item" target="_blank">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.9 6.2a1 1 0 0 0-1.2-1.2l-6.2 2-2.3-2.3A1 1 0 0 0 9.8 6l-6 6a1 1 0 0 0 0 1.4l7.4 7.4a1 1 0 0 0 1.4 0l11.3-11.3zM15 12l-5 5"></path></svg>
-                <span>Medical Record Tracker</span>
-            </a>
-            <a href="https://forms.gle/mVkUTBiFc9fsDBnX7" class="control-item active" target="_blank">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                <span>Finance Log</span>
-            </a>
-            <a href="https://forms.gle/UMc55hPzmrxsGe2j6" class="control-item" target="_blank">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3H8.5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path><path d="M9 7h6"></path><path d="M9 11h6"></path><path d="M9 15h4"></path></svg>
-                <span>Activity Journal</span>
-            </a>
-        </footer>
-    </div>
-</div>
-
-<nav class="bottom-nav">
-    <a href="index.html" class="nav-item active"><i class="fas fa-home"></i><span>Beranda</span></a>
-    <a href="keuangan.html" class="nav-item"><i class="fas fa-wallet"></i><span>Keuangan</span></a>
-    <a href="kesehatan.html" class="nav-item"><i class="fas fa-heartbeat"></i><span>Kesehatan</span></a>
-    <a href="personal.html" class="nav-item"><i class="fas fa-user"></i><span>Personal</span></a>
-</nav>
-
-<script src="utils.js"></script>
-<script src="script.js"></script>
+    <script src="utils.js"></script>
+    <script src="script.js"></script>
 
 </body>
 </html>
