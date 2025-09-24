@@ -112,21 +112,34 @@ document.addEventListener('DOMContentLoaded', () => {
             data.forEach(item => {
                 const jumlah = parseFloat(item.Nominal.replace(/[^0-9]/g, '')) || 0;
                 const sumberDana = item['Sumber Dana'] ? item['Sumber Dana'].toLowerCase() : '';
-
+                const tujuanDana = item['Tujuan Dana'] ? item['Tujuan Dana'].toLowerCase() : ''; // untuk transfer
+            
                 if (item['Jenis Transaksi'] === 'Pemasukan') {
                     totalPemasukan += jumlah;
                     if (sumberDana === 'bank') saldoBank += jumlah;
                     if (sumberDana.includes('wallet')) saldoEwallet += jumlah;
                     if (sumberDana === 'cash') saldoCash += jumlah;
+            
                 } else if (item['Jenis Transaksi'] === 'Pengeluaran') {
                     totalPengeluaran += jumlah;
                     if (sumberDana === 'bank') saldoBank -= jumlah;
                     if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
                     if (sumberDana === 'cash') saldoCash -= jumlah;
+            
+                } else if (item['Jenis Transaksi'] === 'Transfer') {
+                    // Tidak menambah pemasukan/pengeluaran
+                    if (sumberDana === 'bank') saldoBank -= jumlah;
+                    if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
+                    if (sumberDana === 'cash') saldoCash -= jumlah;
+            
+                    if (tujuanDana === 'bank') saldoBank += jumlah;
+                    if (tujuanDana.includes('wallet')) saldoEwallet += jumlah;
+                    if (tujuanDana === 'cash') saldoCash += jumlah;
                 }
             });
             
-            const totalSaldo = totalPemasukan - totalPengeluaran;
+            const totalSaldo = saldoBank + saldoEwallet + saldoCash;
+
             
             document.getElementById('pemasukan-value').textContent = formatRupiah(totalPemasukan);
             document.getElementById('pengeluaran-value').textContent = formatRupiah(totalPengeluaran);
