@@ -1,0 +1,118 @@
+/* --- Layout Grid Halaman Kesehatan --- */
+.health-grid-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Kolom kiri lebih kecil */
+    gap: 20px;
+}
+
+.health-col-left, .health-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- Status Vital --- */
+.vital-status-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+#body-vector-large {
+    width: 80px;
+    margin: 0 auto 15px auto;
+}
+#body-vector-large.body-normal { fill: #667eea; }
+#body-vector-large.body-sick { fill: #f44336; }
+
+.vital-status-container h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.vital-status-container p {
+    color: #999;
+    font-size: 14px;
+}
+
+.vital-details {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+.vital-details h4 { font-weight: 600; margin-bottom: 10px; }
+.vital-details p { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+.vital-details strong { color: #333; }
+
+/* --- Aktivitas Fisik --- */
+.card-body-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0;
+}
+.activity-metric {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.activity-metric i {
+    font-size: 24px;
+    color: #667eea;
+}
+.activity-metric .value {
+    font-size: 20px;
+    font-weight: 600;
+    display: block;
+}
+.activity-metric .label {
+    font-size: 13px;
+    color: #999;
+}
+
+/* --- Analisis Kualitas Tidur --- */
+.sleep-score-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.sleep-score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: conic-gradient(#667eea 0% 85%, #f0f0f0 85% 100%);
+    flex-shrink: 0;
+}
+
+.sleep-score-circle .score {
+    font-size: 36px;
+    font-weight: 700;
+    color: #333;
+}
+.sleep-score-circle small {
+    font-size: 16px;
+    color: #999;
+    margin-left: 2px;
+}
+
+.sleep-score-details p {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #f0f0f0;
+}
+.sleep-score-details p:last-child { border-bottom: none; margin-bottom: 0; }
+.sleep-score-details strong { font-weight: 600; color: #333; }
+
+/* --- Responsif --- */
+@media (max-width: 900px) {
+    .health-grid-container {
+        grid-template-columns: 1fr; /* Tumpuk semua jadi 1 kolom */
+    }
+}
