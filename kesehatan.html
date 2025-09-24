@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kesehatan - Personal Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="kesehatan.css"> <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+</head>
+<body id="halaman-kesehatan">
 
+    <button class="hamburger-btn" id="hamburger-btn"><i class="fas fa-bars"></i></button>
+    <aside class="sidebar" id="sidebar">
+        </aside>
+
+    <div class="main-container" id="main-container">
+        <div class="dashboard-container">
+            <div id="content-wrapper">
+                <header class="header">
+                    <h1>Dasbor Kesehatan</h1>
+                    <p>Ringkasan, analisis, dan tren kesehatanmu.</p>
+                </header>
+
+                <main class="health-grid-container">
+                    <div class="health-col-left">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Status Vital</h2>
+                                <span class="pill-info" id="health-date">Hari Ini</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="vital-status-container">
+                                    <div id="body-vector-large" class="body-normal">
+                                        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M24,2A10,10,0,1,0,34,12,10,10,0,0,0,24,2Z"/><path d="M42.3,23.32,38.5,22a2,2,0,0,0-2.32,1.29L32.6,30.5h-1a13.3,13.3,0,0,0-4.6-9.15V13a1,1,0,0,0-1-1H22a1,1,0,0,0-1,1v8.35A13.3,13.3,0,0,0,16.4,30.5h-1L11.82,23.29A2,2,0,0,0,9.5,22l-3.8,1.32a2,2,0,0,0-1.29,2.32L6,32v9a2,2,0,0,0,2,2h4a1,1,0,0,0,1-1V35h3.6a8.41,8.41,0,0,0,7.4,5h2a8.41,8.41,0,0,0,7.4-5H35v7a1,1,0,0,0,1,1h4a2,2,0,0,0,2-2V32l1.59-6.36A2,2,0,0,0,42.3,23.32Z"/></svg>
+                                    </div>
+                                    <h3 id="body-status-large">Normal</h3>
+                                    <p>Kondisi tubuh terakhir tercatat</p>
+                                </div>
+                                <div class="vital-details">
+                                    <h4>Detail Laporan</h4>
+                                    <p><span>Obat Terakhir</span> <strong id="last-medicine-detail">-</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="health-col-right">
+                        <div class="card">
+                             <div class="card-header">
+                                <h2>Aktivitas Fisik</h2>
+                            </div>
+                             <div class="card-body-row">
+                                <div class="activity-metric">
+                                    <i class="fas fa-shoe-prints"></i>
+                                    <div>
+                                        <span class="value">8,200</span>
+                                        <span class="label">Langkah Hari Ini</span>
+                                    </div>
+                                </div>
+                                 <div class="activity-metric">
+                                    <i class="fas fa-fire"></i>
+                                    <div>
+                                        <span class="value">450</span>
+                                        <span class="label">Kalori Terbakar</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Analisis Kualitas Tidur</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="sleep-score-container">
+                                    <div class="sleep-score-circle">
+                                        <span class="score" id="sleep-score">85<small>/100</small></span>
+                                    </div>
+                                    <div class="sleep-score-details">
+                                        <p><span>Waktu Tidur</span> <strong id="sleep-start-time">-</strong></p>
+                                        <p><span>Waktu Bangun</span> <strong id="sleep-end-time">-</strong></p>
+                                        <p><span>Total Durasi</span> <strong id="sleep-total-duration">-</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        </nav>
+
+    <script src="script.js"></script>
+</body>
+</html>
