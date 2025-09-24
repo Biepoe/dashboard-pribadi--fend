@@ -51,6 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(fetchPayablesData, 15000);
     }
 
+     function initKesehatan() {
+        console.log('Memuat data untuk Halaman Kesehatan...');
+        fetchHealthDataForHealthPage();
+        setInterval(fetchHealthDataForHealthPage, 15000); // Atur auto-refresh
+    }
+    
     // =========================================================
     // 3. DEFINISI SEMUA FUNGSI (LENGKAP)
     // =========================================================
@@ -346,3 +352,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
+//bagian halaman kesehatan
+        async function fetchHealthDataForHealthPage() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/health`);
+            const data = await response.json();
+            console.log('📦 Data Detail Kesehatan diterima:', data);
+
+            if (!data || data.length === 0) return;
+
+            const latestRecord = data[data.length - 1];
+            const lastSleepRecord = [...data].reverse().find(item => item['Waktu Tidur'] && item['Waktu Bangun']);
+            const lastMedicineRecord = [...data].reverse().find(item => item['Obat/Suplemen']);
+            
+            // Update Status Vital di kolom kiri
+            const bodyStatusLarge = document.getElementById('body-status-large');
+            const bodyVectorLarge = document.getElementById('body-vector-large');
+            const kondisiTubuh = latestRecord['Kondisi Tubuh'] || 'Sehat';
+            if (bodyStatusLarge) bodyStatusLarge.textContent = kondisiTubuh;
+            if (bodyVectorLarge) bodyVectorLarge.className = (kondisiTubuh === 'Sakit') ? 'body-sick' : 'body-normal';
+            
+            const lastMedicineDetail = document.getElementById('last-medicine-detail');
+            if (lastMedicineDetail) {
+                lastMedicineDetail.textContent = lastMedicineRecord ? lastMedicineRecord['Obat/Suplemen'] : '-';
+            }
+            
+            const healthDateEl = document.getElementById('health-date');
+            if (healthDateEl) {
+                const latestDate = parseDate(latestRecord['Tanggal Kejadian']);
+                healthDateEl.textContent = (latestDate && !isNaN(latestDate)) ? latestDate.toLocaleDateString('id-ID', { weekday: 'long' }) : "Update";
+            }
+
+            // Update Analisis Kualitas Tidur
+            const sleepStartTimeEl = document.getElementById('sleep-start-time');
+            const sleepEndTimeEl = document.getElementById('sleep-end-time');
+            const sleepTotalDurationEl = document.getElementById('sleep-total-duration');
+
+            if (lastSleepRecord && sleepStartTimeEl && sleepEndTimeEl && sleepTotalDurationEl) {
+                const waktuTidur = lastSleepRecord['Waktu Tidur'];
+                const waktuBangun = lastSleepRecord['Waktu Bangun'];
+                
+                sleepStartTimeEl.textContent = waktuTidur;
+                sleepEndTimeEl.textContent = waktuBangun;
+
+                const [jamTidur, menitTidur] = waktuTidur.split(':').map(Number);
+                const [jamBangun, menitBangun] = waktuBangun.split(':').map(Number);
+                
+                const tglTidur = new Date(2025, 1, 1, jamTidur, menitTidur);
+                let tglBangun = new Date(2025, 1, 1, jamBangun, menitBangun);
+                if (tglBangun < tglTidur) tglBangun.setDate(tglBangun.getDate() + 1);
+                
+                const selisihMenit = (tglBangun - tglTidur) / 1000 / 60;
+                const jam = Math.floor(selisihMenit / 60);
+                const menit = selisihMenit % 60;
+                
+                sleepTotalDurationEl.textContent = `${jam}j ${menit}m`;
+            }
+
+        } catch (error) {
+            console.error('Gagal mengambil data detail kesehatan:', error);
+        }
+    }
