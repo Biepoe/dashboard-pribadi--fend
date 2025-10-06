@@ -299,6 +299,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             let totalPemasukan = 0, totalPengeluaran = 0, saldoBank = 0, saldoEwallet = 0, saldoCash = 0;
+            const now = new Date();
+            const bulanIni = now.getMonth();
+            const tahunIni = now.getFullYear();
+            
             data.forEach(item => {
                 const jumlah = parseFloat(item.Nominal.replace(/[^0-9]/g, '')) || 0;
                 const sumberDana = item['Sumber Dana'] ? item['Sumber Dana'].toLowerCase() : '';
@@ -322,8 +326,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (tujuanDana === 'bank') saldoBank += jumlah;
                     if (tujuanDana.includes('wallet')) saldoEwallet += jumlah;
                     if (tujuanDana === 'cash') saldoCash += jumlah;
+
+                const tanggalTransaksi = parseDate(item['Tanggal Transaksi']);
+                if (tanggalTransaksi) {
+                    const bulanTransaksi = tanggalTransaksi.getMonth();
+                    const tahunTransaksi = tanggalTransaksi.getFullYear();
+
+                    if (bulanTransaksi === bulanIni && tahunTransaksi === tahunIni) {
+                    // Data untuk BULAN INI
+                        if (jenis === 'Pemasukan') pemasukanBulanIni += jumlah;
+                        else if (jenis === 'Pengeluaran') pengeluaranBulanIni += jumlah;
+                    }
                 }
-            });
+            });   
+            
             const totalSaldo = saldoBank + saldoEwallet + saldoCash;
 
             document.getElementById('pemasukan-value').textContent = formatRupiah(totalPemasukan);
