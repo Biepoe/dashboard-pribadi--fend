@@ -95,65 +95,59 @@ body {
 .control-item.active span { color: #667eea; }
 
 /* =================================
-   NAVIGASI BAWAH VERTIKAL (BOTTOM NAVIGATION)
+   NAVIGASI BAWAH (BOTTOM NAVIGATION) - GAYA BARU
    ================================= */
 .bottom-nav {
     display: flex;
-    flex-direction: column; /* <-- Mengubah orientasi menjadi vertikal */
     position: fixed;
-    bottom: 20px; /* Jarak dari bawah */
-    left: 20px;   /* Jarak dari kiri */
-    width: 60px;  /* Lebar "kapsul" */
-    padding: 10px 0;
-    gap: 10px; /* Jarak antar ikon */
+    bottom: 20px;
+    /* Posisikan di tengah layar secara horizontal */
+    left: 50%;
+    transform: translateX(-50%);
     
-    background-color: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px); /* Efek glassmorphism */
+    padding: 8px;
+    gap: 8px;
+    
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
     border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 30px; /* Membuat bentuk kapsul */
+    border-radius: 99px; /* Membuat bentuk kapsul panjang */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     z-index: 999;
 }
 
 .bottom-nav .nav-item {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%; /* Membuat ikon menjadi lingkaran */
+    width: 48px;
+    height: 48px;
+    border-radius: 50%; /* Membuat item menjadi lingkaran */
     display: flex;
     justify-content: center;
     align-items: center;
     text-decoration: none;
-    color: #555;
-    transition: all 0.2s ease-in-out;
+    color: #555; /* Warna ikon default */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.bottom-nav .nav-item span {
+    display: none; /* Sembunyikan teks */
 }
 
 .bottom-nav .nav-item i {
     font-size: 20px;
-    /* Hapus margin karena sudah di-center */
+    margin-bottom: 0; /* Hapus margin karena teks disembunyikan */
 }
 
-/* Tampilan saat link aktif */
+/* INI BAGIAN PENTINGNYA */
 .bottom-nav .nav-item.active {
-    background-color: #667eea;
-    color: white;
-    transform: scale(1.1);
+    background-color: #667eea; /* Warna latar biru */
+    color: white; /* Warna ikon jadi putih */
+    transform: translateY(-3px); /* Efek sedikit terangkat */
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.6);
 }
 
-/* Tampilan saat mouse hover */
+/* Tampilan saat mouse hover di item yang tidak aktif */
 .bottom-nav .nav-item:not(.active):hover {
     background-color: #f0f0f0;
-}
-
-/* Di layar mobile, posisikan kembali di tengah dan horizontal */
-@media (max-width: 768px) {
-    .bottom-nav {
-        flex-direction: row; /* Kembali horizontal */
-        bottom: 15px;
-        left: 15px;
-        right: 15px;
-        width: auto; /* Lebar otomatis */
-        height: 60px;
-    }
 }
 
 
