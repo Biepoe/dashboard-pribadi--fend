@@ -492,8 +492,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    
-    initSidebarListeners();
     initNavListeners();
     runPageInit();
 });
