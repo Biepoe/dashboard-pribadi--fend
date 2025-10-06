@@ -1,22 +1,92 @@
 // =========================================================
-// SCRIPT.JS (VERSI FINAL & LENGKAP)
+// SCRIPT.JS (VERSI FINAL, LENGKAP, DAN BERSIH DENGAN AJAX)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
-    const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com'; // Pastikan URL ini benar
-    
-    // =========================================================
-    // 1. INISIALISASI & ROUTING HALAMAN
-    // =========================================================
+    const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
-    // Panggil fungsi sesuai halaman yang aktif
-    const bodyId = document.body.id;
-    if (bodyId === 'halaman-beranda') {
-        initBeranda();
-    } else if (bodyId === 'halaman-keuangan') {
-        initKeuangan();
+    // =========================================================
+    // 1. SISTEM NAVIGASI AJAX (TANPA RELOAD)
+    // =========================================================
+    
+    // Fungsi untuk menjalankan skrip inisialisasi setelah konten baru dimuat
+    function runPageInit() {
+        const bodyId = document.body.id;
+        if (bodyId === 'halaman-beranda') {
+            initBeranda();
+        } else if (bodyId === 'halaman-keuangan') {
+            initKeuangan();
+        } else if (bodyId === 'halaman-kesehatan') {
+            initKesehatan();
+        }
+    }
+
+    // Fungsi untuk memuat konten halaman baru
+    async function loadPage(url) {
+        const contentWrapper = document.getElementById('content-wrapper');
+        try {
+            if (!contentWrapper) {
+                console.error('Wadah #content-wrapper tidak ditemukan!');
+                return;
+            }
+            contentWrapper.style.transition = 'opacity 0.3s ease-out';
+            contentWrapper.style.opacity = '0.5';
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Halaman tidak ditemukan (${response.status})`);
+            
+            const text = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const newContentWrapper = doc.getElementById('content-wrapper');
+
+            if (!newContentWrapper) {
+                console.error('Gagal menemukan #content-wrapper di file HTML yang baru.');
+                contentWrapper.style.opacity = '1';
+                return;
+            }
+
+            const newContent = newContentWrapper.innerHTML;
+            const newTitle = doc.title;
+            const newBodyId = doc.body.id;
+            
+            document.title = newTitle;
+            document.body.id = newBodyId;
+            contentWrapper.innerHTML = newContent;
+            
+            runPageInit(); // Jalankan inisialisasi untuk konten baru
+            
+            contentWrapper.style.opacity = '1';
+            history.pushState({ path: url }, '', url);
+
+        } catch (error) {
+            console.error('Gagal memuat halaman:', error);
+            if (contentWrapper) contentWrapper.style.opacity = '1';
+        }
+    }
+
+    // Tambahkan event listener ke semua link navigasi
+    function initNavListeners() {
+        document.body.addEventListener('click', (e) => {
+            const link = e.target.closest('.sidebar-nav a, .bottom-nav a');
+            if (!link) return;
+
+            const url = link.href;
+            if (!url || !url.endsWith('.html')) return;
+            
+            e.preventDefault();
+            if (url === window.location.href.split('#')[0]) return;
+
+            loadPage(url);
+            
+            document.querySelectorAll('.sidebar-nav a, .bottom-nav a').forEach(l => l.classList.remove('active'));
+            document.querySelectorAll(`a[href="${link.getAttribute('href')}"]`).forEach(activeLink => {
+                activeLink.classList.add('active');
+            });
+        });
     }
 
     // =========================================================
@@ -31,25 +101,19 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchFinancialData();
         fetchHealthData();
         fetchActivityData();
-        setInterval(fetchFinancialData, 15000);
-        setInterval(fetchHealthData, 15000);
-        setInterval(fetchActivityData, 15000);
     }
 
     function initKeuangan() {
         console.log('Memuat data untuk Halaman Keuangan...');
         fetchFinancialDataForFinancePage();
         fetchBudgetData();
-        setInterval(fetchFinancialDataForFinancePage, 15000);
-        setInterval(fetchBudgetData, 15000);
-    }
-
-     function initKesehatan() {
-        console.log('Memuat data untuk Halaman Kesehatan...');
-        fetchHealthDataForHealthPage();
-        setInterval(fetchHealthDataForHealthPage, 15000); // Atur auto-refresh
     }
     
+    function initKesehatan() {
+        console.log('Memuat data untuk Halaman Kesehatan...');
+        fetchHealthDataForHealthPage();
+    }
+
     // =========================================================
     // 3. DEFINISI SEMUA FUNGSI (LENGKAP)
     // =========================================================
@@ -111,22 +175,19 @@ document.addEventListener('DOMContentLoaded', () => {
             data.forEach(item => {
                 const jumlah = parseFloat(item.Nominal.replace(/[^0-9]/g, '')) || 0;
                 const sumberDana = item['Sumber Dana'] ? item['Sumber Dana'].toLowerCase() : '';
-                const tujuanDana = item['Tujuan Dana'] ? item['Tujuan Dana'].toLowerCase() : ''; // untuk transfer
-            
+                const tujuanDana = item['Tujuan Dana'] ? item['Tujuan Dana'].toLowerCase() : '';
+
                 if (item['Jenis Transaksi'] === 'Pemasukan') {
                     totalPemasukan += jumlah;
                     if (sumberDana === 'bank') saldoBank += jumlah;
                     if (sumberDana.includes('wallet')) saldoEwallet += jumlah;
                     if (sumberDana === 'cash') saldoCash += jumlah;
-            
                 } else if (item['Jenis Transaksi'] === 'Pengeluaran') {
                     totalPengeluaran += jumlah;
                     if (sumberDana === 'bank') saldoBank -= jumlah;
                     if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
                     if (sumberDana === 'cash') saldoCash -= jumlah;
-            
                 } else if (item['Jenis Transaksi'] === 'Transfer') {
-                    // Tidak menambah pemasukan/pengeluaran
                     if (sumberDana === 'bank') saldoBank -= jumlah;
                     if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
                     if (sumberDana === 'cash') saldoCash -= jumlah;
@@ -138,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             const totalSaldo = saldoBank + saldoEwallet + saldoCash;
-
             
             document.getElementById('pemasukan-value').textContent = formatRupiah(totalPemasukan);
             document.getElementById('pengeluaran-value').textContent = formatRupiah(totalPengeluaran);
@@ -166,27 +226,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const bodyStatusEl = document.getElementById('body-status');
             const kondisiTubuh = latestRecord['Kondisi Tubuh'] || 'Sehat';
 
-            bodyStatusEl.textContent = kondisiTubuh;
-            bodyVector.className = (kondisiTubuh === 'Sakit') ? 'body-sick' : 'body-normal';
+            if (bodyStatusEl) bodyStatusEl.textContent = kondisiTubuh;
+            if (bodyVector) bodyVector.className = (kondisiTubuh === 'Sakit') ? 'body-sick' : 'body-normal';
 
             const sleepDurationEl = document.getElementById('sleep-duration');
-            if (lastSleepRecord) {
-                const [jamTidur, menitTidur] = lastSleepRecord['Waktu Tidur'].split(':').map(Number);
-                const [jamBangun, menitBangun] = lastSleepRecord['Waktu Bangun'].split(':').map(Number);
-                const tglTidur = new Date(2025, 1, 1, jamTidur, menitTidur);
-                let tglBangun = new Date(2025, 1, 1, jamBangun, menitBangun);
-                if (tglBangun < tglTidur) tglBangun.setDate(tglBangun.getDate() + 1);
-                const selisihMenit = (tglBangun - tglTidur) / 1000 / 60;
-                sleepDurationEl.textContent = `${Math.floor(selisihMenit / 60)} Jam ${selisihMenit % 60} Menit`;
-            } else {
-                sleepDurationEl.textContent = '- Jam - Menit';
+            if (sleepDurationEl) {
+                if (lastSleepRecord) {
+                    const [jamTidur, menitTidur] = lastSleepRecord['Waktu Tidur'].split(':').map(Number);
+                    const [jamBangun, menitBangun] = lastSleepRecord['Waktu Bangun'].split(':').map(Number);
+                    const tglTidur = new Date(2025, 1, 1, jamTidur, menitTidur);
+                    let tglBangun = new Date(2025, 1, 1, jamBangun, menitBangun);
+                    if (tglBangun < tglTidur) tglBangun.setDate(tglBangun.getDate() + 1);
+                    const selisihMenit = (tglBangun - tglTidur) / 1000 / 60;
+                    sleepDurationEl.textContent = `${Math.floor(selisihMenit / 60)} Jam ${selisihMenit % 60} Menit`;
+                } else {
+                    sleepDurationEl.textContent = '- Jam - Menit';
+                }
             }
 
-            document.getElementById('last-medicine').textContent = lastMedicineRecord ? lastMedicineRecord['Obat/Suplemen'] : '-';
+            const lastMedicineEl = document.getElementById('last-medicine');
+            if(lastMedicineEl) lastMedicineEl.textContent = lastMedicineRecord ? lastMedicineRecord['Obat/Suplemen'] : '-';
             
             const healthDateEl = document.getElementById('health-date');
-            const latestDate = parseDate(latestRecord['Tanggal Kejadian']);
-            healthDateEl.textContent = (latestDate && !isNaN(latestDate)) ? latestDate.toLocaleDateString('id-ID', { weekday: 'long' }) : "Tanggal Tidak Valid";
+            if(healthDateEl) {
+                const latestDate = parseDate(latestRecord['Tanggal Kejadian']);
+                healthDateEl.textContent = (latestDate && !isNaN(latestDate)) ? latestDate.toLocaleDateString('id-ID', { weekday: 'long' }) : "Update";
+            }
 
         } catch (error) {
             console.error('Gagal mengambil data kesehatan:', error);
@@ -237,22 +302,19 @@ document.addEventListener('DOMContentLoaded', () => {
             data.forEach(item => {
                 const jumlah = parseFloat(item.Nominal.replace(/[^0-9]/g, '')) || 0;
                 const sumberDana = item['Sumber Dana'] ? item['Sumber Dana'].toLowerCase() : '';
-                const tujuanDana = item['Tujuan Dana'] ? item['Tujuan Dana'].toLowerCase() : ''; // untuk transfer
-            
+                const tujuanDana = item['Tujuan Dana'] ? item['Tujuan Dana'].toLowerCase() : '';
+
                 if (item['Jenis Transaksi'] === 'Pemasukan') {
                     totalPemasukan += jumlah;
                     if (sumberDana === 'bank') saldoBank += jumlah;
                     if (sumberDana.includes('wallet')) saldoEwallet += jumlah;
                     if (sumberDana === 'cash') saldoCash += jumlah;
-            
                 } else if (item['Jenis Transaksi'] === 'Pengeluaran') {
                     totalPengeluaran += jumlah;
                     if (sumberDana === 'bank') saldoBank -= jumlah;
                     if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
                     if (sumberDana === 'cash') saldoCash -= jumlah;
-            
                 } else if (item['Jenis Transaksi'] === 'Transfer') {
-                    // Tidak menambah pemasukan/pengeluaran
                     if (sumberDana === 'bank') saldoBank -= jumlah;
                     if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
                     if (sumberDana === 'cash') saldoCash -= jumlah;
@@ -262,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (tujuanDana === 'cash') saldoCash += jumlah;
                 }
             });
-            
             const totalSaldo = saldoBank + saldoEwallet + saldoCash;
 
             document.getElementById('pemasukan-value').textContent = formatRupiah(totalPemasukan);
@@ -296,70 +357,116 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-async function fetchBudgetData() {
-    try {
-        // Ambil data budget dan data transaksi secara bersamaan
-        const [budgetResponse, financeResponse] = await Promise.all([
-            fetch(`${BACKEND_URL}/api/budgets`),
-            fetch(`${BACKEND_URL}/api/finances`)
-        ]);
+    async function fetchBudgetData() {
+        try {
+            const [budgetResponse, financeResponse] = await Promise.all([
+                fetch(`${BACKEND_URL}/api/budgets`),
+                fetch(`${BACKEND_URL}/api/finances`)
+            ]);
 
-        const budgetDefs = await budgetResponse.json();
-        const financeData = await financeResponse.json();
+            const budgetDefs = await budgetResponse.json();
+            const financeData = await financeResponse.json();
 
-        // Hitung total pengeluaran per kategori dari data transaksi
-        const spendingByCategory = {};
-        financeData.forEach(item => {
-            if (item['Jenis Transaksi'] === 'Pengeluaran') {
-                const kategori = item.Kategori;
-                const jumlah = parseFloat(item.Nominal) || 0;
-                if (!spendingByCategory[kategori]) {
-                    spendingByCategory[kategori] = 0;
+            const spendingByCategory = {};
+            financeData.forEach(item => {
+                if (item['Jenis Transaksi'] === 'Pengeluaran') {
+                    const kategori = item.Kategori;
+                    const jumlah = parseFloat(item.Nominal) || 0;
+                    if (!spendingByCategory[kategori]) spendingByCategory[kategori] = 0;
+                    spendingByCategory[kategori] += jumlah;
                 }
-                spendingByCategory[kategori] += jumlah;
-            }
-        });
+            });
 
-        // Tampilkan ke HTML
-        const budgetContainer = document.getElementById('budget-container');
-        budgetContainer.innerHTML = ''; // Kosongkan
+            const budgetContainer = document.getElementById('budget-container');
+            budgetContainer.innerHTML = '';
 
-        budgetDefs.forEach(budget => {
-            const kategori = budget.Kategori;
-            const alokasi = parseFloat(budget.Alokasi);
-            const terpakai = spendingByCategory[kategori] || 0;
-            const sisa = alokasi - terpakai;
-            const persentaseTerpakai = (terpakai / alokasi) * 100;
+            budgetDefs.forEach(budget => {
+                const kategori = budget.Kategori;
+                const alokasi = parseFloat(budget.Alokasi);
+                const terpakai = spendingByCategory[kategori] || 0;
+                const sisa = alokasi - terpakai;
+                const persentaseTerpakai = (terpakai / alokasi) * 100;
 
-            let progressBarColorClass = '';
-            if (persentaseTerpakai > 90) {
-                progressBarColorClass = 'danger';
-            } else if (persentaseTerpakai > 70) {
-                progressBarColorClass = 'warning';
-            }
+                let progressBarColorClass = '';
+                if (persentaseTerpakai > 90) progressBarColorClass = 'danger';
+                else if (persentaseTerpakai > 70) progressBarColorClass = 'warning';
 
-            const budgetItem = document.createElement('div');
-            budgetItem.className = 'budget-item';
-            budgetItem.innerHTML = `
-                <div class="budget-item-header">
-                    <span class="category">${kategori}</span>
-                    <span class="remaining">${formatRupiah(sisa)}</span>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar ${progressBarColorClass}" style="width: ${Math.min(persentaseTerpakai, 100)}%;"></div>
-                </div>
-                <div class="budget-item-footer">
-                    <span>Terpakai: ${formatRupiah(terpakai)}</span>
-                    <span>dari ${formatRupiah(alokasi)}</span>
-                </div>
-            `;
-            budgetContainer.appendChild(budgetItem);
-        });
-
-    } catch (error) {
-        console.error('Gagal mengambil data budget:', error);
+                const budgetItem = document.createElement('div');
+                budgetItem.className = 'budget-item';
+                budgetItem.innerHTML = `
+                    <div class="budget-item-header">
+                        <span class="category">${kategori}</span>
+                        <span class="remaining">${formatRupiah(sisa)}</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar ${progressBarColorClass}" style="width: ${Math.min(persentaseTerpakai, 100)}%;"></div>
+                    </div>
+                    <div class="budget-item-footer">
+                        <span>Terpakai: ${formatRupiah(terpakai)}</span>
+                        <span>dari ${formatRupiah(alokasi)}</span>
+                    </div>
+                `;
+                budgetContainer.appendChild(budgetItem);
+            });
+        } catch (error) {
+            console.error('Gagal mengambil data budget:', error);
+        }
     }
-}
+    
+    // --- Fungsi Fetch untuk Halaman Kesehatan Detail ---
+    async function fetchHealthDataForHealthPage() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/health`);
+            const data = await response.json();
+            if (!data || data.length === 0) return;
+
+            const latestRecord = data[data.length - 1];
+            const lastSleepRecord = [...data].reverse().find(item => item['Waktu Tidur'] && item['Waktu Bangun']);
+            const lastMedicineRecord = [...data].reverse().find(item => item['Obat/Suplemen']);
+            
+            const bodyStatusLarge = document.getElementById('body-status-large');
+            const bodyVectorLarge = document.getElementById('body-vector-large');
+            const kondisiTubuh = latestRecord['Kondisi Tubuh'] || 'Sehat';
+            if (bodyStatusLarge) bodyStatusLarge.textContent = kondisiTubuh;
+            if (bodyVectorLarge) bodyVectorLarge.className = (kondisiTubuh === 'Sakit') ? 'body-sick' : 'body-normal';
+            
+            const lastMedicineDetail = document.getElementById('last-medicine-detail');
+            if (lastMedicineDetail) lastMedicineDetail.textContent = lastMedicineRecord ? lastMedicineRecord['Obat/Suplemen'] : '-';
+            
+            const healthDateEl = document.getElementById('health-date');
+            if (healthDateEl) {
+                const latestDate = parseDate(latestRecord['Tanggal Kejadian']);
+                healthDateEl.textContent = (latestDate && !isNaN(latestDate)) ? latestDate.toLocaleDateString('id-ID', { weekday: 'long' }) : "Update";
+            }
+
+            const sleepStartTimeEl = document.getElementById('sleep-start-time');
+            const sleepEndTimeEl = document.getElementById('sleep-end-time');
+            const sleepTotalDurationEl = document.getElementById('sleep-total-duration');
+
+            if (lastSleepRecord && sleepStartTimeEl && sleepEndTimeEl && sleepTotalDurationEl) {
+                const waktuTidur = lastSleepRecord['Waktu Tidur'];
+                const waktuBangun = lastSleepRecord['Waktu Bangun'];
+                
+                sleepStartTimeEl.textContent = waktuTidur;
+                sleepEndTimeEl.textContent = waktuBangun;
+
+                const [jamTidur, menitTidur] = waktuTidur.split(':').map(Number);
+                const [jamBangun, menitBangun] = waktuBangun.split(':').map(Number);
+                
+                const tglTidur = new Date(2025, 1, 1, jamTidur, menitTidur);
+                let tglBangun = new Date(2025, 1, 1, jamBangun, menitBangun);
+                if (tglBangun < tglTidur) tglBangun.setDate(tglBangun.getDate() + 1);
+                
+                const selisihMenit = (tglBangun - tglTidur) / 1000 / 60;
+                const jam = Math.floor(selisihMenit / 60);
+                const menit = selisihMenit % 60;
+                
+                sleepTotalDurationEl.textContent = `${jam}j ${menit}m`;
+            }
+        } catch (error) {
+            console.error('Gagal mengambil data detail kesehatan:', error);
+        }
+    }
 
     function createMonthlyChart(data) {
         const ctx = document.getElementById('monthlyEarningsChart');
@@ -385,66 +492,19 @@ async function fetchBudgetData() {
         });
     }
 
-});
-
-//bagian halaman kesehatan
-        async function fetchHealthDataForHealthPage() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/health`);
-            const data = await response.json();
-            console.log('📦 Data Detail Kesehatan diterima:', data);
-
-            if (!data || data.length === 0) return;
-
-            const latestRecord = data[data.length - 1];
-            const lastSleepRecord = [...data].reverse().find(item => item['Waktu Tidur'] && item['Waktu Bangun']);
-            const lastMedicineRecord = [...data].reverse().find(item => item['Obat/Suplemen']);
-            
-            // Update Status Vital di kolom kiri
-            const bodyStatusLarge = document.getElementById('body-status-large');
-            const bodyVectorLarge = document.getElementById('body-vector-large');
-            const kondisiTubuh = latestRecord['Kondisi Tubuh'] || 'Sehat';
-            if (bodyStatusLarge) bodyStatusLarge.textContent = kondisiTubuh;
-            if (bodyVectorLarge) bodyVectorLarge.className = (kondisiTubuh === 'Sakit') ? 'body-sick' : 'body-normal';
-            
-            const lastMedicineDetail = document.getElementById('last-medicine-detail');
-            if (lastMedicineDetail) {
-                lastMedicineDetail.textContent = lastMedicineRecord ? lastMedicineRecord['Obat/Suplemen'] : '-';
-            }
-            
-            const healthDateEl = document.getElementById('health-date');
-            if (healthDateEl) {
-                const latestDate = parseDate(latestRecord['Tanggal Kejadian']);
-                healthDateEl.textContent = (latestDate && !isNaN(latestDate)) ? latestDate.toLocaleDateString('id-ID', { weekday: 'long' }) : "Update";
-            }
-
-            // Update Analisis Kualitas Tidur
-            const sleepStartTimeEl = document.getElementById('sleep-start-time');
-            const sleepEndTimeEl = document.getElementById('sleep-end-time');
-            const sleepTotalDurationEl = document.getElementById('sleep-total-duration');
-
-            if (lastSleepRecord && sleepStartTimeEl && sleepEndTimeEl && sleepTotalDurationEl) {
-                const waktuTidur = lastSleepRecord['Waktu Tidur'];
-                const waktuBangun = lastSleepRecord['Waktu Bangun'];
-                
-                sleepStartTimeEl.textContent = waktuTidur;
-                sleepEndTimeEl.textContent = waktuBangun;
-
-                const [jamTidur, menitTidur] = waktuTidur.split(':').map(Number);
-                const [jamBangun, menitBangun] = waktuBangun.split(':').map(Number);
-                
-                const tglTidur = new Date(2025, 1, 1, jamTidur, menitTidur);
-                let tglBangun = new Date(2025, 1, 1, jamBangun, menitBangun);
-                if (tglBangun < tglTidur) tglBangun.setDate(tglBangun.getDate() + 1);
-                
-                const selisihMenit = (tglBangun - tglTidur) / 1000 / 60;
-                const jam = Math.floor(selisihMenit / 60);
-                const menit = selisihMenit % 60;
-                
-                sleepTotalDurationEl.textContent = `${jam}j ${menit}m`;
-            }
-
-        } catch (error) {
-            console.error('Gagal mengambil data detail kesehatan:', error);
-        }
+    // =========================================================
+    // 4. EKSEKUSI AWAL
+    // =========================================================
+    
+    function initSidebarListeners() {
+        const sidebar = document.getElementById('sidebar');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const closeBtn = document.getElementById('close-btn');
+        if (hamburgerBtn) hamburgerBtn.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('open'); });
+        if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'); });
     }
+
+    initSidebarListeners();
+    initNavListeners();
+    runPageInit();
+});
