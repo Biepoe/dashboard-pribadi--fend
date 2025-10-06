@@ -46,9 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function initKeuangan() {
         console.log('Memuat data untuk Halaman Keuangan...');
         fetchFinancialDataForFinancePage();
-        fetchPayablesData();
+        fetchBudgetData();
         setInterval(fetchFinancialDataForFinancePage, 15000);
-        setInterval(fetchPayablesData, 15000);
+        setInterval(fetchBudgetData, 15000);
     }
 
      function initKesehatan() {
@@ -303,29 +303,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function fetchPayablesData() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/payables`);
-            const data = await response.json();
-            const payablesList = document.getElementById('payables-list');
-            if(!payablesList) return;
-            payablesList.innerHTML = '';
+async function fetchBudgetData() {
+    try {
+        // Ambil data budget dan data transaksi secara bersamaan
+        const [budgetResponse, financeResponse] = await Promise.all([
+            fetch(`${BACKEND_URL}/api/budgets`),
+            fetch(`${BACKEND_URL}/api/finances`)
+        ]);
 
-            data.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'payable-item';
-                const isLunas = item.Status === 'Lunas';
-                li.innerHTML = `
-                    <input type="checkbox" id="${item['Nama Tagihan']}" ${isLunas ? 'checked' : ''}>
-                    <label for="${item['Nama Tagihan']}">${item['Nama Tagihan']}</label>
-                    <span class="amount">Rp ${parseInt(item.Jumlah).toLocaleString('id-ID')}</span>
-                `;
-                payablesList.appendChild(li);
-            });
-        } catch (error) {
-            console.error('Gagal mengambil data tagihan:', error);
-        }
+        const budgetDefs = await budgetResponse.json();
+        const financeData = await financeResponse.json();
+
+        // Hitung total pengeluaran per kategori dari data transaksi
+        const spendingByCategory = {};
+        financeData.forEach(item => {
+            if (item['Jenis Transaksi'] === 'Pengeluaran') {
+                const kategori = item.Kategori;
+                const jumlah = parseFloat(item.Nominal) || 0;
+                if (!spendingByCategory[kategori]) {
+                    spendingByCategory[kategori] = 0;
+                }
+                spendingByCategory[kategori] += jumlah;
+            }
+        });
+
+        // Tampilkan ke HTML
+        const budgetContainer = document.getElementById('budget-container');
+        budgetContainer.innerHTML = ''; // Kosongkan
+
+        budgetDefs.forEach(budget => {
+            const kategori = budget.Kategori;
+            const alokasi = parseFloat(budget.Alokasi);
+            const terpakai = spendingByCategory[kategori] || 0;
+            const sisa = alokasi - terpakai;
+            const persentaseTerpakai = (terpakai / alokasi) * 100;
+
+            let progressBarColorClass = '';
+            if (persentaseTerpakai > 90) {
+                progressBarColorClass = 'danger';
+            } else if (persentaseTerpakai > 70) {
+                progressBarColorClass = 'warning';
+            }
+
+            const budgetItem = document.createElement('div');
+            budgetItem.className = 'budget-item';
+            budgetItem.innerHTML = `
+                <div class="budget-item-header">
+                    <span class="category">${kategori}</span>
+                    <span class="remaining">${formatRupiah(sisa)}</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar ${progressBarColorClass}" style="width: ${Math.min(persentaseTerpakai, 100)}%;"></div>
+                </div>
+                <div class="budget-item-footer">
+                    <span>Terpakai: ${formatRupiah(terpakai)}</span>
+                    <span>dari ${formatRupiah(alokasi)}</span>
+                </div>
+            `;
+            budgetContainer.appendChild(budgetItem);
+        });
+
+    } catch (error) {
+        console.error('Gagal mengambil data budget:', error);
     }
+}
 
     function createMonthlyChart(data) {
         const ctx = document.getElementById('monthlyEarningsChart');
