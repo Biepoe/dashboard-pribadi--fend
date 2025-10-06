@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tambahkan event listener ke semua link navigasi
     function initNavListeners() {
         document.body.addEventListener('click', (e) => {
-            const link = e.target.closest('.sidebar-nav a, .bottom-nav a');
+            const link = e.target.closest('.bottom-nav a');
             if (!link) return;
 
             const url = link.href;
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             loadPage(url);
             
-            document.querySelectorAll('.sidebar-nav a, .bottom-nav a').forEach(l => l.classList.remove('active'));
+            document.querySelectorAll('.bottom-nav a').forEach(l => l.classList.remove('active'));
             document.querySelectorAll(`a[href="${link.getAttribute('href')}"]`).forEach(activeLink => {
                 activeLink.classList.add('active');
             });
@@ -492,18 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================
-    // 4. EKSEKUSI AWAL
-    // =========================================================
     
-    function initSidebarListeners() {
-        const sidebar = document.getElementById('sidebar');
-        const hamburgerBtn = document.getElementById('hamburger-btn');
-        const closeBtn = document.getElementById('close-btn');
-        if (hamburgerBtn) hamburgerBtn.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('open'); });
-        if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'); });
-    }
-
     initSidebarListeners();
     initNavListeners();
     runPageInit();
