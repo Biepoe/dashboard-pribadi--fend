@@ -10,13 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     // 1. INISIALISASI & ROUTING HALAMAN
     // =========================================================
-    
-    // Logika untuk Sidebar Mobile (Sama untuk semua halaman)
-    const sidebar = document.getElementById('sidebar');
-    const hamburgerBtn = document.getElementById('hamburger-btn');
-    const closeBtn = document.getElementById('close-btn');
-    if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => sidebar.classList.add('open'));
-    if (closeBtn) closeBtn.addEventListener('click', () => sidebar.classList.remove('open'));
 
     // Panggil fungsi sesuai halaman yang aktif
     const bodyId = document.body.id;
