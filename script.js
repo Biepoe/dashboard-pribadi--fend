@@ -342,8 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const totalSaldo = saldoBank + saldoEwallet + saldoCash;
 
-            document.getElementById('pemasukan-value').textContent = formatRupiah(totalPemasukan);
-            document.getElementById('pengeluaran-value').textContent = formatRupiah(totalPengeluaran);
+            document.getElementById('pemasukan-bulan-ini').textContent = formatRupiah(pemasukanBulanIni);
+            document.getElementById('pengeluaran-bulan-ini').textContent = formatRupiah(pengeluaranBulanIni);
             document.getElementById('saldo-bank').textContent = formatRupiah(saldoBank);
             document.getElementById('saldo-ewallet').textContent = formatRupiah(saldoEwallet);
             document.getElementById('saldo-cash').textContent = formatRupiah(saldoCash);
