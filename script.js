@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (VERSI FINAL, LENGKAP, DAN BERSIH DENGAN AJAX)
+// SCRIPT.JS (VERSI PERBAIKAN: CHART.JS SAFE & ROBUST DATA)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,11 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
-    // =========================================================
-    // 1. SISTEM NAVIGASI AJAX (TANPA RELOAD)
-    // =========================================================
-    
-    // Fungsi untuk menjalankan skrip inisialisasi setelah konten baru dimuat
+    // --- FUNGSI NAVIGASI (SPA) ---
     function runPageInit() {
         const bodyId = document.body.id;
         if (bodyId === 'halaman-beranda') {
@@ -23,111 +19,85 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fungsi untuk memuat konten halaman baru
     async function loadPage(url) {
         const contentWrapper = document.getElementById('content-wrapper');
         try {
-            if (!contentWrapper) {
-                console.error('Wadah #content-wrapper tidak ditemukan!');
-                return;
-            }
-            contentWrapper.style.transition = 'opacity 0.3s ease-out';
+            if (!contentWrapper) return;
             contentWrapper.style.opacity = '0.5';
 
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`Halaman tidak ditemukan (${response.status})`);
+            if (!response.ok) throw new Error(`Halaman error: ${response.status}`);
             
             const text = await response.text();
-            
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, 'text/html');
-            const newContentWrapper = doc.getElementById('content-wrapper');
+            const newContent = doc.getElementById('content-wrapper');
 
-            if (!newContentWrapper) {
-                console.error('Gagal menemukan #content-wrapper di file HTML yang baru.');
-                contentWrapper.style.opacity = '1';
+            if (!newContent) {
+                console.error('Element #content-wrapper tidak ditemukan di halaman tujuan.');
+                window.location.href = url; // Fallback reload manual
                 return;
             }
 
-            const newContent = newContentWrapper.innerHTML;
-            const newTitle = doc.title;
-            const newBodyId = doc.body.id;
+            document.title = doc.title;
+            document.body.id = doc.body.id;
+            contentWrapper.innerHTML = newContent.innerHTML;
             
-            document.title = newTitle;
-            document.body.id = newBodyId;
-            contentWrapper.innerHTML = newContent;
-            
-            runPageInit(); // Jalankan inisialisasi untuk konten baru
+            runPageInit();
             
             contentWrapper.style.opacity = '1';
             history.pushState({ path: url }, '', url);
-
         } catch (error) {
-            console.error('Gagal memuat halaman:', error);
-            if (contentWrapper) contentWrapper.style.opacity = '1';
+            console.error('Gagal navigasi:', error);
+            contentWrapper.style.opacity = '1';
         }
     }
 
-    // Tambahkan event listener ke semua link navigasi
     function initNavListeners() {
         document.body.addEventListener('click', (e) => {
             const link = e.target.closest('.bottom-nav a');
             if (!link) return;
-
-            const url = link.href;
-            if (!url || !url.endsWith('.html')) return;
-            
             e.preventDefault();
-            if (url === window.location.href.split('#')[0]) return;
-
+            const url = link.href;
+            if (url === window.location.href) return;
+            
             loadPage(url);
             
             document.querySelectorAll('.bottom-nav a').forEach(l => l.classList.remove('active'));
-            document.querySelectorAll(`a[href="${link.getAttribute('href')}"]`).forEach(activeLink => {
-                activeLink.classList.add('active');
-            });
+            document.querySelectorAll(`a[href="${link.getAttribute('href')}"]`).forEach(active => active.classList.add('active'));
         });
     }
 
-    // =========================================================
-    // 2. FUNGSI INISIALISASI PER HALAMAN
-    // =========================================================
-    
+    // --- INISIALISASI HALAMAN ---
     function initBeranda() {
-        console.log('Memuat data untuk Halaman Beranda...');
-        setDate();
-        setTime();
-        setInterval(setTime, 1000);
-        fetchFinancialData();
+        setDate(); setTime(); setInterval(setTime, 1000);
+        fetchFinancialData(); // Memanggil fungsi pintar yang sama
         fetchHealthData();
         fetchActivityData();
     }
 
     function initKeuangan() {
-        console.log('Memuat data untuk Halaman Keuangan...');
-        fetchFinancialData();
+        fetchFinancialData(); // Memanggil fungsi pintar yang sama
         fetchBudgetData();
     }
     
     function initKesehatan() {
-        console.log('Memuat data untuk Halaman Kesehatan...');
         fetchHealthDataForHealthPage();
     }
 
-    // =========================================================
-    // 3. DEFINISI SEMUA FUNGSI (LENGKAP)
-    // =========================================================
-    
-    // --- Fungsi Helper (Alat Bantu) ---
-    function padZero(num) {
-        return num < 10 ? '0' + num : num;
-    }
+    // --- HELPER UTILS ---
+    function padZero(num) { return num < 10 ? '0' + num : num; }
 
     function parseDate(dateString) {
         if (!dateString) return null;
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-            return new Date(parts[2], parts[1] - 1, parts[0]);
+        // Coba format DD/MM/YYYY (Format Sheet biasanya)
+        if (dateString.includes('/')) {
+            const parts = dateString.split('/');
+            if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        // Coba format YYYY-MM-DD (Format ISO/API)
+        if (dateString.includes('-')) {
+            return new Date(dateString);
         }
         return new Date(dateString);
     }
@@ -135,48 +105,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', {
         style: 'currency', currency: 'IDR', minimumFractionDigits: 0
     }).format(angka);
-    
-    // --- Fungsi Jam & Tanggal ---
+
     function setDate() {
-        const dateElement = document.getElementById('current-date');
-        if (dateElement) {
+        const el = document.getElementById('current-date');
+        if (el) {
             const now = new Date();
-            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            const day = dayNames[now.getDay()];
-            const date = now.getDate();
-            const month = monthNames[now.getMonth()];
-            const year = now.getFullYear();
-            const calendarIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
-            dateElement.innerHTML = `${calendarIcon} ${day}, ${date} ${month} ${year}`;
+            el.innerHTML = `<i class="far fa-calendar-alt"></i> ${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+        }
+    }
+    function setTime() {
+        const el = document.getElementById('current-time');
+        if (el) {
+            const now = new Date();
+            el.innerHTML = `<i class="far fa-clock"></i> ${now.toLocaleTimeString('id-ID')}`;
         }
     }
 
-    function setTime() {
-        const timeElement = document.getElementById('current-time');
-        if (timeElement) {
-            const now = new Date();
-            const hours = padZero(now.getHours());
-            const minutes = padZero(now.getMinutes());
-            const seconds = padZero(now.getSeconds());
-            const clockIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
-            timeElement.innerHTML = `${clockIcon} ${hours}:${minutes}:${seconds}`;
+    // --- MAGIC FUNCTION: PENCARI KOLOM OTOMATIS ---
+    function findValue(item, keywords) {
+        const keys = Object.keys(item);
+        for (let key of keys) {
+            // Bersihkan key (hapus spasi, simbol, lowercase)
+            const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, ''); 
+            for (let keyword of keywords) {
+                if (cleanKey === keyword.toLowerCase().replace(/[^a-z0-9]/g, '')) {
+                    return item[key];
+                }
+            }
         }
+        return undefined;
     }
-    
-    // --- Fungsi Fetch (Beranda) ---
-     async function fetchFinancialData() {
+
+    // --- FITUR UTAMA: KEUANGAN ---
+    async function fetchFinancialData() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/finances`);
             const data = await response.json();
             
-            // --- DEBUGGING (Cek di Console jika masih 0) ---
-            console.log("✅ Data API Diterima:", data);
-            // ------------------------------------------------
+            // DEBUGGING: Cek di Console
+            console.log(`✅ Data API Keuangan: ${data.length} baris diterima.`);
+            if (data.length > 0) console.log("🔍 Sample Data:", data[0]);
 
             let pemasukanBulanIni = 0;
             let pengeluaranBulanIni = 0;
-            
             let saldoBank = 0;
             let saldoEwallet = 0;
             let saldoCash = 0;
@@ -186,129 +157,152 @@ document.addEventListener('DOMContentLoaded', () => {
             const tahunIni = now.getFullYear();
 
             data.forEach(item => {
-                // 1. AMBIL DATA SESUAI NAMA KOLOM SHEET (Persis!)
-                // Menggunakan kurung siku ['...'] karena ada spasi di nama kolom
-                const rawNominal  = item['Nominal']; 
-                const rawJenis    = item['Jenis Transaksi'];
-                const rawSumber   = item['Sumber Dana'];
-                const rawTujuan   = item['Tujuan Dana'];
-                const rawTanggal  = item['Tanggal Transaksi'];
-                const rawDeskripsi = item['Deskripsi'];
+                // Gunakan findValue untuk mencari data yang cocok, apapun nama kolomnya
+                const rawNominal  = findValue(item, ['Nominal', 'amount', 'nilai', 'jumlah', 'harga']);
+                const rawJenis    = findValue(item, ['Jenis Transaksi', 'jenis', 'tipe', 'type']);
+                const rawSumber   = findValue(item, ['Sumber Dana', 'sumber', 'source', 'bank', 'wallet']);
+                const rawTujuan   = findValue(item, ['Tujuan Dana', 'tujuan', 'dest']);
+                const rawTanggal  = findValue(item, ['Tanggal Transaksi', 'tanggal', 'date', 'tgl']);
 
-                // 2. BERSIHKAN DATA (Biar komputer gak bingung)
-                
-                // Nominal: Hapus "Rp", titik, koma, spasi -> jadi angka murni
-                const nominalStr = String(rawNominal || 0); 
+                // Bersihkan angka
+                const nominalStr = String(rawNominal || '0');
                 const jumlah = parseFloat(nominalStr.replace(/[^0-9]/g, '')) || 0;
-                
-                // Teks: Jadi huruf kecil semua & hapus spasi kiri-kanan (biar "Bank " sama dengan "bank")
-                const jenis = String(rawJenis || '').trim().toLowerCase();
-                const sumberDana = String(rawSumber || '').trim().toLowerCase();
-                const tujuanDana = String(rawTujuan || '').trim().toLowerCase();
 
-                // 3. FILTER WAKTU (Untuk "Bulan Ini")
-                // Fungsi parseDate ada di bawah/utils, pastikan format di sheet DD/MM/YYYY
-                const tglTransaksi = parseDate(rawTanggal); 
-                let isCurrentMonth = false;
-                if (tglTransaksi && tglTransaksi.getMonth() === bulanIni && tglTransaksi.getFullYear() === tahunIni) {
-                    isCurrentMonth = true;
-                }
+                // Bersihkan teks
+                const jenis = String(rawJenis || '').toLowerCase().trim();
+                const sumber = String(rawSumber || '').toLowerCase().trim();
+                const tujuan = String(rawTujuan || '').toLowerCase().trim();
 
-                // 4. LOGIKA HITUNGAN (Sesuai Kolom Kamu)
-                if (jenis === 'pemasukan') {
-                    // --- HITUNG SALDO (Semua Waktu) ---
-                    if (sumberDana.includes('bank') || sumberDana.includes('bsi')) saldoBank += jumlah;
-                    else if (sumberDana.includes('wallet') || sumberDana.includes('pay') || sumberDana.includes('shopee') || sumberDana.includes('dana') || sumberDana.includes('gopay')) saldoEwallet += jumlah;
-                    else if (sumberDana.includes('cash') || sumberDana.includes('tunai')) saldoCash += jumlah;
+                // Cek Tanggal
+                const tgl = parseDate(rawTanggal);
+                const isCurrentMonth = (tgl && tgl.getMonth() === bulanIni && tgl.getFullYear() === tahunIni);
 
-                    // --- DASHBOARD (Cuma Bulan Ini) ---
+                // LOGIKA SALDO & BULANAN
+                if (jenis.includes('masuk') || jenis === 'pemasukan') {
                     if (isCurrentMonth) pemasukanBulanIni += jumlah;
+                    
+                    if (sumber.includes('bank') || sumber.includes('bsi')) saldoBank += jumlah;
+                    else if (sumber.includes('wallet') || sumber.includes('pay') || sumber.includes('dana') || sumber.includes('ovo')) saldoEwallet += jumlah;
+                    else if (sumber.includes('cash') || sumber.includes('tunai')) saldoCash += jumlah;
 
-                } else if (jenis === 'pengeluaran') {
-                    // --- HITUNG SALDO ---
-                    if (sumberDana.includes('bank') || sumberDana.includes('bsi')) saldoBank -= jumlah;
-                    else if (sumberDana.includes('wallet') || sumberDana.includes('pay') || sumberDana.includes('shopee') || sumberDana.includes('dana') || sumberDana.includes('gopay')) saldoEwallet -= jumlah;
-                    else if (sumberDana.includes('cash') || sumberDana.includes('tunai')) saldoCash -= jumlah;
-
-                    // --- DASHBOARD ---
+                } else if (jenis.includes('keluar') || jenis === 'pengeluaran') {
                     if (isCurrentMonth) pengeluaranBulanIni += jumlah;
 
-                } else if (jenis === 'transfer') {
-                    // Kurangi dari Pengirim
-                    if (sumberDana.includes('bank') || sumberDana.includes('bsi')) saldoBank -= jumlah;
-                    else if (sumberDana.includes('wallet') || sumberDana.includes('pay')) saldoEwallet -= jumlah;
-                    else if (sumberDana.includes('cash') || sumberDana.includes('tunai')) saldoCash -= jumlah;
-            
-                    // Tambah ke Penerima
-                    if (tujuanDana.includes('bank') || tujuanDana.includes('bsi')) saldoBank += jumlah;
-                    else if (tujuanDana.includes('wallet') || tujuanDana.includes('pay')) saldoEwallet += jumlah;
-                    else if (tujuanDana.includes('cash') || tujuanDana.includes('tunai')) saldoCash += jumlah;
+                    if (sumber.includes('bank') || sumber.includes('bsi')) saldoBank -= jumlah;
+                    else if (sumber.includes('wallet') || sumber.includes('pay') || sumber.includes('dana')) saldoEwallet -= jumlah;
+                    else if (sumber.includes('cash') || sumber.includes('tunai')) saldoCash -= jumlah;
+                
+                } else if (jenis.includes('transfer') || jenis.includes('tf')) {
+                    // Kurangi pengirim
+                    if (sumber.includes('bank') ||cBSI(sumber)) saldoBank -= jumlah;
+                    else if (sumber.includes('wallet') || sumber.includes('pay')) saldoEwallet -= jumlah;
+                    else if (sumber.includes('cash')) saldoCash -= jumlah;
+
+                    // Tambah penerima
+                    if (tujuan.includes('bank') || cBSI(tujuan)) saldoBank += jumlah;
+                    else if (tujuan.includes('wallet') || tujuan.includes('pay')) saldoEwallet += jumlah;
+                    else if (tujuan.includes('cash')) saldoCash += jumlah;
                 }
             });
-            
+
+            // Helper simple cek BSI
+            function cBSI(str) { return str.includes('bsi') || str.includes('syariah'); }
+
             const totalSaldo = saldoBank + saldoEwallet + saldoCash;
 
-            // 5. UPDATE TAMPILAN HTML
-            const setText = (id, val) => {
+            // UPDATE HTML (Pakai try-catch per elemen biar error satu gak matiin semua)
+            const safeSetText = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = formatRupiah(val);
             };
 
-            // Beranda & Keuangan
-            setText('pemasukan-value', pemasukanBulanIni);
-            setText('pengeluaran-value', pengeluaranBulanIni);
-            setText('pemasukan-bulan-ini', pemasukanBulanIni);
-            setText('pengeluaran-bulan-ini', pengeluaranBulanIni);
+            safeSetText('pemasukan-value', pemasukanBulanIni);
+            safeSetText('pengeluaran-value', pengeluaranBulanIni);
+            safeSetText('pemasukan-bulan-ini', pemasukanBulanIni);
+            safeSetText('pengeluaran-bulan-ini', pengeluaranBulanIni);
             
-            setText('saldo-bank', saldoBank);
-            setText('saldo-ewallet', saldoEwallet);
-            setText('saldo-cash', saldoCash);
-            setText('sisa-saldo-value', totalSaldo);
-            
-            setText('card-balance-bank', saldoBank);
-            setText('card-balance-ewallet', saldoEwallet);
+            safeSetText('saldo-bank', saldoBank);
+            safeSetText('saldo-ewallet', saldoEwallet);
+            safeSetText('saldo-cash', saldoCash);
+            safeSetText('sisa-saldo-value', totalSaldo);
+            safeSetText('card-balance-bank', saldoBank);
+            safeSetText('card-balance-ewallet', saldoEwallet);
 
-            // 6. UPDATE TABEL TRANSAKSI
-            const tableBody = document.querySelector('#transaction-table tbody');
-            if (tableBody) {
-                tableBody.innerHTML = '';
-                // Ambil 7 data terakhir
-                const recentTransactions = data.slice(-7).reverse();
-                recentTransactions.forEach(item => {
-                    const row = document.createElement('tr');
-                    
-                    // Ambil data lagi buat tabel
-                    const deskripsi = item['Deskripsi'] || '-';
-                    const jenisTeks = item['Jenis Transaksi'] || '-';
-                    const nominalRaw = item['Nominal'] || 0;
-                    
-                    // Format Nominal
-                    const num = parseFloat(String(nominalRaw).replace(/[^0-9]/g, '')) || 0;
-                    const nominalRp = num.toLocaleString('id-ID');
-                    
-                    // Tentukan Warna
-                    const jenisKecil = String(jenisTeks).toLowerCase();
-                    let warna = '#333';
-                    let tanda = '';
-                    
-                    if(jenisKecil === 'pemasukan') { warna = '#4caf50'; tanda = '+'; }
-                    else if(jenisKecil === 'pengeluaran') { warna = '#f44336'; tanda = '-'; }
+            // UPDATE TABEL
+            updateTransactionTable(data);
 
-                    row.innerHTML = `
-                        <td>${deskripsi}</td>
-                        <td>${jenisTeks}</td>
-                        <td style="color: ${warna}">${tanda} Rp ${nominalRp}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+            // UPDATE GRAFIK (Dengan Pengecekan Aman)
+            if (document.getElementById('monthlyEarningsChart')) {
+                createMonthlyChart(data);
             }
-            
-            // Update Grafik kalau fungsinya ada
-            if (typeof createMonthlyChart === 'function') createMonthlyChart(data);
 
         } catch (error) {
-            console.error('Gagal hitung keuangan:', error);
+            console.error('Gagal proses data keuangan:', error);
         }
+    }
+
+    function updateTransactionTable(data) {
+        const tableBody = document.querySelector('#transaction-table tbody');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = '';
+        const recent = data.slice(-7).reverse();
+        recent.forEach(item => {
+            const row = document.createElement('tr');
+            const desc = findValue(item, ['deskripsi', 'ket']) || '-';
+            const jenis = findValue(item, ['jenis', 'type']) || '-';
+            const nomRaw = findValue(item, ['nominal', 'amount']) || 0;
+            const nom = parseFloat(String(nomRaw).replace(/[^0-9]/g, '')) || 0;
+
+            let color = '#333', sign = '';
+            const j = String(jenis).toLowerCase();
+            if (j.includes('masuk')) { color = '#4caf50'; sign = '+'; }
+            else if (j.includes('keluar')) { color = '#f44336'; sign = '-'; }
+
+            row.innerHTML = `<td>${desc}</td><td>${jenis}</td><td style="color:${color}">${sign} ${formatRupiah(nom)}</td>`;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // --- FUNGSI GRAFIK AMAN ---
+    function createMonthlyChart(data) {
+        // Cek apakah Library Chart.js sudah dimuat?
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js belum dimuat. Grafik dilewati.');
+            return;
+        }
+        
+        const ctx = document.getElementById('monthlyEarningsChart');
+        if (!ctx) return;
+
+        // Hapus chart lama jika ada biar gak numpuk
+        if (window.myFinanceChart instanceof Chart) {
+            window.myFinanceChart.destroy();
+        }
+
+        // Data Dummy untuk grafik (Bisa dikembangkan nanti pakai data real)
+        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
+        const incomeData = [1500000, 2000000, 1800000, 2200000, 2500000, 3000000];
+
+        window.myFinanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tren Pemasukan',
+                    data: incomeData,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
     }
 
     async function fetchHealthData() {
