@@ -166,114 +166,150 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Fungsi Fetch (Beranda) ---
      async function fetchFinancialData() {
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/finances`);
-        const data = await response.json();
-        
-        // Variabel hitungan per BULAN (untuk ditampilkan di Pemasukan/Pengeluaran)
-        let pemasukanBulanIni = 0;
-        let pengeluaranBulanIni = 0;
-        
-        // Variabel hitungan TOTAL (untuk Saldo)
-        let saldoBank = 0;
-        let saldoEwallet = 0;
-        let saldoCash = 0;
-
-        // Ambil waktu saat ini untuk filter
-        const now = new Date();
-        const bulanIni = now.getMonth();
-        const tahunIni = now.getFullYear();
-
-        data.forEach(item => {
-            // 1. Bersihkan data nominal agar jadi angka
-            const nominalStr = item.Nominal ? String(item.Nominal) : '0';
-            const jumlah = parseFloat(nominalStr.replace(/[^0-9]/g, '')) || 0;
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/finances`);
+            const data = await response.json();
             
-            const sumberDana = item['Sumber Dana'] ? item['Sumber Dana'].toLowerCase() : '';
-            const tujuanDana = item['Tujuan Dana'] ? item['Tujuan Dana'].toLowerCase() : '';
-            const jenis = item['Jenis Transaksi'];
+            // --- DEBUGGING (Cek di Console jika masih 0) ---
+            console.log("✅ Data API Diterima:", data);
+            // ------------------------------------------------
+
+            let pemasukanBulanIni = 0;
+            let pengeluaranBulanIni = 0;
             
-            // 2. Cek apakah transaksi ini terjadi di Bulan & Tahun saat ini?
-            const tglTransaksi = parseDate(item['Tanggal Transaksi']);
-            let isCurrentMonth = false;
-            if (tglTransaksi && tglTransaksi.getMonth() === bulanIni && tglTransaksi.getFullYear() === tahunIni) {
-                isCurrentMonth = true;
-            }
+            let saldoBank = 0;
+            let saldoEwallet = 0;
+            let saldoCash = 0;
 
-            // 3. Logika Perhitungan
-            if (jenis === 'Pemasukan') {
-                // Saldo (Dihitung Semua)
-                if (sumberDana === 'bank') saldoBank += jumlah;
-                if (sumberDana.includes('wallet')) saldoEwallet += jumlah;
-                if (sumberDana === 'cash') saldoCash += jumlah;
+            const now = new Date();
+            const bulanIni = now.getMonth();
+            const tahunIni = now.getFullYear();
 
-                // Pemasukan (Hanya Bulan Ini)
-                if (isCurrentMonth) pemasukanBulanIni += jumlah;
+            data.forEach(item => {
+                // 1. AMBIL DATA SESUAI NAMA KOLOM SHEET (Persis!)
+                // Menggunakan kurung siku ['...'] karena ada spasi di nama kolom
+                const rawNominal  = item['Nominal']; 
+                const rawJenis    = item['Jenis Transaksi'];
+                const rawSumber   = item['Sumber Dana'];
+                const rawTujuan   = item['Tujuan Dana'];
+                const rawTanggal  = item['Tanggal Transaksi'];
+                const rawDeskripsi = item['Deskripsi'];
 
-            } else if (jenis === 'Pengeluaran') {
-                // Saldo (Dihitung Semua)
-                if (sumberDana === 'bank') saldoBank -= jumlah;
-                if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
-                if (sumberDana === 'cash') saldoCash -= jumlah;
+                // 2. BERSIHKAN DATA (Biar komputer gak bingung)
+                
+                // Nominal: Hapus "Rp", titik, koma, spasi -> jadi angka murni
+                const nominalStr = String(rawNominal || 0); 
+                const jumlah = parseFloat(nominalStr.replace(/[^0-9]/g, '')) || 0;
+                
+                // Teks: Jadi huruf kecil semua & hapus spasi kiri-kanan (biar "Bank " sama dengan "bank")
+                const jenis = String(rawJenis || '').trim().toLowerCase();
+                const sumberDana = String(rawSumber || '').trim().toLowerCase();
+                const tujuanDana = String(rawTujuan || '').trim().toLowerCase();
 
-                // Pengeluaran (Hanya Bulan Ini)
-                if (isCurrentMonth) pengeluaranBulanIni += jumlah;
+                // 3. FILTER WAKTU (Untuk "Bulan Ini")
+                // Fungsi parseDate ada di bawah/utils, pastikan format di sheet DD/MM/YYYY
+                const tglTransaksi = parseDate(rawTanggal); 
+                let isCurrentMonth = false;
+                if (tglTransaksi && tglTransaksi.getMonth() === bulanIni && tglTransaksi.getFullYear() === tahunIni) {
+                    isCurrentMonth = true;
+                }
 
-            } else if (jenis === 'Transfer') {
-                // Transfer hanya mempengaruhi Saldo
-                if (sumberDana === 'bank') saldoBank -= jumlah;
-                if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
-                if (sumberDana === 'cash') saldoCash -= jumlah;
-        
-                if (tujuanDana === 'bank') saldoBank += jumlah;
-                if (tujuanDana.includes('wallet')) saldoEwallet += jumlah;
-                if (tujuanDana === 'cash') saldoCash += jumlah;
-            }
-        });
-        
-        const totalSaldo = saldoBank + saldoEwallet + saldoCash;
+                // 4. LOGIKA HITUNGAN (Sesuai Kolom Kamu)
+                if (jenis === 'pemasukan') {
+                    // --- HITUNG SALDO (Semua Waktu) ---
+                    if (sumberDana.includes('bank') || sumberDana.includes('bsi')) saldoBank += jumlah;
+                    else if (sumberDana.includes('wallet') || sumberDana.includes('pay') || sumberDana.includes('shopee') || sumberDana.includes('dana') || sumberDana.includes('gopay')) saldoEwallet += jumlah;
+                    else if (sumberDana.includes('cash') || sumberDana.includes('tunai')) saldoCash += jumlah;
 
-        // 4. Update Tampilan ke HTML
-        // Update Beranda & Keuangan (Pemasukan/Pengeluaran Bulan Ini)
-        if(document.getElementById('pemasukan-value')) document.getElementById('pemasukan-value').textContent = formatRupiah(pemasukanBulanIni);
-        if(document.getElementById('pengeluaran-value')) document.getElementById('pengeluaran-value').textContent = formatRupiah(pengeluaranBulanIni);
-        if(document.getElementById('pemasukan-bulan-ini')) document.getElementById('pemasukan-bulan-ini').textContent = formatRupiah(pemasukanBulanIni);
-        if(document.getElementById('pengeluaran-bulan-ini')) document.getElementById('pengeluaran-bulan-ini').textContent = formatRupiah(pengeluaranBulanIni);
-        
-        // Update Saldo (Total Semua)
-        if(document.getElementById('saldo-bank')) document.getElementById('saldo-bank').textContent = formatRupiah(saldoBank);
-        if(document.getElementById('saldo-ewallet')) document.getElementById('saldo-ewallet').textContent = formatRupiah(saldoEwallet);
-        if(document.getElementById('saldo-cash')) document.getElementById('saldo-cash').textContent = formatRupiah(saldoCash);
-        if(document.getElementById('sisa-saldo-value')) document.getElementById('sisa-saldo-value').textContent = formatRupiah(totalSaldo);
-        if(document.getElementById('card-balance-bank')) document.getElementById('card-balance-bank').textContent = formatRupiah(saldoBank);
-        if(document.getElementById('card-balance-ewallet')) document.getElementById('card-balance-ewallet').textContent = formatRupiah(saldoEwallet);
+                    // --- DASHBOARD (Cuma Bulan Ini) ---
+                    if (isCurrentMonth) pemasukanBulanIni += jumlah;
 
-        // Update Tabel (7 Transaksi Terakhir)
-        const tableBody = document.querySelector('#transaction-table tbody');
-        if (tableBody) {
-            tableBody.innerHTML = '';
-            const recentTransactions = data.slice(-7).reverse();
-            recentTransactions.forEach(item => {
-                const row = document.createElement('tr');
-                const jenis = item['Jenis Transaksi'];
-                const nominalStr = item.Nominal ? String(item.Nominal) : '0';
-                const nominal = parseInt(nominalStr.replace(/[^0-9]/g, '')).toLocaleString('id-ID');
-                row.innerHTML = `
-                    <td>${item.Deskripsi || '-'}</td>
-                    <td>${jenis}</td>
-                    <td style="color: ${jenis === 'Pemasukan' ? '#4caf50' : '#f44336'}">${jenis === 'Pemasukan' ? '+' : '-'} Rp ${nominal}</td>
-                `;
-                tableBody.appendChild(row);
+                } else if (jenis === 'pengeluaran') {
+                    // --- HITUNG SALDO ---
+                    if (sumberDana.includes('bank') || sumberDana.includes('bsi')) saldoBank -= jumlah;
+                    else if (sumberDana.includes('wallet') || sumberDana.includes('pay') || sumberDana.includes('shopee') || sumberDana.includes('dana') || sumberDana.includes('gopay')) saldoEwallet -= jumlah;
+                    else if (sumberDana.includes('cash') || sumberDana.includes('tunai')) saldoCash -= jumlah;
+
+                    // --- DASHBOARD ---
+                    if (isCurrentMonth) pengeluaranBulanIni += jumlah;
+
+                } else if (jenis === 'transfer') {
+                    // Kurangi dari Pengirim
+                    if (sumberDana.includes('bank') || sumberDana.includes('bsi')) saldoBank -= jumlah;
+                    else if (sumberDana.includes('wallet') || sumberDana.includes('pay')) saldoEwallet -= jumlah;
+                    else if (sumberDana.includes('cash') || sumberDana.includes('tunai')) saldoCash -= jumlah;
+            
+                    // Tambah ke Penerima
+                    if (tujuanDana.includes('bank') || tujuanDana.includes('bsi')) saldoBank += jumlah;
+                    else if (tujuanDana.includes('wallet') || tujuanDana.includes('pay')) saldoEwallet += jumlah;
+                    else if (tujuanDana.includes('cash') || tujuanDana.includes('tunai')) saldoCash += jumlah;
+                }
             });
-        }
-        
-        // Panggil grafik
-        if (typeof createMonthlyChart === 'function') createMonthlyChart(data);
+            
+            const totalSaldo = saldoBank + saldoEwallet + saldoCash;
 
-    } catch (error) {
-        console.error('Gagal hitung keuangan:', error);
+            // 5. UPDATE TAMPILAN HTML
+            const setText = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = formatRupiah(val);
+            };
+
+            // Beranda & Keuangan
+            setText('pemasukan-value', pemasukanBulanIni);
+            setText('pengeluaran-value', pengeluaranBulanIni);
+            setText('pemasukan-bulan-ini', pemasukanBulanIni);
+            setText('pengeluaran-bulan-ini', pengeluaranBulanIni);
+            
+            setText('saldo-bank', saldoBank);
+            setText('saldo-ewallet', saldoEwallet);
+            setText('saldo-cash', saldoCash);
+            setText('sisa-saldo-value', totalSaldo);
+            
+            setText('card-balance-bank', saldoBank);
+            setText('card-balance-ewallet', saldoEwallet);
+
+            // 6. UPDATE TABEL TRANSAKSI
+            const tableBody = document.querySelector('#transaction-table tbody');
+            if (tableBody) {
+                tableBody.innerHTML = '';
+                // Ambil 7 data terakhir
+                const recentTransactions = data.slice(-7).reverse();
+                recentTransactions.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    // Ambil data lagi buat tabel
+                    const deskripsi = item['Deskripsi'] || '-';
+                    const jenisTeks = item['Jenis Transaksi'] || '-';
+                    const nominalRaw = item['Nominal'] || 0;
+                    
+                    // Format Nominal
+                    const num = parseFloat(String(nominalRaw).replace(/[^0-9]/g, '')) || 0;
+                    const nominalRp = num.toLocaleString('id-ID');
+                    
+                    // Tentukan Warna
+                    const jenisKecil = String(jenisTeks).toLowerCase();
+                    let warna = '#333';
+                    let tanda = '';
+                    
+                    if(jenisKecil === 'pemasukan') { warna = '#4caf50'; tanda = '+'; }
+                    else if(jenisKecil === 'pengeluaran') { warna = '#f44336'; tanda = '-'; }
+
+                    row.innerHTML = `
+                        <td>${deskripsi}</td>
+                        <td>${jenisTeks}</td>
+                        <td style="color: ${warna}">${tanda} Rp ${nominalRp}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // Update Grafik kalau fungsinya ada
+            if (typeof createMonthlyChart === 'function') createMonthlyChart(data);
+
+        } catch (error) {
+            console.error('Gagal hitung keuangan:', error);
+        }
     }
-}
 
     async function fetchHealthData() {
         try {
