@@ -294,93 +294,101 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fungsi Fetch Data (Halaman Keuangan) ---
 async function fetchFinancialDataForFinancePage() {
-    try {
-        const response = await fetch(`${BACKEND_URL}/api/finances`);
-        const data = await response.json();
-        
-        let totalPemasukan = 0, totalPengeluaran = 0, saldoBank = 0, saldoEwallet = 0, saldoCash = 0;
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/finances`);
+            if (!response.ok) throw new Error('Gagal mengambil data API'); // Error handling tambahan
+            const data = await response.json();
+            
+            let totalPemasukan = 0, totalPengeluaran = 0, saldoBank = 0, saldoEwallet = 0, saldoCash = 0;
 
-        // Variabel baru untuk menghitung total bulan ini
-        let pemasukanBulanIni = 0;
-        let pengeluaranBulanIni = 0;
-        const now = new Date();
-        const bulanIni = now.getMonth();
-        const tahunIni = now.getFullYear();
-        
-        data.forEach(item => {
-            const jumlah = parseFloat(item.Nominal.replace(/[^0-9]/g, '')) || 0;
-            const sumberDana = item['Sumber Dana'] ? item['Sumber Dana'].toLowerCase() : '';
-            const tujuanDana = item['Tujuan Dana'] ? item['Tujuan Dana'].toLowerCase() : '';
-            const jenis = item['Jenis Transaksi'];
+            let pemasukanBulanIni = 0;
+            let pengeluaranBulanIni = 0;
+            const now = new Date();
+            const bulanIni = now.getMonth();
+            const tahunIni = now.getFullYear();
+            
+            data.forEach(item => {
+                // Pastikan Nominal diubah jadi string dulu sebelum di-replace
+                const nominalString = item.Nominal ? String(item.Nominal) : '0';
+                const jumlah = parseFloat(nominalString.replace(/[^0-9]/g, '')) || 0;
+                
+                const sumberDana = item['Sumber Dana'] ? item['Sumber Dana'].toLowerCase() : '';
+                const tujuanDana = item['Tujuan Dana'] ? item['Tujuan Dana'].toLowerCase() : '';
+                const jenis = item['Jenis Transaksi'];
 
-            // Kalkulasi saldo total (all time)
-            if (jenis === 'Pemasukan') {
-                totalPemasukan += jumlah;
-                if (sumberDana === 'bank') saldoBank += jumlah;
-                if (sumberDana.includes('wallet')) saldoEwallet += jumlah;
-                if (sumberDana === 'cash') saldoCash += jumlah;
-            } else if (jenis === 'Pengeluaran') {
-                totalPengeluaran += jumlah;
-                if (sumberDana === 'bank') saldoBank -= jumlah;
-                if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
-                if (sumberDana === 'cash') saldoCash -= jumlah;
-            } else if (jenis === 'Transfer') {
-                if (sumberDana === 'bank') saldoBank -= jumlah;
-                if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
-                if (sumberDana === 'cash') saldoCash -= jumlah;
-        
-                if (tujuanDana === 'bank') saldoBank += jumlah;
-                if (tujuanDana.includes('wallet')) saldoEwallet += jumlah;
-                if (tujuanDana === 'cash') saldoCash += jumlah;
-            }
-
-            // Kalkulasi bulanan (ini yang dipindahkan ke luar if)
-            const tanggalTransaksi = parseDate(item['Tanggal Transaksi']);
-            if (tanggalTransaksi) {
-                const bulanTransaksi = tanggalTransaksi.getMonth();
-                const tahunTransaksi = tanggalTransaksi.getFullYear();
-
-                if (bulanTransaksi === bulanIni && tahunTransaksi === tahunIni) {
-                    if (jenis === 'Pemasukan') pemasukanBulanIni += jumlah;
-                    else if (jenis === 'Pengeluaran') pengeluaranBulanIni += jumlah;
+                // Kalkulasi saldo total (all time)
+                if (jenis === 'Pemasukan') {
+                    totalPemasukan += jumlah;
+                    if (sumberDana === 'bank') saldoBank += jumlah;
+                    if (sumberDana.includes('wallet')) saldoEwallet += jumlah;
+                    if (sumberDana === 'cash') saldoCash += jumlah;
+                } else if (jenis === 'Pengeluaran') {
+                    totalPengeluaran += jumlah;
+                    if (sumberDana === 'bank') saldoBank -= jumlah;
+                    if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
+                    if (sumberDana === 'cash') saldoCash -= jumlah;
+                } else if (jenis === 'Transfer') {
+                    // Logika transfer
+                    if (sumberDana === 'bank') saldoBank -= jumlah;
+                    if (sumberDana.includes('wallet')) saldoEwallet -= jumlah;
+                    if (sumberDana === 'cash') saldoCash -= jumlah;
+            
+                    if (tujuanDana === 'bank') saldoBank += jumlah;
+                    if (tujuanDana.includes('wallet')) saldoEwallet += jumlah;
+                    if (tujuanDana === 'cash') saldoCash += jumlah;
                 }
+
+                // Kalkulasi bulanan
+                const tanggalTransaksi = parseDate(item['Tanggal Transaksi']);
+                if (tanggalTransaksi) {
+                    if (tanggalTransaksi.getMonth() === bulanIni && tanggalTransaksi.getFullYear() === tahunIni) {
+                        if (jenis === 'Pemasukan') pemasukanBulanIni += jumlah;
+                        else if (jenis === 'Pengeluaran') pengeluaranBulanIni += jumlah;
+                    }
+                }
+            }); 
+            
+            const totalSaldo = saldoBank + saldoEwallet + saldoCash;
+
+            // Update elemen DOM (Pastikan elemen ada sebelum di-set textContent)
+            if(document.getElementById('pemasukan-bulan-ini')) document.getElementById('pemasukan-bulan-ini').textContent = formatRupiah(pemasukanBulanIni);
+            if(document.getElementById('pengeluaran-bulan-ini')) document.getElementById('pengeluaran-bulan-ini').textContent = formatRupiah(pengeluaranBulanIni);
+            
+            // Menggunakan ID yang sesuai dengan HTML Keuangan
+            if(document.getElementById('saldo-bank')) document.getElementById('saldo-bank').textContent = formatRupiah(saldoBank);
+            if(document.getElementById('saldo-ewallet')) document.getElementById('saldo-ewallet').textContent = formatRupiah(saldoEwallet);
+            if(document.getElementById('saldo-cash')) document.getElementById('saldo-cash').textContent = formatRupiah(saldoCash);
+            if(document.getElementById('sisa-saldo-value')) document.getElementById('sisa-saldo-value').textContent = formatRupiah(totalSaldo);
+            
+            if(document.getElementById('card-balance-bank')) document.getElementById('card-balance-bank').textContent = formatRupiah(saldoBank);
+            if(document.getElementById('card-balance-ewallet')) document.getElementById('card-balance-ewallet').textContent = formatRupiah(saldoEwallet);
+
+            const transactionTableBody = document.querySelector('#transaction-table tbody');
+            if (transactionTableBody) {
+                transactionTableBody.innerHTML = '';
+                const recentTransactions = data.slice(-7).reverse();
+                recentTransactions.forEach(item => {
+                    const row = document.createElement('tr');
+                    const jenis = item['Jenis Transaksi'];
+                    const nominalStr = item.Nominal ? String(item.Nominal) : '0';
+                    const nominal = parseInt(nominalStr.replace(/[^0-9]/g, '')).toLocaleString('id-ID');
+                    
+                    row.innerHTML = `
+                        <td>${item.Deskripsi || '-'}</td>
+                        <td>${jenis}</td>
+                        <td style="color: ${jenis === 'Pemasukan' ? '#4caf50' : '#f44336'}">${jenis === 'Pemasukan' ? '+' : '-'} Rp ${nominal}</td>
+                    `;
+                    transactionTableBody.appendChild(row);
+                });
             }
-        }); // <-- Kurung forEach ditutup di sini
-        
-        const totalSaldo = saldoBank + saldoEwallet + saldoCash;
 
-        // Update elemen di HTML
-        // Di halaman keuangan, kita tampilkan total pemasukan/pengeluaran bulan ini
-        document.getElementById('pemasukan-value').textContent = formatRupiah(pemasukanBulanIni);
-        document.getElementById('pengeluaran-value').textContent = formatRupiah(pengeluaranBulanIni);
-        document.getElementById('saldo-bank').textContent = formatRupiah(saldoBank);
-        document.getElementById('saldo-ewallet').textContent = formatRupiah(saldoEwallet);
-        document.getElementById('saldo-cash').textContent = formatRupiah(saldoCash);
-        document.getElementById('sisa-saldo-value').textContent = formatRupiah(totalSaldo);
-        document.getElementById('card-balance-bank').textContent = formatRupiah(saldoBank);
-        document.getElementById('card-balance-ewallet').textContent = formatRupiah(saldoEwallet);
+            // Panggil Chart setelah data siap
+            createMonthlyChart(data);
 
-        const transactionTableBody = document.querySelector('#transaction-table tbody');
-        transactionTableBody.innerHTML = '';
-        const recentTransactions = data.slice(-7).reverse();
-        recentTransactions.forEach(item => {
-            const row = document.createElement('tr');
-            const jenis = item['Jenis Transaksi'];
-            const nominal = parseInt(item.Nominal).toLocaleString('id-ID');
-            row.innerHTML = `
-                <td>${item.Deskripsi}</td>
-                <td>${jenis}</td>
-                <td style="color: ${jenis === 'Pemasukan' ? '#4caf50' : '#f44336'}">${jenis === 'Pemasukan' ? '+' : '-'} Rp ${nominal}</td>
-            `;
-            transactionTableBody.appendChild(row);
-        });
-
-        createMonthlyChart(data);
-
-    } catch (error) {
-        console.error('Gagal mengambil data keuangan (Detail):', error);
+        } catch (error) {
+            console.error('Gagal mengambil data keuangan (Detail):', error);
+        }
     }
-}
 
     async function fetchBudgetData() {
         try {
