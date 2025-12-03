@@ -142,13 +142,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 4. FITUR UTAMA: KEUANGAN & GRAFIK DUAL
+    // 4. FITUR UTAMA: KEUANGAN, GRAFIK & DOWNLOAD
     // =========================================================
+
+    // Variabel Global untuk menyimpan data agar bisa didownload
+    let cachedFinanceData = [];
 
     async function fetchFinancialData() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/finances`);
             const data = await response.json();
+            
+            // Simpan data ke variabel global untuk fitur download
+            cachedFinanceData = data;
 
             let pemasukanBulanIni = 0;
             let pengeluaranBulanIni = 0;
@@ -223,9 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateTransactionTable(data);
             
-            // Panggil grafik
             if (document.getElementById('monthlyEarningsChart')) {
                 createMonthlyChart(data);
+            }
+
+            // Inisialisasi fitur download jika elemennya ada
+            if (document.getElementById('month-selector')) {
+                setupDownloadFeature(data);
             }
 
         } catch (error) {
@@ -233,12 +243,101 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- LOGIKA DOWNLOAD BARU ---
+    function setupDownloadFeature(data) {
+        const monthSelector = document.getElementById('month-selector');
+        const btnDownload = document.getElementById('btn-download-csv');
+        if (!monthSelector || !btnDownload) return;
+
+        // 1. Cari Bulan Unik dari Data
+        const uniqueMonths = new Set();
+        data.forEach(item => {
+            const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl']);
+            const tgl = parseDate(rawTgl);
+            if (tgl) {
+                // Format YYYY-MM untuk value, dan Nama Bulan untuk tampilan
+                const monthValue = `${tgl.getFullYear()}-${padZero(tgl.getMonth() + 1)}`;
+                uniqueMonths.add(monthValue);
+            }
+        });
+
+        // 2. Masukkan ke Dropdown (Urutkan terbaru)
+        const sortedMonths = Array.from(uniqueMonths).sort().reverse();
+        monthSelector.innerHTML = '<option value="">Pilih Bulan...</option>';
+        
+        const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        sortedMonths.forEach(m => {
+            const [y, mo] = m.split('-');
+            const label = `${monthNames[parseInt(mo) - 1]} ${y}`;
+            const option = document.createElement('option');
+            option.value = m;
+            option.textContent = label;
+            monthSelector.appendChild(option);
+        });
+
+        // 3. Event Listener Tombol Download
+        // Hapus listener lama biar gak dobel (cloning node)
+        const newBtn = btnDownload.cloneNode(true);
+        btnDownload.parentNode.replaceChild(newBtn, btnDownload);
+
+        newBtn.addEventListener('click', () => {
+            const selectedMonth = monthSelector.value;
+            if (!selectedMonth) {
+                alert('Silakan pilih bulan terlebih dahulu!');
+                return;
+            }
+            downloadCSV(data, selectedMonth);
+        });
+    }
+
+    function downloadCSV(data, selectedMonth) {
+        // Filter data sesuai bulan
+        const filteredData = data.filter(item => {
+            const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl']);
+            const tgl = parseDate(rawTgl);
+            if (!tgl) return false;
+            const itemMonth = `${tgl.getFullYear()}-${padZero(tgl.getMonth() + 1)}`;
+            return itemMonth === selectedMonth;
+        });
+
+        if (filteredData.length === 0) {
+            alert('Tidak ada data untuk bulan ini.');
+            return;
+        }
+
+        // Buat isi CSV
+        let csvContent = "Tanggal,Deskripsi,Kategori,Jenis,Nominal,Sumber Dana,Tujuan Dana\n";
+
+        filteredData.forEach(item => {
+            const tgl = findValue(item, ['Tanggal', 'date']) || '';
+            const desc = `"${(findValue(item, ['Deskripsi', 'ket']) || '').replace(/"/g, '""')}"`; // Escape koma & quote
+            const kat = findValue(item, ['Kategori', 'cat']) || '';
+            const jenis = findValue(item, ['Jenis', 'tipe']) || '';
+            const nom = findValue(item, ['Nominal', 'amount']) || 0;
+            const src = findValue(item, ['Sumber', 'source']) || '';
+            const dest = findValue(item, ['Tujuan', 'dest']) || '';
+
+            csvContent += `${tgl},${desc},${kat},${jenis},${nom},${src},${dest}\n`;
+        });
+
+        // Proses Download File
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Laporan_Keuangan_${selectedMonth}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     function updateTransactionTable(data) {
         const tableBody = document.querySelector('#transaction-table tbody');
         if (!tableBody) return;
 
         tableBody.innerHTML = '';
-        const recent = data.slice(-7).reverse();
+        const recent = data.slice(-3).reverse();
         recent.forEach(item => {
             const row = document.createElement('tr');
             
@@ -265,7 +364,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!ctx) return;
 
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        // Siapkan DUA wadah: satu untuk pemasukan, satu untuk pengeluaran
         const incomePerMonth = new Array(12).fill(0); 
         const expensePerMonth = new Array(12).fill(0); 
 
@@ -283,7 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tgl && tgl.getFullYear() === currentYear) {
                 const monthIndex = tgl.getMonth(); 
                 
-                // Pisahkan Pemasukan & Pengeluaran
                 if (jenis.includes('masuk') || jenis === 'pemasukan') {
                     incomePerMonth[monthIndex] += jumlah;
                 } else if (jenis.includes('keluar') || jenis === 'pengeluaran') {
@@ -296,7 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.myFinanceChart.destroy();
         }
 
-        // Buat Chart dengan 2 Dataset
         window.myFinanceChart = new Chart(ctx, {
             type: 'line',
             data: {
