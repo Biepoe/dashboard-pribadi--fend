@@ -492,50 +492,113 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(e) { console.error('Activity Error:', e); }
     }
 
-    // --- 4. FITUR BUDGET ---
     async function fetchBudgetData() {
         try {
-            const [resB, resF] = await Promise.all([
+            const [budgetResponse, financeResponse] = await Promise.all([
                 fetch(`${BACKEND_URL}/api/budgets`),
                 fetch(`${BACKEND_URL}/api/finances`)
             ]);
-            const budgets = await resB.json();
-            const finances = await resF.json();
+
+            const budgetDefs = await budgetResponse.json();
+            const financeData = await financeResponse.json();
+
+            // 1. Petakan Budget agar mudah dicocokkan (Mapping)
+            // Contoh: { "makanan": {limit: 500000, used: 0}, "transport": {...} }
+            const budgetMap = {};
             
-            const used = {};
-            const now = new Date();
-            
-            finances.forEach(item => {
-                const j = String(findValue(item, ['jenis'])).toLowerCase();
-                const tgl = parseDate(findValue(item, ['tanggal']));
-                if ((j.includes('keluar') || j==='pengeluaran') && tgl && tgl.getMonth() === now.getMonth()) {
-                    const cat = findValue(item, ['kategori']) || 'Lainnya';
-                    const amt = parseFloat(String(findValue(item, ['nominal'])).replace(/[^0-9]/g, '')) || 0;
-                    used[cat] = (used[cat] || 0) + amt;
+            budgetDefs.forEach(b => {
+                const name = findValue(b, ['kategori', 'category']);
+                const rawLimit = findValue(b, ['alokasi', 'limit', 'budget', 'nominal']);
+                
+                if (name) {
+                    const limit = parseFloat(String(rawLimit).replace(/[^0-9]/g, '')) || 0;
+                    // Simpan dengan kunci huruf kecil biar gampang dicari
+                    budgetMap[name.toLowerCase()] = { 
+                        originalName: name, 
+                        limit: limit, 
+                        used: 0 
+                    };
                 }
             });
 
-            const container = document.getElementById('budget-container');
-            if(container) {
-                container.innerHTML = '';
-                budgets.forEach(b => {
-                    const cat = findValue(b, ['kategori']);
-                    const limit = parseFloat(String(findValue(b, ['alokasi'])).replace(/[^0-9]/g, '')) || 0;
-                    const cur = used[cat] || 0;
-                    const pct = (cur / limit) * 100;
-                    const color = pct > 90 ? 'danger' : (pct > 70 ? 'warning' : '');
+            // 2. Loop Transaksi & Cocokkan ke Budget
+            financeData.forEach(item => {
+                const jenis = String(findValue(item, ['jenis', 'transaksi']) || '').toLowerCase();
+                
+                // Ambil hanya Pengeluaran
+                if (jenis.includes('keluar') || jenis === 'pengeluaran') {
                     
-                    container.innerHTML += `
-                        <div class="budget-item">
-                            <div class="budget-item-header"><span>${cat}</span><span>${formatRupiah(limit - cur)}</span></div>
-                            <div class="progress-bar-container"><div class="progress-bar ${color}" style="width:${Math.min(pct,100)}%"></div></div>
-                            <div class="budget-item-footer"><span>Terpakai: ${formatRupiah(cur)}</span><span>dari ${formatRupiah(limit)}</span></div>
-                        </div>`;
-                });
-            }
-        } catch(e) { console.error('Budget Error:', e); }
-    }
+                    // Ambil kategori transaksi (Misal: "Makanan / Lauk")
+                    const transCat = String(findValue(item, ['kategori', 'category']) || '').toLowerCase();
+                    const rawNominal = findValue(item, ['nominal', 'jumlah']);
+                    const amount = parseFloat(String(rawNominal).replace(/[^0-9]/g, '')) || 0;
 
+                    // --- LOGIKA PENCCOCOKAN PINTAR ---
+                    // Cek apakah nama budget ada di dalam nama kategori transaksi?
+                    // Contoh: Budget "makanan" ada di dalam Transaksi "makanan / lauk"
+                    let matched = false;
+                    for (let budgetKey in budgetMap) {
+                        if (transCat.includes(budgetKey)) {
+                            budgetMap[budgetKey].used += amount;
+                            matched = true;
+                            break; // Stop jika sudah ketemu
+                        }
+                    }
+                    
+                    // Jika tidak ketemu match persis, masukkan ke Lainnya (Opsional)
+                    // if (!matched) { ... } 
+                }
+            });
+
+            // 3. Tampilkan ke HTML
+            const budgetContainer = document.getElementById('budget-container');
+            if (budgetContainer) {
+                budgetContainer.innerHTML = '';
+                
+                // Loop hasil hitungan budgetMap
+                for (let key in budgetMap) {
+                    const data = budgetMap[key];
+                    const sisa = data.limit - data.used;
+                    
+                    // Hitung Persentase (Max 100%)
+                    let percentage = 0;
+                    if (data.limit > 0) {
+                        percentage = (data.used / data.limit) * 100;
+                    } else if (data.used > 0) {
+                        percentage = 100; // Kalau limit 0 tapi ada pengeluaran, full bar
+                    }
+
+                    // Tentukan Warna
+                    let colorClass = '';
+                    if (percentage >= 100) colorClass = 'danger'; // Merah
+                    else if (percentage > 75) colorClass = 'warning'; // Kuning
+                    // Default biru
+
+                    budgetContainer.innerHTML += `
+                        <div class="budget-item">
+                            <div class="budget-item-header">
+                                <span class="category">${data.originalName}</span>
+                                <span class="remaining" style="color: ${sisa < 0 ? '#f44336' : '#4caf50'}">
+                                    ${sisa < 0 ? 'Over: ' : 'Sisa: '} ${formatRupiah(Math.abs(sisa))}
+                                </span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar ${colorClass}" style="width: ${Math.min(percentage, 100)}%;"></div>
+                            </div>
+                            <div class="budget-item-footer">
+                                <span>Terpakai: ${formatRupiah(data.used)}</span>
+                                <span>dari ${formatRupiah(data.limit)}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+        } catch (error) {
+            console.error('Gagal ambil data budget:', error);
+        }
+    }
+    
     initNavListeners();
     runPageInit();
 });
