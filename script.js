@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS
+// SCRIPT.JS (VERSI FINAL: DOWNLOAD EXCEL RAPI + GRAFIK DUAL)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,10 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
-    // =========================================================
-    // 1. SISTEM NAVIGASI (SPA - Single Page Application)
-    // =========================================================
-    
+    // --- FUNGSI NAVIGASI (SPA) ---
     function runPageInit() {
         const bodyId = document.body.id;
         if (bodyId === 'halaman-beranda') {
@@ -70,10 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================
-    // 2. INISIALISASI HALAMAN
-    // =========================================================
-
+    // --- INISIALISASI HALAMAN ---
     function initBeranda() {
         setDate(); setTime(); setInterval(setTime, 1000);
         fetchFinancialData(); 
@@ -90,10 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchHealthDataForHealthPage();
     }
 
-    // =========================================================
-    // 3. HELPER & UTILS
-    // =========================================================
-
+    // --- HELPER UTILS ---
     function padZero(num) { return num < 10 ? '0' + num : num; }
 
     function parseDate(dateString) {
@@ -127,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- MAGIC FUNCTION: PENCARI KOLOM OTOMATIS (FINDVALUE) ---
     function findValue(item, keywords) {
         const keys = Object.keys(item);
         for (let key of keys) {
@@ -141,20 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return undefined;
     }
 
-    // =========================================================
-    // 4. FITUR UTAMA: KEUANGAN, GRAFIK & DOWNLOAD
-    // =========================================================
-
-    // Variabel Global untuk menyimpan data agar bisa didownload
-    let cachedFinanceData = [];
-
+    // --- 1. FITUR KEUANGAN & DOWNLOAD ---
     async function fetchFinancialData() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/finances`);
             const data = await response.json();
-            
-            // Simpan data ke variabel global untuk fitur download
-            cachedFinanceData = data;
 
             let pemasukanBulanIni = 0;
             let pengeluaranBulanIni = 0;
@@ -167,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const tahunIni = now.getFullYear();
 
             data.forEach(item => {
-                const rawNominal  = findValue(item, ['Nominal', 'amount', 'nilai', 'jumlah', 'harga']);
+                const rawNominal  = findValue(item, ['Nominal', 'amount', 'nilai', 'jumlah']);
                 const rawJenis    = findValue(item, ['Jenis', 'tipe', 'type', 'transaksi']); 
                 const rawSumber   = findValue(item, ['Sumber', 'source', 'bank', 'wallet', 'asal']);
                 const rawTujuan   = findValue(item, ['Tujuan', 'dest', 'ke']);
@@ -187,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (isCurrentMonth) pemasukanBulanIni += jumlah;
                     
                     if (sumber.includes('bank') || sumber.includes('bsi')) saldoBank += jumlah;
-                    else if (sumber.includes('wallet') || sumber.includes('pay') || sumber.includes('dana') || sumber.includes('ovo')) saldoEwallet += jumlah;
+                    else if (sumber.includes('wallet') || sumber.includes('pay') || sumber.includes('dana')) saldoEwallet += jumlah;
                     else if (sumber.includes('cash') || sumber.includes('tunai')) saldoCash += jumlah;
 
                 } else if (jenis.includes('keluar') || jenis === 'pengeluaran') {
@@ -233,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 createMonthlyChart(data);
             }
 
-            // Inisialisasi fitur download jika elemennya ada
+            // Inisialisasi Download
             if (document.getElementById('month-selector')) {
                 setupDownloadFeature(data);
             }
@@ -243,22 +224,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- LOGIKA DOWNLOAD BARU ---
-    // --- GANTI FUNGSI DOWNLOAD CSV LAMA DENGAN INI ---
-    
-    // Ubah pemanggilannya di setupDownloadFeature dulu:
+    // --- LOGIKA DOWNLOAD EXCEL (.XLSX) ---
     function setupDownloadFeature(data) {
         const monthSelector = document.getElementById('month-selector');
-        const btnDownload = document.getElementById('btn-download-csv'); // ID tetap sama biar gak ubah HTML
+        const btnDownload = document.getElementById('btn-download-csv'); 
         if (!monthSelector || !btnDownload) return;
 
         // 1. Cari Bulan Unik
         const uniqueMonths = new Set();
         data.forEach(item => {
             const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl', 'timestamp']);
-            // Coba parsing tanggal dengan format DD/MM/YYYY atau Timestamp
             const tgl = parseDate(rawTgl ? rawTgl.split(' ')[0] : null); 
-            
             if (tgl && !isNaN(tgl)) {
                 const monthValue = `${tgl.getFullYear()}-${padZero(tgl.getMonth() + 1)}`;
                 uniqueMonths.add(monthValue);
@@ -268,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // 2. Masukkan ke Dropdown
         const sortedMonths = Array.from(uniqueMonths).sort().reverse();
         monthSelector.innerHTML = '<option value="">Pilih Bulan...</option>';
-        
         const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
         sortedMonths.forEach(m => {
@@ -280,13 +255,11 @@ document.addEventListener('DOMContentLoaded', () => {
             monthSelector.appendChild(option);
         });
 
-        // 3. Event Listener Baru (Panggil downloadExcel)
+        // 3. Reset Button Listener
         const newBtn = btnDownload.cloneNode(true);
         btnDownload.parentNode.replaceChild(newBtn, btnDownload);
-
-        // Ubah teks tombol biar sesuai
         newBtn.innerHTML = '<i class="fas fa-file-excel"></i> Unduh Excel'; 
-        newBtn.style.backgroundColor = '#1D6F42'; // Warna Hijau Excel
+        newBtn.style.backgroundColor = '#1D6F42'; 
 
         newBtn.addEventListener('click', () => {
             const selectedMonth = monthSelector.value;
@@ -299,10 +272,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function downloadExcel(data, selectedMonth) {
-        // --- CEK APAKAH LIBRARY EXCEL SUDAH ADA? ---
         if (typeof XLSX === 'undefined') {
-            alert('Library Excel (SheetJS) belum dimuat! Pastikan internet lancar dan refresh halaman.');
-            console.error('❌ Error: XLSX tidak ditemukan. Pastikan script tag ada di HTML.');
+            alert('Library Excel belum siap! Refresh halaman ini.');
             return;
         }
 
@@ -320,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 2. Format Data Sesuai Kolom Excel
+        // 2. Format Data Sesuai Screenshot 105 (Rapi)
         const excelData = filteredData.map(item => {
             const nominalRaw = findValue(item, ['Nominal', 'amount']) || 0;
             const nominalNum = parseFloat(String(nominalRaw).replace(/[^0-9]/g, '')) || 0;
@@ -338,40 +309,26 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // 3. Buat Worksheet & Workbook
+        // 3. Buat File Excel
         const worksheet = XLSX.utils.json_to_sheet(excelData);
-        
-        // Atur lebar kolom otomatis
         const wscols = [
-            {wch: 20}, // Timestamp
-            {wch: 15}, // Jenis
-            {wch: 15}, // Nominal
-            {wch: 15}, // Kategori
-            {wch: 15}, // Tanggal
-            {wch: 30}, // Deskripsi
-            {wch: 15}, // Sumber
-            {wch: 15}, // Tujuan
-            {wch: 15}  // Bukti
+            {wch: 20}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}, {wch: 15}, {wch: 15}, {wch: 15}
         ];
         worksheet['!cols'] = wscols;
 
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Keuangan");
-
-        // 4. Download File
         XLSX.writeFile(workbook, `Laporan_Keuangan_${selectedMonth}.xlsx`);
     }
-    
-    
+
     function updateTransactionTable(data) {
         const tableBody = document.querySelector('#transaction-table tbody');
         if (!tableBody) return;
 
         tableBody.innerHTML = '';
-        const recent = data.slice(-3).reverse();
+        const recent = data.slice(-5).reverse();
         recent.forEach(item => {
             const row = document.createElement('tr');
-            
             const desc = findValue(item, ['deskripsi', 'ket', 'desc']) || '-';
             const jenis = findValue(item, ['jenis', 'type', 'transaksi']) || '-'; 
             const nomRaw = findValue(item, ['nominal', 'amount', 'nilai']) || 0;
@@ -387,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- GRAFIK BULANAN (Pemasukan vs Pengeluaran) ---
+    // --- GRAFIK (Pemasukan vs Pengeluaran) ---
     function createMonthlyChart(data) {
         if (typeof Chart === 'undefined') return;
         
@@ -411,7 +368,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (tgl && tgl.getFullYear() === currentYear) {
                 const monthIndex = tgl.getMonth(); 
-                
                 if (jenis.includes('masuk') || jenis === 'pemasukan') {
                     incomePerMonth[monthIndex] += jumlah;
                 } else if (jenis.includes('keluar') || jenis === 'pengeluaran') {
@@ -432,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: 'Pemasukan',
                         data: incomePerMonth, 
-                        borderColor: '#667eea', // Biru
+                        borderColor: '#667eea', 
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         tension: 0.4,
                         fill: true
@@ -440,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: 'Pengeluaran',
                         data: expensePerMonth, 
-                        borderColor: '#f44336', // Merah
+                        borderColor: '#f44336', 
                         backgroundColor: 'rgba(244, 67, 54, 0.1)',
                         tension: 0.4,
                         fill: true
@@ -461,64 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================
-    // 5. FITUR KESEHATAN
-    // =========================================================
-
+    // --- 2. FITUR KESEHATAN ---
     async function fetchHealthData() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/health`);
-            const data = await response.json();
-
-            if (!data || data.length === 0) return;
-
-            const latestRecord = data[data.length - 1];
-            
-            const kondisiTubuh = findValue(latestRecord, ['kondisi', 'condition', 'tubuh']) || 'Sehat';
-            const rawTgl = findValue(latestRecord, ['tanggal', 'date', 'kejadian']);
-
-            const lastSleepRecord = [...data].reverse().find(item => findValue(item, ['waktu_tidur', 'tidur']));
-            const lastMedicineRecord = [...data].reverse().find(item => findValue(item, ['obat', 'suplemen']));
-            
-            const bodyVector = document.getElementById('body-vector');
-            const bodyStatusEl = document.getElementById('body-status');
-
-            if (bodyStatusEl) bodyStatusEl.textContent = kondisiTubuh;
-            if (bodyVector) bodyVector.className = (kondisiTubuh.toLowerCase() === 'sakit') ? 'body-sick' : 'body-normal';
-
-            const sleepDurationEl = document.getElementById('sleep-duration');
-            if (sleepDurationEl && lastSleepRecord) {
-                const jamTidurStr = findValue(lastSleepRecord, ['waktu_tidur', 'tidur']) || '00:00';
-                const jamBangunStr = findValue(lastSleepRecord, ['waktu_bangun', 'bangun']) || '00:00';
-                
-                const [tH, tM] = jamTidurStr.split(':').map(Number);
-                const [bH, bM] = jamBangunStr.split(':').map(Number);
-                
-                let durasiJam = bH - tH;
-                let durasiMenit = bM - tM;
-                if (durasiJam < 0) durasiJam += 24; 
-                
-                sleepDurationEl.textContent = `${durasiJam} Jam ${Math.abs(durasiMenit)} Menit`;
-            }
-
-            const lastMedicineEl = document.getElementById('last-medicine');
-            if(lastMedicineEl) {
-                const namaObat = lastMedicineRecord ? findValue(lastMedicineRecord, ['obat', 'suplemen']) : '-';
-                lastMedicineEl.textContent = namaObat;
-            }
-            
-            const healthDateEl = document.getElementById('health-date');
-            if(healthDateEl && rawTgl) {
-                const latestDate = parseDate(rawTgl);
-                healthDateEl.textContent = (latestDate) ? latestDate.toLocaleDateString('id-ID', { weekday: 'long' }) : "Update";
-            }
-
-        } catch (error) {
-            console.error('Gagal mengambil data kesehatan:', error);
-        }
-    }
-
-    async function fetchHealthDataForHealthPage() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/health`);
             const data = await response.json();
@@ -526,138 +426,114 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const latestRecord = data[data.length - 1];
             const kondisi = findValue(latestRecord, ['kondisi', 'tubuh']) || 'Sehat';
-            const lastMedicineRecord = [...data].reverse().find(item => findValue(item, ['obat', 'suplemen']));
+            const rawTgl = findValue(latestRecord, ['tanggal', 'date']);
+            const lastSleep = [...data].reverse().find(item => findValue(item, ['tidur']));
+            const lastMed = [...data].reverse().find(item => findValue(item, ['obat']));
             
-            const bodyStatusLarge = document.getElementById('body-status-large');
-            const bodyVectorLarge = document.getElementById('body-vector-large');
-            const lastMedicineDetail = document.getElementById('last-medicine-detail');
-            
-            if (bodyStatusLarge) bodyStatusLarge.textContent = kondisi;
-            if (bodyVectorLarge) bodyVectorLarge.className = (kondisi.toLowerCase() === 'sakit') ? 'body-sick' : 'body-normal';
-            if (lastMedicineDetail) lastMedicineDetail.textContent = lastMedicineRecord ? findValue(lastMedicineRecord, ['obat', 'suplemen']) : '-';
+            const bodyStatusEl = document.getElementById('body-status');
+            const bodyVector = document.getElementById('body-vector');
+            if (bodyStatusEl) bodyStatusEl.textContent = kondisi;
+            if (bodyVector) bodyVector.className = (kondisi.toLowerCase() === 'sakit') ? 'body-sick' : 'body-normal';
 
-        } catch (error) {
-            console.error('Gagal mengambil data detail kesehatan:', error);
-        }
+            const sleepEl = document.getElementById('sleep-duration');
+            if (sleepEl && lastSleep) {
+                const t = findValue(lastSleep, ['tidur']) || '00:00';
+                const b = findValue(lastSleep, ['bangun']) || '00:00';
+                const [tH, tM] = t.split(':');
+                const [bH, bM] = b.split(':');
+                let dur = (parseInt(bH) - parseInt(tH));
+                if (dur < 0) dur += 24;
+                sleepEl.textContent = `${dur} Jam`;
+            }
+
+            const medEl = document.getElementById('last-medicine');
+            if(medEl) medEl.textContent = lastMed ? findValue(lastMed, ['obat']) : '-';
+            
+            const dateEl = document.getElementById('health-date');
+            if(dateEl && rawTgl) {
+                dateEl.textContent = parseDate(rawTgl).toLocaleDateString('id-ID', {weekday: 'long'});
+            }
+        } catch (e) { console.error('Health Error:', e); }
     }
 
-    // =========================================================
-    // 6. FITUR AKTIVITAS
-    // =========================================================
+    async function fetchHealthDataForHealthPage() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/health`);
+            const data = await response.json();
+            if (!data || data.length === 0) return;
+            const latest = data[data.length-1];
+            const kondisi = findValue(latest, ['kondisi']) || 'Sehat';
+            document.getElementById('body-status-large').textContent = kondisi;
+            document.getElementById('body-vector-large').className = (kondisi.toLowerCase() === 'sakit') ? 'body-sick' : 'body-normal';
+        } catch(e) { console.error(e); }
+    }
 
+    // --- 3. FITUR AKTIVITAS ---
     async function fetchActivityData() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/activities`);
             const data = await response.json();
-
-            const listContainer = document.getElementById('activity-log-list');
-            if (!listContainer) return;
-
-            listContainer.innerHTML = '';
-            if (!data || data.length === 0) {
-                listContainer.innerHTML = '<li class="placeholder">Belum ada aktivitas tercatat.</li>';
-                return;
-            }
-
-            const recentData = data.slice(-10).reverse();
-            recentData.forEach(item => {
-                const tanggal = findValue(item, ['kapan', 'tanggal', 'when']) || '';
-                const waktu = findValue(item, ['waktu', 'jam', 'time']) || '';
-                const kegiatan = findValue(item, ['ngapain', 'kegiatan', 'aktivitas', 'activity']) || '-';
-                const notes = findValue(item, ['notes', 'catatan']) || '';
-
-                const listItem = document.createElement('li');
-                listItem.className = 'activity-log-item';
-                listItem.innerHTML = `
-                    <div class="activity-log-time">
-                        <span class="date">${tanggal}</span>
-                        <span class="time">${waktu}</span>
-                    </div>
-                    <div class="activity-log-details">
-                        <span class="title">${kegiatan}</span>
-                        <span class="notes">${notes}</span>
-                    </div>`;
-                listContainer.appendChild(listItem);
+            const list = document.getElementById('activity-log-list');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            data.slice(-5).reverse().forEach(item => {
+                const tgl = findValue(item, ['kapan', 'tanggal']) || '';
+                const jam = findValue(item, ['waktu', 'jam']) || '';
+                const keg = findValue(item, ['ngapain', 'kegiatan']) || '-';
+                const note = findValue(item, ['notes']) || '';
+                
+                list.innerHTML += `
+                    <li class="activity-log-item">
+                        <div class="activity-log-time"><span class="date">${tgl}</span><span class="time">${jam}</span></div>
+                        <div class="activity-log-details"><span class="title">${keg}</span><span class="notes">${note}</span></div>
+                    </li>`;
             });
-        } catch (error) {
-            console.error('Gagal mengambil data aktivitas:', error);
-        }
+        } catch(e) { console.error('Activity Error:', e); }
     }
 
-    // =========================================================
-    // 7. FITUR BUDGET
-    // =========================================================
-
+    // --- 4. FITUR BUDGET ---
     async function fetchBudgetData() {
         try {
-            const [budgetResponse, financeResponse] = await Promise.all([
+            const [resB, resF] = await Promise.all([
                 fetch(`${BACKEND_URL}/api/budgets`),
                 fetch(`${BACKEND_URL}/api/finances`)
             ]);
-
-            const budgetDefs = await budgetResponse.json();
-            const financeData = await financeResponse.json();
-
-            const spendingByCategory = {};
+            const budgets = await resB.json();
+            const finances = await resF.json();
+            
+            const used = {};
             const now = new Date();
-            const bulanIni = now.getMonth();
-            const tahunIni = now.getFullYear();
-
-            financeData.forEach(item => {
-                const jenis = String(findValue(item, ['jenis', 'transaksi']) || '').toLowerCase();
-                if (jenis.includes('keluar') || jenis === 'pengeluaran') {
-                    
-                    const rawTgl = findValue(item, ['tanggal', 'date']);
-                    const tgl = parseDate(rawTgl);
-
-                    if (tgl && tgl.getMonth() === bulanIni && tgl.getFullYear() === tahunIni) {
-                        const kategori = findValue(item, ['kategori', 'category']) || 'Lainnya';
-                        const rawNominal = findValue(item, ['nominal', 'jumlah']);
-                        const jumlah = parseFloat(String(rawNominal).replace(/[^0-9]/g, '')) || 0;
-                        
-                        if (!spendingByCategory[kategori]) spendingByCategory[kategori] = 0;
-                        spendingByCategory[kategori] += jumlah;
-                    }
+            
+            finances.forEach(item => {
+                const j = String(findValue(item, ['jenis'])).toLowerCase();
+                const tgl = parseDate(findValue(item, ['tanggal']));
+                if ((j.includes('keluar') || j==='pengeluaran') && tgl && tgl.getMonth() === now.getMonth()) {
+                    const cat = findValue(item, ['kategori']) || 'Lainnya';
+                    const amt = parseFloat(String(findValue(item, ['nominal'])).replace(/[^0-9]/g, '')) || 0;
+                    used[cat] = (used[cat] || 0) + amt;
                 }
             });
 
-            const budgetContainer = document.getElementById('budget-container');
-            if (budgetContainer) {
-                budgetContainer.innerHTML = '';
-                budgetDefs.forEach(budget => {
-                    const kategori = findValue(budget, ['kategori', 'category']);
-                    const rawAlokasi = findValue(budget, ['alokasi', 'budget', 'limit']);
-                    const alokasi = parseFloat(String(rawAlokasi).replace(/[^0-9]/g, '')) || 0;
+            const container = document.getElementById('budget-container');
+            if(container) {
+                container.innerHTML = '';
+                budgets.forEach(b => {
+                    const cat = findValue(b, ['kategori']);
+                    const limit = parseFloat(String(findValue(b, ['alokasi'])).replace(/[^0-9]/g, '')) || 0;
+                    const cur = used[cat] || 0;
+                    const pct = (cur / limit) * 100;
+                    const color = pct > 90 ? 'danger' : (pct > 70 ? 'warning' : '');
                     
-                    const terpakai = spendingByCategory[kategori] || 0;
-                    const sisa = alokasi - terpakai;
-                    const persentaseTerpakai = alokasi > 0 ? (terpakai / alokasi) * 100 : 0;
-
-                    let progressBarColorClass = '';
-                    if (persentaseTerpakai > 90) progressBarColorClass = 'danger';
-                    else if (persentaseTerpakai > 70) progressBarColorClass = 'warning';
-
-                    const budgetItem = document.createElement('div');
-                    budgetItem.className = 'budget-item';
-                    budgetItem.innerHTML = `
-                        <div class="budget-item-header">
-                            <span class="category">${kategori}</span>
-                            <span class="remaining">${formatRupiah(sisa)}</span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar ${progressBarColorClass}" style="width: ${Math.min(persentaseTerpakai, 100)}%;"></div>
-                        </div>
-                        <div class="budget-item-footer">
-                            <span>Terpakai: ${formatRupiah(terpakai)}</span>
-                            <span>dari ${formatRupiah(alokasi)}</span>
-                        </div>
-                    `;
-                    budgetContainer.appendChild(budgetItem);
+                    container.innerHTML += `
+                        <div class="budget-item">
+                            <div class="budget-item-header"><span>${cat}</span><span>${formatRupiah(limit - cur)}</span></div>
+                            <div class="progress-bar-container"><div class="progress-bar ${color}" style="width:${Math.min(pct,100)}%"></div></div>
+                            <div class="budget-item-footer"><span>Terpakai: ${formatRupiah(cur)}</span><span>dari ${formatRupiah(limit)}</span></div>
+                        </div>`;
                 });
             }
-        } catch (error) {
-            console.error('Gagal ambil data budget:', error);
-        }
+        } catch(e) { console.error('Budget Error:', e); }
     }
 
     initNavListeners();
