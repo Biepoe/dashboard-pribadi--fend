@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tableBody) return;
 
         tableBody.innerHTML = '';
-        const recent = data.slice(-5).reverse();
+        const recent = data.slice(-3).reverse();
         recent.forEach(item => {
             const row = document.createElement('tr');
             const desc = findValue(item, ['deskripsi', 'ket', 'desc']) || '-';
