@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (VERSI FINAL: REAL DATA, GRAFIK LIVE, & AUTO-MATCH)
+// SCRIPT.JS
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const newContent = doc.getElementById('content-wrapper');
 
             if (!newContent) {
-                // Jika struktur halaman beda, reload manual aja
                 window.location.href = url; 
                 return;
             }
@@ -99,12 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function parseDate(dateString) {
         if (!dateString) return null;
-        // Coba format DD/MM/YYYY (Format Sheet biasanya)
         if (dateString.includes('/')) {
             const parts = dateString.split('/');
             if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
         }
-        // Coba format YYYY-MM-DD (Format ISO/API)
         if (dateString.includes('-')) {
             return new Date(dateString);
         }
@@ -131,14 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MAGIC FUNCTION: PENCARI KOLOM OTOMATIS (FINDVALUE) ---
-    // Fungsi ini mencari data meskipun nama kolomnya beda casing atau ada underscore
     function findValue(item, keywords) {
         const keys = Object.keys(item);
         for (let key of keys) {
-            // Bersihkan key dari object (hapus spasi, simbol, lowercase)
             const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, ''); 
             for (let keyword of keywords) {
-                // Cek apakah cleanKey mengandung keyword yang kita cari
                 if (cleanKey.includes(keyword.toLowerCase().replace(/[^a-z0-9]/g, ''))) {
                     return item[key];
                 }
@@ -148,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 4. FITUR UTAMA: KEUANGAN & GRAFIK
+    // 4. FITUR UTAMA: KEUANGAN & GRAFIK DUAL
     // =========================================================
 
     async function fetchFinancialData() {
@@ -167,14 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const tahunIni = now.getFullYear();
 
             data.forEach(item => {
-                // Gunakan findValue agar fleksibel baca nama kolom
                 const rawNominal  = findValue(item, ['Nominal', 'amount', 'nilai', 'jumlah', 'harga']);
                 const rawJenis    = findValue(item, ['Jenis', 'tipe', 'type', 'transaksi']); 
                 const rawSumber   = findValue(item, ['Sumber', 'source', 'bank', 'wallet', 'asal']);
                 const rawTujuan   = findValue(item, ['Tujuan', 'dest', 'ke']);
                 const rawTanggal  = findValue(item, ['Tanggal', 'date', 'tgl']);
 
-                // Bersihkan & Konversi Data
                 const nominalStr = String(rawNominal || '0');
                 const jumlah = parseFloat(nominalStr.replace(/[^0-9]/g, '')) || 0;
 
@@ -182,11 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sumber = String(rawSumber || '').toLowerCase().trim();
                 const tujuan = String(rawTujuan || '').toLowerCase().trim();
 
-                // Cek Tanggal
                 const tgl = parseDate(rawTanggal);
                 const isCurrentMonth = (tgl && tgl.getMonth() === bulanIni && tgl.getFullYear() === tahunIni);
 
-                // --- LOGIKA SALDO & DASHBOARD ---
                 if (jenis.includes('masuk') || jenis === 'pemasukan') {
                     if (isCurrentMonth) pemasukanBulanIni += jumlah;
                     
@@ -202,12 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     else if (sumber.includes('cash') || sumber.includes('tunai')) saldoCash -= jumlah;
                 
                 } else if (jenis.includes('transfer') || jenis.includes('tf')) {
-                    // Kurangi pengirim
                     if (sumber.includes('bank') || sumber.includes('bsi')) saldoBank -= jumlah;
                     else if (sumber.includes('wallet') || sumber.includes('pay')) saldoEwallet -= jumlah;
                     else if (sumber.includes('cash')) saldoCash -= jumlah;
 
-                    // Tambah penerima
                     if (tujuan.includes('bank') || tujuan.includes('bsi')) saldoBank += jumlah;
                     else if (tujuan.includes('wallet') || tujuan.includes('pay')) saldoEwallet += jumlah;
                     else if (tujuan.includes('cash')) saldoCash += jumlah;
@@ -216,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const totalSaldo = saldoBank + saldoEwallet + saldoCash;
 
-            // Update Tampilan (Safe Update)
             const safeSetText = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = formatRupiah(val);
@@ -234,9 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
             safeSetText('card-balance-bank', saldoBank);
             safeSetText('card-balance-ewallet', saldoEwallet);
 
-            // Update Tabel & Grafik
             updateTransactionTable(data);
             
+            // Panggil grafik
             if (document.getElementById('monthlyEarningsChart')) {
                 createMonthlyChart(data);
             }
@@ -251,11 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tableBody) return;
 
         tableBody.innerHTML = '';
-        const recent = data.slice(-3).reverse();
+        const recent = data.slice(-7).reverse();
         recent.forEach(item => {
             const row = document.createElement('tr');
             
-            // Cari data pakai findValue
             const desc = findValue(item, ['deskripsi', 'ket', 'desc']) || '-';
             const jenis = findValue(item, ['jenis', 'type', 'transaksi']) || '-'; 
             const nomRaw = findValue(item, ['nominal', 'amount', 'nilai']) || 0;
@@ -271,18 +257,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- FUNGSI GRAFIK REAL-TIME ---
+    // --- GRAFIK BULANAN (Pemasukan vs Pengeluaran) ---
     function createMonthlyChart(data) {
         if (typeof Chart === 'undefined') return;
         
         const ctx = document.getElementById('monthlyEarningsChart');
         if (!ctx) return;
 
-        // 1. Siapkan Wadah Data (Jan - Des)
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        // Siapkan DUA wadah: satu untuk pemasukan, satu untuk pengeluaran
         const incomePerMonth = new Array(12).fill(0); 
+        const expensePerMonth = new Array(12).fill(0); 
 
-        // 2. Hitung total per bulan dari data API
         const currentYear = new Date().getFullYear();
         
         data.forEach(item => {
@@ -294,37 +280,56 @@ document.addEventListener('DOMContentLoaded', () => {
             const jumlah = parseFloat(String(rawNominal).replace(/[^0-9]/g, '')) || 0;
             const tgl = parseDate(rawTanggal);
 
-            // Hanya hitung Pemasukan tahun ini
             if (tgl && tgl.getFullYear() === currentYear) {
+                const monthIndex = tgl.getMonth(); 
+                
+                // Pisahkan Pemasukan & Pengeluaran
                 if (jenis.includes('masuk') || jenis === 'pemasukan') {
-                    const monthIndex = tgl.getMonth(); 
                     incomePerMonth[monthIndex] += jumlah;
+                } else if (jenis.includes('keluar') || jenis === 'pengeluaran') {
+                    expensePerMonth[monthIndex] += jumlah;
                 }
             }
         });
 
-        // 3. Render Grafik
         if (window.myFinanceChart instanceof Chart) {
             window.myFinanceChart.destroy();
         }
 
+        // Buat Chart dengan 2 Dataset
         window.myFinanceChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: monthNames,
-                datasets: [{
-                    label: `Pemasukan ${currentYear}`,
-                    data: incomePerMonth, 
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
+                datasets: [
+                    {
+                        label: 'Pemasukan',
+                        data: incomePerMonth, 
+                        borderColor: '#667eea', // Biru
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Pengeluaran',
+                        data: expensePerMonth, 
+                        borderColor: '#f44336', // Merah
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: { 
+                    y: { beginAtZero: true } 
+                }
             }
         });
     }
@@ -342,7 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const latestRecord = data[data.length - 1];
             
-            // Cari data pakai findValue
             const kondisiTubuh = findValue(latestRecord, ['kondisi', 'condition', 'tubuh']) || 'Sehat';
             const rawTgl = findValue(latestRecord, ['tanggal', 'date', 'kejadian']);
 
@@ -387,7 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Detail Halaman Kesehatan ---
     async function fetchHealthDataForHealthPage() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/health`);
@@ -431,7 +434,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const recentData = data.slice(-10).reverse();
             recentData.forEach(item => {
-                // Cari data pakai findValue
                 const tanggal = findValue(item, ['kapan', 'tanggal', 'when']) || '';
                 const waktu = findValue(item, ['waktu', 'jam', 'time']) || '';
                 const kegiatan = findValue(item, ['ngapain', 'kegiatan', 'aktivitas', 'activity']) || '-';
@@ -474,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const bulanIni = now.getMonth();
             const tahunIni = now.getFullYear();
 
-            // Hitung pengeluaran per kategori
             financeData.forEach(item => {
                 const jenis = String(findValue(item, ['jenis', 'transaksi']) || '').toLowerCase();
                 if (jenis.includes('keluar') || jenis === 'pengeluaran') {
@@ -483,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tgl = parseDate(rawTgl);
 
                     if (tgl && tgl.getMonth() === bulanIni && tgl.getFullYear() === tahunIni) {
-                        // Cari kategori
                         const kategori = findValue(item, ['kategori', 'category']) || 'Lainnya';
                         const rawNominal = findValue(item, ['nominal', 'jumlah']);
                         const jumlah = parseFloat(String(rawNominal).replace(/[^0-9]/g, '')) || 0;
@@ -498,7 +498,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (budgetContainer) {
                 budgetContainer.innerHTML = '';
                 budgetDefs.forEach(budget => {
-                    // Cari data budget pakai findValue
                     const kategori = findValue(budget, ['kategori', 'category']);
                     const rawAlokasi = findValue(budget, ['alokasi', 'budget', 'limit']);
                     const alokasi = parseFloat(String(rawAlokasi).replace(/[^0-9]/g, '')) || 0;
@@ -534,7 +533,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- START ---
     initNavListeners();
     runPageInit();
 });
