@@ -299,6 +299,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function downloadExcel(data, selectedMonth) {
+        // --- CEK APAKAH LIBRARY EXCEL SUDAH ADA? ---
+        if (typeof XLSX === 'undefined') {
+            alert('Library Excel (SheetJS) belum dimuat! Pastikan internet lancar dan refresh halaman.');
+            console.error('❌ Error: XLSX tidak ditemukan. Pastikan script tag ada di HTML.');
+            return;
+        }
+
         // 1. Filter Data
         const filteredData = data.filter(item => {
             const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl', 'timestamp']);
@@ -313,15 +320,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 2. Format Data Sesuai Kolom Excel yang diinginkan (Screenshot 105)
+        // 2. Format Data Sesuai Kolom Excel
         const excelData = filteredData.map(item => {
             const nominalRaw = findValue(item, ['Nominal', 'amount']) || 0;
             const nominalNum = parseFloat(String(nominalRaw).replace(/[^0-9]/g, '')) || 0;
 
             return {
-                "Timestamp": findValue(item, ['Timestamp', 'waktu']) || findValue(item, ['Tanggal', 'date']), // Sesuai Screenshot 105
+                "Timestamp": findValue(item, ['Timestamp', 'waktu']) || findValue(item, ['Tanggal', 'date']),
                 "Jenis Transaksi": findValue(item, ['Jenis', 'tipe']) || '',
-                "Nominal": nominalNum, // Biarkan angka agar bisa di-sum di Excel
+                "Nominal": nominalNum, 
                 "Kategori": findValue(item, ['Kategori', 'cat']) || '',
                 "Tanggal Transaksi": findValue(item, ['Tanggal', 'date']) || '',
                 "Deskripsi": findValue(item, ['Deskripsi', 'ket']) || '',
@@ -334,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Buat Worksheet & Workbook
         const worksheet = XLSX.utils.json_to_sheet(excelData);
         
-        // Atur lebar kolom otomatis (biar rapi)
+        // Atur lebar kolom otomatis
         const wscols = [
             {wch: 20}, // Timestamp
             {wch: 15}, // Jenis
