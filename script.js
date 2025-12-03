@@ -244,24 +244,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- LOGIKA DOWNLOAD BARU ---
+    // --- GANTI FUNGSI DOWNLOAD CSV LAMA DENGAN INI ---
+    
+    // Ubah pemanggilannya di setupDownloadFeature dulu:
     function setupDownloadFeature(data) {
         const monthSelector = document.getElementById('month-selector');
-        const btnDownload = document.getElementById('btn-download-csv');
+        const btnDownload = document.getElementById('btn-download-csv'); // ID tetap sama biar gak ubah HTML
         if (!monthSelector || !btnDownload) return;
 
-        // 1. Cari Bulan Unik dari Data
+        // 1. Cari Bulan Unik
         const uniqueMonths = new Set();
         data.forEach(item => {
-            const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl']);
-            const tgl = parseDate(rawTgl);
-            if (tgl) {
-                // Format YYYY-MM untuk value, dan Nama Bulan untuk tampilan
+            const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl', 'timestamp']);
+            // Coba parsing tanggal dengan format DD/MM/YYYY atau Timestamp
+            const tgl = parseDate(rawTgl ? rawTgl.split(' ')[0] : null); 
+            
+            if (tgl && !isNaN(tgl)) {
                 const monthValue = `${tgl.getFullYear()}-${padZero(tgl.getMonth() + 1)}`;
                 uniqueMonths.add(monthValue);
             }
         });
 
-        // 2. Masukkan ke Dropdown (Urutkan terbaru)
+        // 2. Masukkan ke Dropdown
         const sortedMonths = Array.from(uniqueMonths).sort().reverse();
         monthSelector.innerHTML = '<option value="">Pilih Bulan...</option>';
         
@@ -276,10 +280,13 @@ document.addEventListener('DOMContentLoaded', () => {
             monthSelector.appendChild(option);
         });
 
-        // 3. Event Listener Tombol Download
-        // Hapus listener lama biar gak dobel (cloning node)
+        // 3. Event Listener Baru (Panggil downloadExcel)
         const newBtn = btnDownload.cloneNode(true);
         btnDownload.parentNode.replaceChild(newBtn, btnDownload);
+
+        // Ubah teks tombol biar sesuai
+        newBtn.innerHTML = '<i class="fas fa-file-excel"></i> Unduh Excel'; 
+        newBtn.style.backgroundColor = '#1D6F42'; // Warna Hijau Excel
 
         newBtn.addEventListener('click', () => {
             const selectedMonth = monthSelector.value;
@@ -287,15 +294,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Silakan pilih bulan terlebih dahulu!');
                 return;
             }
-            downloadCSV(data, selectedMonth);
+            downloadExcel(data, selectedMonth);
         });
     }
 
-    function downloadCSV(data, selectedMonth) {
-        // Filter data sesuai bulan
+    function downloadExcel(data, selectedMonth) {
+        // 1. Filter Data
         const filteredData = data.filter(item => {
-            const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl']);
-            const tgl = parseDate(rawTgl);
+            const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl', 'timestamp']);
+            const tgl = parseDate(rawTgl ? rawTgl.split(' ')[0] : null);
             if (!tgl) return false;
             const itemMonth = `${tgl.getFullYear()}-${padZero(tgl.getMonth() + 1)}`;
             return itemMonth === selectedMonth;
@@ -306,32 +313,49 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Buat isi CSV
-        let csvContent = "Tanggal,Deskripsi,Kategori,Jenis,Nominal,Sumber Dana,Tujuan Dana\n";
+        // 2. Format Data Sesuai Kolom Excel yang diinginkan (Screenshot 105)
+        const excelData = filteredData.map(item => {
+            const nominalRaw = findValue(item, ['Nominal', 'amount']) || 0;
+            const nominalNum = parseFloat(String(nominalRaw).replace(/[^0-9]/g, '')) || 0;
 
-        filteredData.forEach(item => {
-            const tgl = findValue(item, ['Tanggal', 'date']) || '';
-            const desc = `"${(findValue(item, ['Deskripsi', 'ket']) || '').replace(/"/g, '""')}"`; // Escape koma & quote
-            const kat = findValue(item, ['Kategori', 'cat']) || '';
-            const jenis = findValue(item, ['Jenis', 'tipe']) || '';
-            const nom = findValue(item, ['Nominal', 'amount']) || 0;
-            const src = findValue(item, ['Sumber', 'source']) || '';
-            const dest = findValue(item, ['Tujuan', 'dest']) || '';
-
-            csvContent += `${tgl},${desc},${kat},${jenis},${nom},${src},${dest}\n`;
+            return {
+                "Timestamp": findValue(item, ['Timestamp', 'waktu']) || findValue(item, ['Tanggal', 'date']), // Sesuai Screenshot 105
+                "Jenis Transaksi": findValue(item, ['Jenis', 'tipe']) || '',
+                "Nominal": nominalNum, // Biarkan angka agar bisa di-sum di Excel
+                "Kategori": findValue(item, ['Kategori', 'cat']) || '',
+                "Tanggal Transaksi": findValue(item, ['Tanggal', 'date']) || '',
+                "Deskripsi": findValue(item, ['Deskripsi', 'ket']) || '',
+                "Sumber Dana": findValue(item, ['Sumber', 'source']) || '',
+                "Tujuan Dana": findValue(item, ['Tujuan', 'dest']) || '',
+                "Bukti Transfer": findValue(item, ['Bukti', 'proof']) || '-'
+            };
         });
 
-        // Proses Download File
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Laporan_Keuangan_${selectedMonth}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+        // 3. Buat Worksheet & Workbook
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        
+        // Atur lebar kolom otomatis (biar rapi)
+        const wscols = [
+            {wch: 20}, // Timestamp
+            {wch: 15}, // Jenis
+            {wch: 15}, // Nominal
+            {wch: 15}, // Kategori
+            {wch: 15}, // Tanggal
+            {wch: 30}, // Deskripsi
+            {wch: 15}, // Sumber
+            {wch: 15}, // Tujuan
+            {wch: 15}  // Bukti
+        ];
+        worksheet['!cols'] = wscols;
 
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Keuangan");
+
+        // 4. Download File
+        XLSX.writeFile(workbook, `Laporan_Keuangan_${selectedMonth}.xlsx`);
+    }
+    
+    
     function updateTransactionTable(data) {
         const tableBody = document.querySelector('#transaction-table tbody');
         if (!tableBody) return;
