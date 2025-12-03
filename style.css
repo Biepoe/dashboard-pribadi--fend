@@ -18,7 +18,6 @@ body {
 /* =================================
    KONTEN UTAMA & KARTU
    ================================= */
-/* Tidak lagi butuh .main-container, kita tata langsung .dashboard-container */
 .dashboard-container {
     width: 100%;
     max-width: 900px;
@@ -62,7 +61,6 @@ body {
 .card.full-width { grid-column: 1 / -1; }
 
 /* --- Gaya Spesifik Kartu --- */
-/* (Semua gaya spesifik untuk kartu keuangan, kesehatan, aktivitas tetap sama) */
 .finance-summary { display: flex; justify-content: space-between; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #eef2f7; }
 .finance-breakdown { font-size: 14px; color: #555; line-height: 1.6; }
 .finance-breakdown span { font-weight: 500; float: right; }
@@ -95,23 +93,20 @@ body {
 .control-item.active span { color: #667eea; }
 
 /* =================================
-   NAVIGASI BAWAH (BOTTOM NAVIGATION) - GAYA BARU
+   NAVIGASI BAWAH (BOTTOM NAVIGATION)
    ================================= */
 .bottom-nav {
     display: flex;
     position: fixed;
     bottom: 20px;
-    /* Posisikan di tengah layar secara horizontal */
     left: 50%;
     transform: translateX(-50%);
-    
     padding: 8px;
     gap: 8px;
-    
     background-color: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 99px; /* Membuat bentuk kapsul panjang */
+    border-radius: 99px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     z-index: 999;
 }
@@ -119,73 +114,30 @@ body {
 .bottom-nav .nav-item {
     width: 48px;
     height: 48px;
-    border-radius: 50%; /* Membuat item menjadi lingkaran */
+    border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     text-decoration: none;
-    color: #555; /* Warna ikon default */
+    color: #555;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.bottom-nav .nav-item span {
-    display: none; /* Sembunyikan teks */
-}
+.bottom-nav .nav-item span { display: none; }
+.bottom-nav .nav-item i { font-size: 20px; margin-bottom: 0; }
 
-.bottom-nav .nav-item i {
-    font-size: 20px;
-    margin-bottom: 0; /* Hapus margin karena teks disembunyikan */
-}
-
-/* INI BAGIAN PENTINGNYA */
 .bottom-nav .nav-item.active {
-    background-color: #667eea; /* Warna latar biru */
-    color: white; /* Warna ikon jadi putih */
-    transform: translateY(-3px); /* Efek sedikit terangkat */
+    background-color: #667eea;
+    color: white;
+    transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.6);
 }
 
-/* Tampilan saat mouse hover di item yang tidak aktif */
-.bottom-nav .nav-item:not(.active):hover {
-    background-color: #f0f0f0;
-}
-
+.bottom-nav .nav-item:not(.active):hover { background-color: #f0f0f0; }
 
 /* =================================
-   RESPONSIVE UNTUK MOBILE
+   GAYA HALAMAN KEUANGAN
    ================================= */
-@media (max-width: 768px) {
-    .dashboard-container {
-        padding: 15px;
-    }
-    .header {
-        border-radius: 18px; /* Tetap rounded di mobile */
-    }
-    .main-content {
-        grid-template-columns: 1fr; /* 1 kolom di mobile */
-    }
-    .activity-log-item {
-        flex-direction: column;
-        gap: 5px;
-        align-items: flex-start;
-    }
-    .activity-log-time {
-        text-align: left;
-    }
-    .activity-log-details {
-        border-left: none;
-        padding-left: 0;
-    }
-
-    .footer-controls {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* punya halm keuangan */
-/* TAMBAHKAN INI DI BAGIAN BAWAH style.css */
-
-/* --- Layout Grid Halaman Keuangan --- */
 .finance-grid-container {
     display: grid;
     grid-template-columns: 1.2fr 1.5fr 1fr;
@@ -198,7 +150,6 @@ body {
     gap: 20px;
 }
 
-/* --- Kartu Akun (BSI & ShopeePay) --- */
 .account-cards-container {
     display: flex;
     flex-direction: column;
@@ -214,12 +165,8 @@ body {
     flex-direction: column;
     justify-content: space-between;
 }
-.account-card.bank {
-    background: linear-gradient(45deg, #005266, #008080);
-}
-.account-card.ewallet {
-    background: linear-gradient(45deg, #FF6B00, #FF8C00);
-}
+.account-card.bank { background: linear-gradient(45deg, #005266, #008080); }
+.account-card.ewallet { background: linear-gradient(45deg, #FF6B00, #FF8C00); }
 .card-title { font-size: 16px; font-weight: 500; }
 .card-balance { font-size: 28px; font-weight: 600; letter-spacing: 1px; }
 .card-logo {
@@ -230,7 +177,6 @@ body {
     opacity: 0.8;
 }
 
-/* --- Tabel Riwayat Transaksi --- */
 .transaction-table { width: 100%; border-collapse: collapse; }
 .transaction-table th, .transaction-table td {
     padding: 8px 4px;
@@ -241,7 +187,6 @@ body {
 .transaction-table th { font-weight: 600; }
 .transaction-table td:nth-child(3) { text-align: right; font-weight: 500; }
 
-/* --- Info Saldo --- */
 .finance-summary p, .finance-breakdown p, .finance-total p {
     display: flex;
     justify-content: space-between;
@@ -250,13 +195,11 @@ body {
     font-weight: 600;
 }
 
-/* --- Wadah Grafik --- */
 .chart-container {
-    height: 200px; /* Beri tinggi agar grafik muncul */
+    height: 200px;
     position: relative;
 }
 
-/* --- Gaya untuk Fitur Budgeting --- */
 .budget-container {
     width: 100%;
     display: flex;
@@ -264,9 +207,7 @@ body {
     gap: 15px;
 }
 
-.budget-item {
-    font-size: 14px;
-}
+.budget-item { font-size: 14px; }
 
 .budget-item-header {
     display: flex;
@@ -302,20 +243,63 @@ body {
 
 .budget-item-footer .remaining {
     font-weight: 600;
-    color: #4caf50; /* Hijau untuk sisa */
+    color: #4caf50; 
 }
 
-/* --- Responsif untuk Halaman Keuangan --- */
+/* --- FITUR DOWNLOAD --- */
+.download-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px dashed #eef2f7;
+}
+.download-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #333;
+}
+.download-controls {
+    display: flex;
+    gap: 10px;
+}
+.month-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    flex-grow: 1;
+    font-family: inherit;
+    outline: none;
+}
+.btn-download {
+    padding: 8px 16px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-download:hover {
+    background-color: #43a047;
+}
+.btn-download:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* --- Responsif --- */
 @media (max-width: 900px) {
-    .finance-grid-container {
-        grid-template-columns: 1fr 1fr; /* Jadi 2 kolom untuk tablet */
-    }
-    .finance-col-right {
-        grid-column: 1 / -1; /* Kolom kanan pindah ke bawah, full width */
-    }
+    .finance-grid-container { grid-template-columns: 1fr 1fr; }
+    .finance-col-right { grid-column: 1 / -1; }
 }
 @media (max-width: 768px) {
-    .finance-grid-container {
-        grid-template-columns: 1fr; /* Jadi 1 kolom untuk HP */
-    }
+    .finance-grid-container { grid-template-columns: 1fr; }
+    .footer-controls { grid-template-columns: 1fr; }
 }
