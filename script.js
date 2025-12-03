@@ -492,6 +492,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(e) { console.error('Activity Error:', e); }
     }
 
+    // =========================================================
+    // 7. FITUR BUDGET (DIPERBAIKI: FILTER BULAN REAL-TIME AKTIF)
+    // =========================================================
+
     async function fetchBudgetData() {
         try {
             const [budgetResponse, financeResponse] = await Promise.all([
@@ -502,8 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const budgetDefs = await budgetResponse.json();
             const financeData = await financeResponse.json();
 
-            // 1. Petakan Budget agar mudah dicocokkan (Mapping)
-            // Contoh: { "makanan": {limit: 500000, used: 0}, "transport": {...} }
+            // 1. Petakan Budget (Mapping)
             const budgetMap = {};
             
             budgetDefs.forEach(b => {
@@ -512,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (name) {
                     const limit = parseFloat(String(rawLimit).replace(/[^0-9]/g, '')) || 0;
-                    // Simpan dengan kunci huruf kecil biar gampang dicari
                     budgetMap[name.toLowerCase()] = { 
                         originalName: name, 
                         limit: limit, 
@@ -521,58 +523,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // 2. Loop Transaksi & Cocokkan ke Budget
+            // 2. Filter Waktu (Hanya Bulan & Tahun Saat Ini)
+            const now = new Date();
+            const bulanIni = now.getMonth();
+            const tahunIni = now.getFullYear();
+
+            // 3. Loop Transaksi
             financeData.forEach(item => {
                 const jenis = String(findValue(item, ['jenis', 'transaksi']) || '').toLowerCase();
                 
-                // Ambil hanya Pengeluaran
-                if (jenis.includes('keluar') || jenis === 'pengeluaran') {
+                // Cek Tanggal Transaksi
+                const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl']);
+                const tgl = parseDate(rawTgl);
+
+                // SYARAT: Harus Pengeluaran DAN Harus Bulan Ini
+                if ((jenis.includes('keluar') || jenis === 'pengeluaran') && 
+                    tgl && tgl.getMonth() === bulanIni && tgl.getFullYear() === tahunIni) {
                     
-                    // Ambil kategori transaksi (Misal: "Makanan / Lauk")
                     const transCat = String(findValue(item, ['kategori', 'category']) || '').toLowerCase();
                     const rawNominal = findValue(item, ['nominal', 'jumlah']);
                     const amount = parseFloat(String(rawNominal).replace(/[^0-9]/g, '')) || 0;
 
-                    // --- LOGIKA PENCCOCOKAN PINTAR ---
-                    // Cek apakah nama budget ada di dalam nama kategori transaksi?
-                    // Contoh: Budget "makanan" ada di dalam Transaksi "makanan / lauk"
-                    let matched = false;
+                    // Cocokkan Kategori Transaksi ke Budget
                     for (let budgetKey in budgetMap) {
                         if (transCat.includes(budgetKey)) {
                             budgetMap[budgetKey].used += amount;
-                            matched = true;
-                            break; // Stop jika sudah ketemu
+                            break; 
                         }
                     }
-                    
-                    // Jika tidak ketemu match persis, masukkan ke Lainnya (Opsional)
-                    // if (!matched) { ... } 
                 }
             });
 
-            // 3. Tampilkan ke HTML
+            // 4. Tampilkan ke HTML
             const budgetContainer = document.getElementById('budget-container');
             if (budgetContainer) {
                 budgetContainer.innerHTML = '';
                 
-                // Loop hasil hitungan budgetMap
                 for (let key in budgetMap) {
                     const data = budgetMap[key];
                     const sisa = data.limit - data.used;
                     
-                    // Hitung Persentase (Max 100%)
                     let percentage = 0;
-                    if (data.limit > 0) {
-                        percentage = (data.used / data.limit) * 100;
-                    } else if (data.used > 0) {
-                        percentage = 100; // Kalau limit 0 tapi ada pengeluaran, full bar
-                    }
+                    if (data.limit > 0) percentage = (data.used / data.limit) * 100;
+                    else if (data.used > 0) percentage = 100;
 
-                    // Tentukan Warna
                     let colorClass = '';
-                    if (percentage >= 100) colorClass = 'danger'; // Merah
-                    else if (percentage > 75) colorClass = 'warning'; // Kuning
-                    // Default biru
+                    if (percentage >= 100) colorClass = 'danger'; 
+                    else if (percentage > 75) colorClass = 'warning'; 
 
                     budgetContainer.innerHTML += `
                         <div class="budget-item">
