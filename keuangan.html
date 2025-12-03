@@ -38,18 +38,33 @@
                             <div class="card-header">
                                 <h2>Riwayat Transaksi</h2>
                             </div>
-                            <div class="card-body">
-                                <table class="transaction-table" id="transaction-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Deskripsi</th>
-                                            <th>Jenis</th>
-                                            <th>Jumlah</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        </tbody>
-                                </table>
+                            <div class="card-body" style="flex-direction: column;">
+                                <div style="overflow-x: auto;">
+                                    <table class="transaction-table" id="transaction-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Deskripsi</th>
+                                                <th>Jenis</th>
+                                                <th>Jumlah</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="download-section">
+                                    <h3>Unduh Laporan</h3>
+                                    <div class="download-controls">
+                                        <select id="month-selector" class="month-select">
+                                            <option value="">Pilih Bulan...</option>
+                                        </select>
+                                        <button id="btn-download-csv" class="btn-download">
+                                            <i class="fas fa-file-download"></i> Unduh CSV
+                                        </button>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
