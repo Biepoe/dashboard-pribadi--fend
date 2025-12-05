@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (VERSI FINAL: DOWNLOAD EXCEL RAPI + GRAFIK DUAL)
+// SCRIPT.JS (FINAL: FULL DASHBOARD INTEGRATION)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,7 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
-    // --- FUNGSI NAVIGASI (SPA) ---
+    // =========================================================
+    // 1. SISTEM NAVIGASI (SPA)
+    // =========================================================
+    
     function runPageInit() {
         const bodyId = document.body.id;
         if (bodyId === 'halaman-beranda') {
@@ -67,7 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- INISIALISASI HALAMAN ---
+    // =========================================================
+    // 2. INISIALISASI HALAMAN
+    // =========================================================
+
     function initBeranda() {
         setDate(); setTime(); setInterval(setTime, 1000);
         fetchFinancialData(); 
@@ -81,10 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function initKesehatan() {
-        fetchHealthDataForHealthPage();
+        // Fitur Baru untuk Halaman Kesehatan
+        initDiagnosticFeature(); // Pop-up simulasi
+        initMentalHealthChart(); // Grafik Mental Health
+        simulateActivityData();  // Data Dummy Steps/Workout
+        fetchHealthDataForHealthPage(); // Data API (jika ada)
     }
 
-    // --- HELPER UTILS ---
+    // =========================================================
+    // 3. HELPER & UTILS
+    // =========================================================
+
     function padZero(num) { return num < 10 ? '0' + num : num; }
 
     function parseDate(dateString) {
@@ -131,7 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return undefined;
     }
 
-    // --- 1. FITUR KEUANGAN & DOWNLOAD ---
+    // =========================================================
+    // 4. FITUR KEUANGAN (DATA & CHART & DOWNLOAD)
+    // =========================================================
+
     async function fetchFinancialData() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/finances`);
@@ -214,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 createMonthlyChart(data);
             }
 
-            // Inisialisasi Download
             if (document.getElementById('month-selector')) {
                 setupDownloadFeature(data);
             }
@@ -230,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnDownload = document.getElementById('btn-download-csv'); 
         if (!monthSelector || !btnDownload) return;
 
-        // 1. Cari Bulan Unik
         const uniqueMonths = new Set();
         data.forEach(item => {
             const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl', 'timestamp']);
@@ -241,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 2. Masukkan ke Dropdown
         const sortedMonths = Array.from(uniqueMonths).sort().reverse();
         monthSelector.innerHTML = '<option value="">Pilih Bulan...</option>';
         const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -255,7 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
             monthSelector.appendChild(option);
         });
 
-        // 3. Reset Button Listener
         const newBtn = btnDownload.cloneNode(true);
         btnDownload.parentNode.replaceChild(newBtn, btnDownload);
         newBtn.innerHTML = '<i class="fas fa-file-excel"></i> Unduh Excel'; 
@@ -277,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 1. Filter Data
         const filteredData = data.filter(item => {
             const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl', 'timestamp']);
             const tgl = parseDate(rawTgl ? rawTgl.split(' ')[0] : null);
@@ -291,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 2. Format Data Sesuai Screenshot 105 (Rapi)
         const excelData = filteredData.map(item => {
             const nominalRaw = findValue(item, ['Nominal', 'amount']) || 0;
             const nominalNum = parseFloat(String(nominalRaw).replace(/[^0-9]/g, '')) || 0;
@@ -309,7 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // 3. Buat File Excel
         const worksheet = XLSX.utils.json_to_sheet(excelData);
         const wscols = [
             {wch: 20}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}, {wch: 15}, {wch: 15}, {wch: 15}
@@ -326,9 +335,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tableBody) return;
 
         tableBody.innerHTML = '';
-        const recent = data.slice(-3).reverse();
+        const recent = data.slice(-5).reverse();
         recent.forEach(item => {
             const row = document.createElement('tr');
+            
             const desc = findValue(item, ['deskripsi', 'ket', 'desc']) || '-';
             const jenis = findValue(item, ['jenis', 'type', 'transaksi']) || '-'; 
             const nomRaw = findValue(item, ['nominal', 'amount', 'nilai']) || 0;
@@ -417,83 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 2. FITUR KESEHATAN ---
-    async function fetchHealthData() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/health`);
-            const data = await response.json();
-            if (!data || data.length === 0) return;
-
-            const latestRecord = data[data.length - 1];
-            const kondisi = findValue(latestRecord, ['kondisi', 'tubuh']) || 'Sehat';
-            const rawTgl = findValue(latestRecord, ['tanggal', 'date']);
-            const lastSleep = [...data].reverse().find(item => findValue(item, ['tidur']));
-            const lastMed = [...data].reverse().find(item => findValue(item, ['obat']));
-            
-            const bodyStatusEl = document.getElementById('body-status');
-            const bodyVector = document.getElementById('body-vector');
-            if (bodyStatusEl) bodyStatusEl.textContent = kondisi;
-            if (bodyVector) bodyVector.className = (kondisi.toLowerCase() === 'sakit') ? 'body-sick' : 'body-normal';
-
-            const sleepEl = document.getElementById('sleep-duration');
-            if (sleepEl && lastSleep) {
-                const t = findValue(lastSleep, ['tidur']) || '00:00';
-                const b = findValue(lastSleep, ['bangun']) || '00:00';
-                const [tH, tM] = t.split(':');
-                const [bH, bM] = b.split(':');
-                let dur = (parseInt(bH) - parseInt(tH));
-                if (dur < 0) dur += 24;
-                sleepEl.textContent = `${dur} Jam`;
-            }
-
-            const medEl = document.getElementById('last-medicine');
-            if(medEl) medEl.textContent = lastMed ? findValue(lastMed, ['obat']) : '-';
-            
-            const dateEl = document.getElementById('health-date');
-            if(dateEl && rawTgl) {
-                dateEl.textContent = parseDate(rawTgl).toLocaleDateString('id-ID', {weekday: 'long'});
-            }
-        } catch (e) { console.error('Health Error:', e); }
-    }
-
-    async function fetchHealthDataForHealthPage() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/health`);
-            const data = await response.json();
-            if (!data || data.length === 0) return;
-            const latest = data[data.length-1];
-            const kondisi = findValue(latest, ['kondisi']) || 'Sehat';
-            document.getElementById('body-status-large').textContent = kondisi;
-            document.getElementById('body-vector-large').className = (kondisi.toLowerCase() === 'sakit') ? 'body-sick' : 'body-normal';
-        } catch(e) { console.error(e); }
-    }
-
-    // --- 3. FITUR AKTIVITAS ---
-    async function fetchActivityData() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/activities`);
-            const data = await response.json();
-            const list = document.getElementById('activity-log-list');
-            if (!list) return;
-            list.innerHTML = '';
-            
-            data.slice(-5).reverse().forEach(item => {
-                const tgl = findValue(item, ['kapan', 'tanggal']) || '';
-                const jam = findValue(item, ['waktu', 'jam']) || '';
-                const keg = findValue(item, ['ngapain', 'kegiatan']) || '-';
-                const note = findValue(item, ['notes']) || '';
-                
-                list.innerHTML += `
-                    <li class="activity-log-item">
-                        <div class="activity-log-time"><span class="date">${tgl}</span><span class="time">${jam}</span></div>
-                        <div class="activity-log-details"><span class="title">${keg}</span><span class="notes">${note}</span></div>
-                    </li>`;
-            });
-        } catch(e) { console.error('Activity Error:', e); }
-    }
-
     // =========================================================
-    // 7. FITUR BUDGET (DIPERBAIKI: FILTER BULAN REAL-TIME AKTIF)
+    // 5. FITUR BUDGET (FILTER BULAN REAL-TIME)
     // =========================================================
 
     async function fetchBudgetData() {
@@ -506,13 +441,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const budgetDefs = await budgetResponse.json();
             const financeData = await financeResponse.json();
 
-            // 1. Petakan Budget (Mapping)
             const budgetMap = {};
             
             budgetDefs.forEach(b => {
                 const name = findValue(b, ['kategori', 'category']);
                 const rawLimit = findValue(b, ['alokasi', 'limit', 'budget', 'nominal']);
-                
                 if (name) {
                     const limit = parseFloat(String(rawLimit).replace(/[^0-9]/g, '')) || 0;
                     budgetMap[name.toLowerCase()] = { 
@@ -523,20 +456,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // 2. Filter Waktu (Hanya Bulan & Tahun Saat Ini)
             const now = new Date();
             const bulanIni = now.getMonth();
             const tahunIni = now.getFullYear();
 
-            // 3. Loop Transaksi
             financeData.forEach(item => {
                 const jenis = String(findValue(item, ['jenis', 'transaksi']) || '').toLowerCase();
-                
-                // Cek Tanggal Transaksi
                 const rawTgl = findValue(item, ['Tanggal', 'date', 'tgl']);
                 const tgl = parseDate(rawTgl);
 
-                // SYARAT: Harus Pengeluaran DAN Harus Bulan Ini
                 if ((jenis.includes('keluar') || jenis === 'pengeluaran') && 
                     tgl && tgl.getMonth() === bulanIni && tgl.getFullYear() === tahunIni) {
                     
@@ -544,7 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const rawNominal = findValue(item, ['nominal', 'jumlah']);
                     const amount = parseFloat(String(rawNominal).replace(/[^0-9]/g, '')) || 0;
 
-                    // Cocokkan Kategori Transaksi ke Budget
                     for (let budgetKey in budgetMap) {
                         if (transCat.includes(budgetKey)) {
                             budgetMap[budgetKey].used += amount;
@@ -554,7 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // 4. Tampilkan ke HTML
             const budgetContainer = document.getElementById('budget-container');
             if (budgetContainer) {
                 budgetContainer.innerHTML = '';
@@ -595,7 +521,120 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Gagal ambil data budget:', error);
         }
     }
-    
+
+    // =========================================================
+    // 6. FITUR KESEHATAN BARU (SIMULASI & CHART)
+    // =========================================================
+
+    // --- MENTAL HEALTH CHART (GAUGE) ---
+    function initMentalHealthChart() {
+        const ctx = document.getElementById('mentalHealthChart');
+        if (!ctx) return;
+
+        if (window.mentalChart instanceof Chart) window.mentalChart.destroy();
+
+        window.mentalChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Skor', 'Sisa'], 
+                datasets: [{
+                    data: [78, 22],
+                    backgroundColor: ['#4caf50', '#e0e0e0'],
+                    borderWidth: 0,
+                    circumference: 180, 
+                    rotation: 270, 
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '85%',
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+    }
+
+    // --- SIMULASI AKTIVITAS (ANGKA BERGERAK DIKIT) ---
+    function simulateActivityData() {
+        const elSteps = document.getElementById('dummy-steps');
+        
+        if (elSteps) {
+            let steps = 8200;
+            setInterval(() => {
+                steps += Math.floor(Math.random() * 5); 
+                elSteps.textContent = steps.toLocaleString();
+            }, 3000);
+        }
+    }
+
+    // --- FITUR DIAGNOSTIC (MODAL POPUP) ---
+    let diagInterval = null;
+    function initDiagnosticFeature() {
+        const btn = document.getElementById('btn-diagnostic');
+        const modal = document.getElementById('diagnostic-modal');
+        const close = document.querySelector('.close-btn');
+        if(btn && modal) btn.addEventListener('click', ()=>{ modal.classList.add('show'); startSim(); });
+        if(close) close.addEventListener('click', ()=>{ modal.classList.remove('show'); stopSim(); });
+        window.onclick = (e) => { if(e.target==modal) { modal.classList.remove('show'); stopSim(); }};
+    }
+    function startSim(){ updateVal(); diagInterval=setInterval(updateVal, 1500); }
+    function stopSim(){ if(diagInterval) clearInterval(diagInterval); }
+    function updateVal(){
+        const hr = Math.floor(Math.random()*(95-65+1))+65;
+        const sp = Math.floor(Math.random()*(99-96+1))+96;
+        const tp = (Math.random()*(36.8-36.3)+36.3).toFixed(1);
+        if(document.getElementById('live-heart-rate')) document.getElementById('live-heart-rate').textContent=hr;
+        if(document.getElementById('live-spo2')) document.getElementById('live-spo2').textContent=sp;
+        if(document.getElementById('live-temp')) document.getElementById('live-temp').textContent=tp;
+    }
+
+    // --- FETCH DATA KESEHATAN (DATA LAMA DARI SHEET) ---
+    async function fetchHealthData() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/health`);
+            const data = await res.json();
+            if (!data.length) return;
+            const last = data[data.length - 1];
+            const cond = findValue(last, ['kondisi', 'tubuh']) || 'Sehat';
+            const vec = document.getElementById('body-vector');
+            if (document.getElementById('body-status')) document.getElementById('body-status').textContent = cond;
+            if (vec) vec.className = cond.toLowerCase().includes('sakit') ? 'body-sick' : 'body-normal';
+            
+            const sleepEl = document.getElementById('sleep-duration');
+            const lastSleep = [...data].reverse().find(i => findValue(i, ['tidur']));
+            if(sleepEl && lastSleep) {
+                const t = findValue(lastSleep, ['tidur']);
+                const b = findValue(lastSleep, ['bangun']);
+                const dur = (parseInt(b.split(':')[0]) - parseInt(t.split(':')[0]) + 24) % 24;
+                sleepEl.textContent = `${dur} Jam`;
+            }
+            if(document.getElementById('last-medicine')) {
+                const lastMed = [...data].reverse().find(i => findValue(i, ['obat']));
+                document.getElementById('last-medicine').textContent = lastMed ? findValue(lastMed, ['obat']) : '-';
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function fetchHealthDataForHealthPage() {
+        // Biarkan kosong atau isi logika jika mau ambil data real dari sheet ke kartu baru
+    }
+
+    async function fetchActivityData() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/activities`);
+            const data = await res.json();
+            const list = document.getElementById('activity-log-list');
+            if (list) {
+                list.innerHTML = '';
+                data.slice(-5).reverse().forEach(i => {
+                    const t = findValue(i, ['kapan', 'date']) || '';
+                    const k = findValue(i, ['ngapain', 'kegiatan']) || '-';
+                    list.innerHTML += `<li class="activity-log-item"><div class="activity-log-time">${t}</div><div class="activity-log-details">${k}</div></li>`;
+                });
+            }
+        } catch (e) { console.error(e); }
+    }
+
     initNavListeners();
     runPageInit();
 });
