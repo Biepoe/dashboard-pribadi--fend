@@ -5,85 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kesehatan - Personal Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="kesehatan.css"> <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="kesehatan.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body id="halaman-kesehatan">
 
-    <div class="main-container" id="main-container">
-        <div class="dashboard-container">
-            <div id="content-wrapper">
-                <header class="header">
-                    <h1>Dasbor Kesehatan</h1>
-                    <p>Ringkasan, analisis, dan tren kesehatanmu.</p>
-                </header>
+    <div class="dashboard-container">
+        <div id="content-wrapper">
+            <div class="page-header">
+                <h1>Ringkasan Kesehatan</h1>
+                <span class="date-badge" id="health-date">Hari Ini</span>
+            </div>
 
-                <main class="health-grid-container">
-                    <div class="health-col-left">
-                        <div class="card">
-                            <div class="card-header">
-                                <h2>Status Vital</h2>
-                                <span class="pill-info" id="health-date">Hari Ini</span>
-                            </div>
-                            <div class="card-body">
-                                <div class="vital-status-container">
-                                    <div id="body-vector-large" class="body-normal">
-                                        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M24,2A10,10,0,1,0,34,12,10,10,0,0,0,24,2Z"/><path d="M42.3,23.32,38.5,22a2,2,0,0,0-2.32,1.29L32.6,30.5h-1a13.3,13.3,0,0,0-4.6-9.15V13a1,1,0,0,0-1-1H22a1,1,0,0,0-1,1v8.35A13.3,13.3,0,0,0,16.4,30.5h-1L11.82,23.29A2,2,0,0,0,9.5,22l-3.8,1.32a2,2,0,0,0-1.29,2.32L6,32v9a2,2,0,0,0,2,2h4a1,1,0,0,0,1-1V35h3.6a8.41,8.41,0,0,0,7.4,5h2a8.41,8.41,0,0,0,7.4-5H35v7a1,1,0,0,0,1,1h4a2,2,0,0,0,2-2V32l1.59-6.36A2,2,0,0,0,42.3,23.32Z"/></svg>
-                                    </div>
-                                    <h3 id="body-status-large">Normal</h3>
-                                    <p>Kondisi tubuh terakhir tercatat</p>
+            <main class="health-layout">
+                <aside class="health-sidebar">
+                    <div class="sidebar-card health-hero">
+                        <div class="hero-header">
+                            <div class="icon-box"><i class="fas fa-heartbeat"></i></div>
+                            <h3>Kesehatan</h3>
+                            <p>Diagnosis terakhir<br>3 hari yang lalu</p>
+                        </div>
+                        <div class="hero-image">
+                            <i class="fas fa-heart pulse-anim-slow" style="font-size: 80px; color: rgba(255,255,255,0.8);"></i>
+                        </div>
+                        <button id="btn-diagnostic" class="btn-diagnostic">
+                            Diagnostik
+                        </button>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Detail Laporan <i class="fas fa-ellipsis-v"></i></h4>
+                        <div class="report-score">
+                            <span class="big-percent">75%</span>
+                            <span class="label">dari batas sehat</span>
+                        </div>
+                        
+                        <div class="reminder-list">
+                            <div class="reminder-item">
+                                <i class="fas fa-calendar-check" style="color: #4caf50;"></i>
+                                <div>
+                                    <span>Cek berikutnya</span>
+                                    <strong>28 Feb 2025</strong>
                                 </div>
-                                <div class="vital-details">
-                                    <h4>Detail Laporan</h4>
-                                    <p><span>Obat Terakhir</span> <strong id="last-medicine-detail">-</strong></p>
+                            </div>
+                            <div class="reminder-item">
+                                <i class="fas fa-tint" style="color: #2196f3;"></i>
+                                <div>
+                                    <span>Hidrasi</span>
+                                    <strong>3.5L / hari</strong>
+                                </div>
+                            </div>
+                            <div class="reminder-item">
+                                <i class="fas fa-running" style="color: #ff9800;"></i>
+                                <div>
+                                    <span>Olahraga</span>
+                                    <strong>30 menit jogging</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="health-main">
+                    
+                    <div class="section-header">
+                        <h2><i class="fab fa-gratipay" style="color: #9c27b0;"></i> Aktivitas Saya</h2>
+                    </div>
+                    <div class="activity-grid">
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <span class="stat-title">Langkah Hari Ini</span>
+                                <span class="stat-badge blue"><i class="fas fa-clock"></i> 45 mnt</span>
+                            </div>
+                            <div class="stat-value">
+                                <span id="dummy-steps">8.200</span> <small>langkah</small>
+                            </div>
+                            <p class="stat-desc">Rute: Rumah → Taman Kota</p>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <span class="stat-title">Latihan</span>
+                                <span class="stat-badge orange"><i class="fas fa-fire"></i> 30 mnt</span>
+                            </div>
+                            <div class="stat-value">
+                                <span id="dummy-cal">450</span> <small>Kkal terbakar</small>
+                            </div>
+                            <p class="stat-desc">Tipe: Latihan HIIT</p>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <span class="stat-title">Tidur & Pemulihan</span>
+                                <span class="stat-badge purple"><i class="fas fa-moon"></i> 7j 45m</span>
+                            </div>
+                            <div class="stat-value">
+                                <span id="dummy-sleep-score">85</span><span style="font-size:20px; color:#999;">/100</span>
+                            </div>
+                            <p class="stat-desc">Tidur Nyenyak: 2j 10m</p>
+                        </div>
+                    </div>
+
+                    <div class="middle-grid">
+                        <div class="wide-card">
+                            <div class="card-head">
+                                <h3><i class="fas fa-smile" style="color: #4caf50;"></i> Skor Kesehatan Mental</h3>
+                                <i class="fas fa-arrow-up" style="color: #ccc;"></i>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="mentalHealthChart"></canvas>
+                                <div class="chart-center-text">
+                                    <span id="mental-score">78</span>
+                                    <small>/100</small>
+                                </div>
+                            </div>
+                            <div class="mental-stats">
+                                <span>Kesadaran <strong>82%</strong></span>
+                                <span>Manajemen Stres <strong>68%</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="right-column-stack">
+                            <div class="wide-card body-comp">
+                                <div class="card-head">
+                                    <h3><i class="fas fa-weight" style="color: #ff9800;"></i> Komposisi Tubuh</h3>
+                                    <i class="fas fa-arrow-up" style="color: #ccc;"></i>
+                                </div>
+                                <div class="body-stats-row">
+                                    <div class="body-stat">
+                                        <div class="icon-circle pink"><i class="fas fa-weight-hanging"></i></div>
+                                        <div>
+                                            <span class="val">68 Kg</span>
+                                            <p>Berat (Sehat)</p>
+                                        </div>
+                                    </div>
+                                    <div class="body-stat">
+                                        <div class="icon-circle red"><i class="fas fa-percentage"></i></div>
+                                        <div>
+                                            <span class="val">22%</span>
+                                            <p>Lemak Tubuh (Ideal)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="wide-card goals-card-dark">
+                                <div class="goals-content">
+                                    <h3>Tetapkan dan Capai<br>Target Kesehatanmu!</h3>
+                                    <p>Target: Turun 3kg dalam 1 bulan</p>
+                                    <button class="btn-goal">Atur Target <i class="fas fa-chevron-right"></i></button>
+                                </div>
+                                <div class="goals-decor">
+                                    <i class="fas fa-bullseye"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="health-col-right">
-                        <div class="card">
-                             <div class="card-header">
-                                <h2>Aktivitas Fisik</h2>
-                            </div>
-                             <div class="card-body-row">
-                                <div class="activity-metric">
-                                    <i class="fas fa-shoe-prints"></i>
-                                    <div>
-                                        <span class="value">8,200</span>
-                                        <span class="label">Langkah Hari Ini</span>
-                                    </div>
-                                </div>
-                                 <div class="activity-metric">
-                                    <i class="fas fa-fire"></i>
-                                    <div>
-                                        <span class="value">450</span>
-                                        <span class="label">Kalori Terbakar</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                </section>
+            </main>
+        </div>
+    </div>
 
-                        <div class="card">
-                            <div class="card-header">
-                                <h2>Analisis Kualitas Tidur</h2>
-                            </div>
-                            <div class="card-body">
-                                <div class="sleep-score-container">
-                                    <div class="sleep-score-circle">
-                                        <span class="score" id="sleep-score">85<small>/100</small></span>
-                                    </div>
-                                    <div class="sleep-score-details">
-                                        <p><span>Waktu Tidur</span> <strong id="sleep-start-time">-</strong></p>
-                                        <p><span>Waktu Bangun</span> <strong id="sleep-end-time">-</strong></p>
-                                        <p><span>Total Durasi</span> <strong id="sleep-total-duration">-</strong></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <div id="diagnostic-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <div class="diagnostic-header">
+                <h2><i class="fas fa-heartbeat" style="color: #e91e63;"></i> Diagnostik Langsung</h2>
+                <p>Memindai kondisi vital secara real-time...</p>
+            </div>
+            <div class="diagnostic-grid-modal">
+                <div class="diag-item">
+                    <span class="diag-label"><i class="fas fa-heart"></i> Detak Jantung</span>
+                    <div class="diag-value-box heart">
+                        <span id="live-heart-rate">--</span> <small>bpm</small>
                     </div>
-                </main>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-label"><i class="fas fa-lungs"></i> SpO2</span>
+                    <div class="diag-value-box">
+                        <span id="live-spo2">--</span> <small>%</small>
+                    </div>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-label"><i class="fas fa-thermometer-half"></i> Suhu</span>
+                    <div class="diag-value-box">
+                        <span id="live-temp">--</span> <small>°C</small>
+                    </div>
+                </div>
+            </div>
+            <div class="diagnostic-footer">
+                <div class="scan-line"></div>
+                <p>Status: <strong style="color: #4caf50;">Memindai...</strong></p>
             </div>
         </div>
     </div>
