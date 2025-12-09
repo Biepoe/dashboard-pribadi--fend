@@ -1,1 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal - Dashboard</title>
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="personal.css">
 
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body id="halaman-personal">
+
+    <div class="dashboard-container">
+        <div id="content-wrapper">
+            <div class="page-header">
+                <h1>Profil Saya</h1>
+                <span class="date-badge" id="current-date">Hari Ini</span>
+            </div>
+
+            <main class="personal-layout">
+                
+                <aside>
+                    <div class="card profile-card">
+                        <img src="https://ui-avatars.com/api/?name=User&background=random" alt="Foto Profil" class="profile-img" id="profile-img">
+                        <h2 class="profile-name" id="profile-name">Nama Kamu</h2>
+                        <p class="profile-role" id="profile-role">Pekerjaan / Hobi</p>
+                        <p class="profile-bio" id="profile-bio">"Ketuk ikon pensil di bawah untuk mengedit profil ini."</p>
+                        <button class="edit-btn" onclick="editProfile()" style="margin-top: 10px;"><i class="fas fa-pencil-alt"></i> Edit Profil</button>
+                    </div>
+                </aside>
+
+                <section class="personal-content">
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-header-actions">
+                                <h2><i class="fas fa-laptop-code" style="color: #667eea;"></i> Skill Progress</h2>
+                                <button class="edit-btn" onclick="addSkill()"><i class="fas fa-plus-circle"></i> Tambah</button>
+                            </div>
+                        </div>
+                        <div class="card-body" style="display: block;" id="skill-container">
+                            <div class="empty-state">Memuat data...</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header">
+                            <div class="card-header-actions">
+                                <h2><i class="fas fa-bullseye" style="color: #ff9800;"></i> Target & Impian</h2>
+                                <button class="edit-btn" onclick="addGoal()"><i class="fas fa-plus-circle"></i> Tambah</button>
+                            </div>
+                        </div>
+                        <div class="card-body" id="goal-container">
+                            <div class="empty-state">Memuat data...</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header">
+                            <div class="card-header-actions">
+                                <h2><i class="fas fa-book" style="color: #e91e63;"></i> Reading List</h2>
+                                <button class="edit-btn" onclick="addBook()"><i class="fas fa-plus-circle"></i> Tambah</button>
+                            </div>
+                        </div>
+                        <div class="card-body" style="display: block;">
+                            <div class="book-grid" id="book-container">
+                                <div class="empty-state">Memuat data...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="keuangan.html" class="nav-item"><i class="fas fa-wallet"></i></a>
+        <a href="kesehatan.html" class="nav-item"><i class="fas fa-heartbeat"></i></a>
+        <a href="personal.html" class="nav-item active"><i class="fas fa-user"></i></a>
+    </nav>
+
+    <script src="script.js"></script>
+</body>
+</html>
