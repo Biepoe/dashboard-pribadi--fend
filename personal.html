@@ -6,7 +6,6 @@
     <title>Personal - Dashboard</title>
     
     <link rel="stylesheet" href="style.css">
-    
     <link rel="stylesheet" href="personal.css">
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,8 +29,8 @@
                         <img src="https://ui-avatars.com/api/?name=User&background=random" alt="Foto Profil" class="profile-img" id="profile-img">
                         <h2 class="profile-name" id="profile-name">Nama Kamu</h2>
                         <p class="profile-role" id="profile-role">Pekerjaan / Hobi</p>
-                        <p class="profile-bio" id="profile-bio">"Ketuk ikon pensil di bawah untuk mengedit profil ini."</p>
-                        <button class="edit-btn" onclick="editProfile()" style="margin-top: 10px;"><i class="fas fa-pencil-alt"></i> Edit Profil</button>
+                        <p class="profile-bio" id="profile-bio">"Klik tombol edit untuk mengubah profil ini."</p>
+                        <button class="edit-btn" onclick="openModal('modal-profile')"><i class="fas fa-pencil-alt"></i> Edit Profil</button>
                     </div>
                 </aside>
 
@@ -41,7 +40,7 @@
                         <div class="card-header">
                             <div class="card-header-actions">
                                 <h2><i class="fas fa-laptop-code" style="color: #667eea;"></i> Skill Progress</h2>
-                                <button class="edit-btn" onclick="addSkill()"><i class="fas fa-plus-circle"></i> Tambah</button>
+                                <button class="edit-btn" onclick="openModal('modal-skill')"><i class="fas fa-plus-circle"></i> Tambah</button>
                             </div>
                         </div>
                         <div class="card-body" style="display: block;" id="skill-container">
@@ -53,7 +52,7 @@
                         <div class="card-header">
                             <div class="card-header-actions">
                                 <h2><i class="fas fa-bullseye" style="color: #ff9800;"></i> Target & Impian</h2>
-                                <button class="edit-btn" onclick="addGoal()"><i class="fas fa-plus-circle"></i> Tambah</button>
+                                <button class="edit-btn" onclick="openModal('modal-goal')"><i class="fas fa-plus-circle"></i> Tambah</button>
                             </div>
                         </div>
                         <div class="card-body" id="goal-container">
@@ -65,7 +64,7 @@
                         <div class="card-header">
                             <div class="card-header-actions">
                                 <h2><i class="fas fa-book" style="color: #e91e63;"></i> Reading List</h2>
-                                <button class="edit-btn" onclick="addBook()"><i class="fas fa-plus-circle"></i> Tambah</button>
+                                <button class="edit-btn" onclick="openModal('modal-book')"><i class="fas fa-plus-circle"></i> Tambah</button>
                             </div>
                         </div>
                         <div class="card-body" style="display: block;">
@@ -77,6 +76,66 @@
 
                 </section>
             </main>
+        </div>
+    </div>
+
+    <div id="modal-profile" class="modal-overlay">
+        <div class="modal-box">
+            <span class="close-modal" onclick="closeModal('modal-profile')">&times;</span>
+            <h3>Edit Profil</h3>
+            <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input type="text" id="input-name" placeholder="Nama Kamu">
+            </div>
+            <div class="form-group">
+                <label>Pekerjaan / Role</label>
+                <input type="text" id="input-role" placeholder="Contoh: Mahasiswa / Developer">
+            </div>
+            <div class="form-group">
+                <label>Bio Singkat</label>
+                <textarea id="input-bio" rows="3" placeholder="Tulis sedikit tentang dirimu..."></textarea>
+            </div>
+            <button class="btn-save" onclick="saveProfile()">Simpan Perubahan</button>
+        </div>
+    </div>
+
+    <div id="modal-skill" class="modal-overlay">
+        <div class="modal-box">
+            <span class="close-modal" onclick="closeModal('modal-skill')">&times;</span>
+            <h3>Tambah Skill Baru</h3>
+            <div class="form-group">
+                <label>Nama Skill</label>
+                <input type="text" id="input-skill-name" placeholder="Contoh: Python, Desain Grafis">
+            </div>
+            <div class="form-group">
+                <label>Progress (%)</label>
+                <input type="number" id="input-skill-progress" placeholder="0 - 100" min="0" max="100">
+            </div>
+            <button class="btn-save" onclick="saveSkill()">Tambahkan Skill</button>
+        </div>
+    </div>
+
+    <div id="modal-goal" class="modal-overlay">
+        <div class="modal-box">
+            <span class="close-modal" onclick="closeModal('modal-goal')">&times;</span>
+            <h3>Tambah Target Baru</h3>
+            <div class="form-group">
+                <label>Apa target kamu?</label>
+                <input type="text" id="input-goal-text" placeholder="Contoh: Lulus Cumlaude, Beli Laptop">
+            </div>
+            <button class="btn-save" onclick="saveGoal()">Tambahkan Target</button>
+        </div>
+    </div>
+
+    <div id="modal-book" class="modal-overlay">
+        <div class="modal-box">
+            <span class="close-modal" onclick="closeModal('modal-book')">&times;</span>
+            <h3>Tambah Buku</h3>
+            <div class="form-group">
+                <label>Judul Buku</label>
+                <input type="text" id="input-book-title" placeholder="Judul buku yang mau dibaca">
+            </div>
+            <button class="btn-save" onclick="saveBook()">Tambahkan Buku</button>
         </div>
     </div>
 
