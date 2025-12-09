@@ -4,21 +4,35 @@
 
 .personal-layout {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 2fr; /* Kiri kecil, Kanan besar */
     gap: 20px;
 }
 
 /* --- Profile Card --- */
 .profile-card { text-align: center; padding: 30px 20px; }
+
 .profile-img {
-    width: 120px; height: 120px; border-radius: 50%;
-    object-fit: cover; border: 4px solid #eef2f7; margin-bottom: 15px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #eef2f7;
+    margin-bottom: 15px;
 }
+
 .profile-name { font-size: 20px; font-weight: 700; color: #333; margin-bottom: 5px; }
 .profile-role { font-size: 14px; color: #667eea; font-weight: 500; margin-bottom: 15px; }
 .profile-bio { font-size: 13px; color: #777; line-height: 1.6; margin-bottom: 20px; }
 
-/* --- Header & Buttons --- */
+.social-links { display: flex; justify-content: center; gap: 15px; }
+.social-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #f4f7fa; color: #555;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; transition: 0.2s;
+}
+.social-btn:hover { background: #667eea; color: white; transform: translateY(-3px); }
+
+/* --- Header dengan Tombol Edit --- */
 .card-header-actions {
     display: flex; justify-content: space-between; align-items: center; width: 100%;
 }
@@ -27,22 +41,32 @@
 }
 .edit-btn:hover { color: #667eea; }
 
-/* --- Content Items --- */
-.empty-state { text-align: center; padding: 20px; color: #999; font-size: 13px; border: 1px dashed #eee; border-radius: 10px; }
+/* --- Empty State --- */
+.empty-state {
+    text-align: center; padding: 20px; color: #999; font-size: 13px; border: 1px dashed #eee; border-radius: 10px;
+}
 
+/* --- Goal List --- */
 .goal-list { list-style: none; padding: 0; width: 100%; }
 .goal-item {
-    display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed #eee;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px dashed #eee;
 }
 .goal-item:last-child { border-bottom: none; }
 .goal-text { font-size: 14px; flex-grow: 1; }
 .delete-item { color: #ff4d4d; cursor: pointer; font-size: 12px; display: none; }
 .goal-item:hover .delete-item { display: block; }
-.goal-check { width: 20px; height: 20px; border-radius: 5px; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; }
 
+.goal-check {
+    width: 20px; height: 20px; border-radius: 5px;
+    border: 2px solid #ddd; display: flex; align-items: center; justify-content: center;
+}
+
+/* --- Skill Bar --- */
 .skill-item { margin-bottom: 15px; }
 .skill-head { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; font-weight: 500; }
 
+/* --- Book Grid --- */
 .book-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
 .book-item { min-width: 100px; text-align: center; position: relative; }
 .book-cover {
@@ -52,11 +76,13 @@
 }
 .book-title { font-size: 12px; font-weight: 600; display:block; line-height: 1.3; }
 .book-delete { 
-    position: absolute; top: -5px; right: -5px; background: red; color: white; width: 20px; height: 20px; border-radius: 50%; 
-    font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    position: absolute; top: -5px; right: -5px; background: red; color: white; 
+    width: 20px; height: 20px; border-radius: 50%; font-size: 10px; 
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 
 /* =========================================
+   👇👇👇 BAGIAN PENTING YANG HILANG 👇👇👇
    GAYA MODAL POPUP (FORM INPUT)
    ========================================= */
 .modal-overlay {
@@ -98,6 +124,7 @@
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+/* Responsive */
 @media (max-width: 768px) {
     .personal-layout { grid-template-columns: 1fr; }
 }
