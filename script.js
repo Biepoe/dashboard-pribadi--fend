@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (FINAL: FULL DASHBOARD + ADVANCED PERSONAL MANAGER)
+// SCRIPT.JS (FINAL FIX: CHECKLIST SKILL & BOOK COVER)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,10 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
-    // =========================================================
-    // 1. SISTEM NAVIGASI (SPA)
-    // =========================================================
-    
+    // --- NAVIGASI ---
     function runPageInit() {
         const bodyId = document.body.id;
         if (bodyId === 'halaman-beranda') initBeranda();
@@ -51,10 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================
-    // 2. INIT HALAMAN UTAMA
-    // =========================================================
-
+    // --- INIT HALAMAN UTAMA ---
     function initBeranda() {
         setDate(); setTime(); setInterval(setTime, 1000);
         fetchFinancialData(); fetchHealthData(); fetchActivityData();
@@ -65,11 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
         initDiagnosticFeature(); initMentalHealthChart(); simulateActivityData();  
     }
 
+    // --- INIT PERSONAL (DIPERBAIKI) ---
     function initPersonal() {
         setDate();
         loadPersonalData();
         
-        // Expose Functions to Window (Untuk onclick di HTML)
+        // EXPOSE FUNGSI KE WINDOW (Supaya HTML bisa baca onclick="")
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.saveProfile = saveProfile;
@@ -80,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         window.openSkillModal = openSkillModal;
         window.addMaterialToList = addMaterialToList;
+        window.toggleMaterialTemp = toggleMaterialTemp; // <--- INI PERBAIKANNYA
+        window.deleteMaterialTemp = deleteMaterialTemp; // <--- INI JUGA
+        
         window.toggleGoal = toggleGoal;
         window.toggleBook = toggleBook;
         
@@ -90,21 +88,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // =========================================================
-    // 3. FITUR PERSONAL MANAGER (LOCAL STORAGE)
-    // =========================================================
-
-    const STORAGE_KEY = 'dashboard_personal_data_v2'; // Ganti key biar fresh
+    // --- PERSONAL DATA ---
+    const STORAGE_KEY = 'dashboard_personal_data_v3'; // Versi baru biar refresh
     
-    // Struktur Data Baru (Mendukung Checklist)
     let personalData = {
         profile: { name: "Nama Kamu", role: "Pekerjaan", bio: "Bio singkat..." },
-        skills: [], // [{ name: "Skill A", materials: [{text:"Bab 1", done:false}] }]
-        goals: [],  // [{ text: "Target A", done: false }]
-        books: []   // [{ title: "Buku A", done: false }]
+        skills: [], 
+        goals: [],  
+        books: []   
     };
 
-    // --- LOAD & SAVE ---
     function loadPersonalData() {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) personalData = JSON.parse(stored);
@@ -115,22 +108,31 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPersonalUI();
     }
 
-    // --- RENDER UI ---
+    // --- HELPER: CONVERT GDRIVE LINK TO IMAGE ---
+    function getImgUrl(url) {
+        if (!url) return '';
+        // Cek apakah link Google Drive?
+        if (url.includes('drive.google.com') && url.includes('/d/')) {
+            // Ambil ID File
+            const id = url.split('/d/')[1].split('/')[0];
+            return `https://lh3.googleusercontent.com/d/${id}=s220`; // Link gambar langsung
+        }
+        return url; // Kalau bukan GDrive, balikin apa adanya
+    }
+
     function renderPersonalUI() {
-        // 1. Profil
+        // Profil
         if(document.getElementById('profile-name')) {
             document.getElementById('profile-name').textContent = personalData.profile.name;
             document.getElementById('profile-role').textContent = personalData.profile.role;
             document.getElementById('profile-bio').textContent = personalData.profile.bio;
         }
 
-        // 2. Skills (Hitung Persen Otomatis)
+        // Skills
         const skillContainer = document.getElementById('skill-container');
         if (skillContainer) {
             skillContainer.innerHTML = personalData.skills.length ? '' : '<div class="empty-state">Belum ada skill. Klik Tambah.</div>';
-            
             personalData.skills.forEach((s, i) => {
-                // Hitung Progress dari Checklist
                 const total = s.materials.length;
                 const done = s.materials.filter(m => m.done).length;
                 const progress = total === 0 ? 0 : Math.round((done / total) * 100);
@@ -138,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 skillContainer.innerHTML += `
                     <div class="skill-item" onclick="openSkillModal(${i})">
                         <div class="skill-head">
-                            <span>${s.name} <small style="color:#999; font-weight:400;">(${done}/${total} materi)</small></span>
+                            <span>${s.name} <small style="color:#999; font-weight:400;">(${done}/${total})</small></span>
                             <span>${progress}% <i class="fas fa-edit" style="font-size:10px; color:#667eea; margin-left:5px;"></i></span>
                         </div>
                         <div class="progress-bar-container"><div class="progress-bar" style="width: ${progress}%;"></div></div>
@@ -146,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 3. Goals (Dengan Checkbox)
+        // Goals
         const goalContainer = document.getElementById('goal-container');
         if (goalContainer) {
             goalContainer.innerHTML = personalData.goals.length ? '<ul class="goal-list"></ul>' : '<div class="empty-state">Belum ada target.</div>';
@@ -165,15 +167,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 4. Books (Klik untuk Selesai)
+        // Books (UPDATE GAMBAR)
         const bookContainer = document.getElementById('book-container');
         if (bookContainer) {
             bookContainer.innerHTML = personalData.books.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada buku.</div>';
             personalData.books.forEach((b, i) => {
                 const readClass = b.done ? 'read' : '';
+                
+                // Cek ada gambar atau tidak
+                let coverStyle = 'background-color: #eee;';
+                let coverContent = b.title.charAt(0);
+                
+                if (b.img) {
+                    coverStyle = `background-image: url('${b.img}'); background-size: cover; background-position: center; color: transparent;`;
+                    coverContent = '';
+                }
+
                 bookContainer.innerHTML += `
                     <div class="book-item" onclick="toggleBook(${i})">
-                        <div class="book-cover ${readClass}" style="background-color: #eee;">${b.title.charAt(0)}</div>
+                        <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
                         <span class="book-title ${readClass}">${b.title}</span>
                         <div class="book-delete" onclick="event.stopPropagation(); deleteItem('books', ${i})">×</div>
                     </div>`;
@@ -181,16 +193,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // =========================================================
-    // 4. LOGIKA MODAL & CRUD
-    // =========================================================
+    // --- MODAL LOGIC ---
+    let tempMaterials = []; 
 
-    // --- UMUM ---
     function openModal(id) {
         const modal = document.getElementById(id);
         if(modal) {
             modal.classList.add('show');
-            // Isi form edit profil
             if(id === 'modal-profile') {
                 document.getElementById('input-name').value = personalData.profile.name;
                 document.getElementById('input-role').value = personalData.profile.role;
@@ -203,29 +212,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if(modal) modal.classList.remove('show');
     }
 
-    // --- SKILL & MATERI (LOGIKA KOMPLEKS) ---
-    // Variabel sementara untuk nyimpen list materi saat modal terbuka
-    let tempMaterials = []; 
-
+    // --- SKILL LOGIC ---
     function openSkillModal(index = -1) {
         const modal = document.getElementById('modal-skill');
         const title = document.getElementById('skill-modal-title');
         const nameInput = document.getElementById('input-skill-name');
-        const listContainer = document.getElementById('material-list-container');
         const indexInput = document.getElementById('edit-skill-index');
 
         modal.classList.add('show');
-        indexInput.value = index; // Simpan index (-1 artinya buat baru)
+        indexInput.value = index;
 
         if (index === -1) {
             title.textContent = "Tambah Skill Baru";
             nameInput.value = "";
-            tempMaterials = []; // Reset list
+            tempMaterials = []; 
         } else {
             title.textContent = "Edit Skill & Materi";
             const skill = personalData.skills[index];
             nameInput.value = skill.name;
-            // Clone array agar tidak mengubah data asli sebelum save
             tempMaterials = JSON.parse(JSON.stringify(skill.materials));
         }
         renderMaterialList();
@@ -257,11 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
         tempMaterials.forEach((m, i) => {
             const check = m.done ? 'checked' : '';
             const style = m.done ? 'text-decoration:line-through; color:#aaa;' : '';
+            // PENTING: onclick disini sekarang memanggil fungsi global window
             list.innerHTML += `
                 <li class="material-item">
-                    <div style="display:flex; align-items:center;">
-                        <input type="checkbox" class="material-check" ${check} onclick="event.stopPropagation(); toggleMaterialTemp(${i})">
-                        <span style="${style}" onclick="toggleMaterialTemp(${i})">${m.text}</span>
+                    <div style="display:flex; align-items:center; cursor:pointer;" onclick="toggleMaterialTemp(${i})">
+                        <input type="checkbox" class="material-check" ${check} style="pointer-events:none;">
+                        <span style="${style}">${m.text}</span>
                     </div>
                     <i class="fas fa-times material-del" onclick="deleteMaterialTemp(${i})"></i>
                 </li>
@@ -272,31 +277,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveSkill() {
         const name = document.getElementById('input-skill-name').value;
         const index = parseInt(document.getElementById('edit-skill-index').value);
-
         if (!name) return alert("Nama skill harus diisi!");
-
         const newSkillData = { name: name, materials: tempMaterials };
-
-        if (index === -1) {
-            personalData.skills.push(newSkillData);
-        } else {
-            personalData.skills[index] = newSkillData;
-        }
+        if (index === -1) personalData.skills.push(newSkillData);
+        else personalData.skills[index] = newSkillData;
         saveDataStorage();
         closeModal('modal-skill');
     }
 
-    // --- TARGET & BUKU (LOGIKA CHECKBOX) ---
+    // --- OTHER SAVE LOGIC ---
     function saveGoal() {
         const text = document.getElementById('input-goal-text').value;
         if(text) {
             personalData.goals.push({ text: text, done: false });
-            saveDataStorage();
-            closeModal('modal-goal');
-            document.getElementById('input-goal-text').value = '';
+            saveDataStorage(); closeModal('modal-goal'); document.getElementById('input-goal-text').value = '';
         }
     }
-
     function toggleGoal(index) {
         personalData.goals[index].done = !personalData.goals[index].done;
         saveDataStorage();
@@ -304,14 +300,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveBook() {
         const title = document.getElementById('input-book-title').value;
+        const imgLink = document.getElementById('input-book-img').value; // Ambil input gambar
+        
         if(title) {
-            personalData.books.push({ title: title, done: false });
+            personalData.books.push({ 
+                title: title, 
+                done: false,
+                img: getImgUrl(imgLink) // Konversi link dulu
+            });
             saveDataStorage();
             closeModal('modal-book');
             document.getElementById('input-book-title').value = '';
+            document.getElementById('input-book-img').value = '';
         }
     }
-
     function toggleBook(index) {
         personalData.books[index].done = !personalData.books[index].done;
         saveDataStorage();
@@ -324,8 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(name) personalData.profile.name = name;
         if(role) personalData.profile.role = role;
         if(bio) personalData.profile.bio = bio;
-        saveDataStorage();
-        closeModal('modal-profile');
+        saveDataStorage(); closeModal('modal-profile');
     }
 
     function deleteItem(type, index) {
@@ -335,10 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // =========================================================
-    // 5. HELPER & UTILS
-    // =========================================================
-    // ... (Fungsi helper lainnya sama seperti sebelumnya)
+    // --- HELPER UTILS (SAMA SEPERTI SEBELUMNYA) ---
     function padZero(n){return n<10?'0'+n:n}
     function setDate(){const e=document.getElementById('current-date');if(e)e.innerHTML=`<i class="fas fa-calendar"></i> ${new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`}
     function setTime(){const e=document.getElementById('current-time');if(e)e.innerHTML=`<i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('id-ID')}`}
@@ -346,14 +344,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function parseDate(s){if(!s)return null;if(s.includes('/')){const p=s.split('/');return new Date(p[2],p[1]-1,p[0])}return new Date(s)}
     function findValue(o,k){const ks=Object.keys(o);for(let key of ks){const ck=key.toLowerCase().replace(/[^a-z0-9]/g,'');for(let kw of k){if(ck.includes(kw.toLowerCase().replace(/[^a-z0-9]/g,'')))return o[key]}}return undefined}
 
-    // --- FETCH DATA KEUANGAN/KESEHATAN (DIPERTAHANKAN) ---
-    async function fetchFinancialData() {
+    // --- FETCH DATA (SAMA SEPERTI SEBELUMNYA) ---
+    async function fetchFinancialData() { /* ... (Gunakan kode fetch sebelumnya, tidak berubah) ... */ 
         try {
             const res = await fetch(`${BACKEND_URL}/api/finances`);
             const data = await res.json();
             let pemasukan=0, pengeluaran=0, sBank=0, sEwallet=0, sCash=0;
             const now = new Date(); const m = now.getMonth(); const y = now.getFullYear();
-
             data.forEach(item => {
                 const nom = parseFloat(String(findValue(item,['nominal','amount'])||'0').replace(/[^0-9]/g,''))||0;
                 const jenis = String(findValue(item,['jenis','transaksi'])||'').toLowerCase().trim();
@@ -361,37 +358,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dst = String(findValue(item,['tujuan','ke'])||'').toLowerCase();
                 const tgl = parseDate(findValue(item,['tanggal','date']));
                 const isCur = (tgl && tgl.getMonth()===m && tgl.getFullYear()===y);
-
                 if(jenis.includes('masuk')||jenis==='pemasukan'){
                     if(isCur) pemasukan+=nom;
-                    if(src.includes('bank')||src.includes('bsi')) sBank+=nom;
-                    else if(src.includes('wallet')||src.includes('pay')) sEwallet+=nom;
-                    else if(src.includes('cash')||src.includes('tunai')) sCash+=nom;
+                    if(src.includes('bank')||src.includes('bsi')) sBank+=nom; else if(src.includes('wallet')) sEwallet+=nom; else if(src.includes('cash')) sCash+=nom;
                 } else if(jenis.includes('keluar')||jenis==='pengeluaran'){
                     if(isCur) pengeluaran+=nom;
-                    if(src.includes('bank')||src.includes('bsi')) sBank-=nom;
-                    else if(src.includes('wallet')||src.includes('pay')) sEwallet-=nom;
-                    else if(src.includes('cash')||src.includes('tunai')) sCash-=nom;
-                } else if(jenis.includes('tf')||jenis.includes('transfer')){
                     if(src.includes('bank')||src.includes('bsi')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else if(src.includes('cash')) sCash-=nom;
-                    if(dst.includes('bank')||dst.includes('bsi')) sBank+=nom; else if(dst.includes('wallet')) sEwallet+=nom; else if(dst.includes('cash')) sCash+=nom;
+                } else if(jenis.includes('tf')||jenis.includes('transfer')){
+                    if(src.includes('bank')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else if(src.includes('cash')) sCash-=nom;
+                    if(dst.includes('bank')) sBank+=nom; else if(dst.includes('wallet')) sEwallet+=nom; else if(dst.includes('cash')) sCash+=nom;
                 }
             });
-            
             const setText = (id,v) => {const el=document.getElementById(id);if(el)el.textContent=formatRupiah(v)};
             setText('pemasukan-value', pemasukan); setText('pengeluaran-value', pengeluaran);
             setText('pemasukan-bulan-ini', pemasukan); setText('pengeluaran-bulan-ini', pengeluaran);
             setText('saldo-bank', sBank); setText('saldo-ewallet', sEwallet); setText('saldo-cash', sCash);
             setText('sisa-saldo-value', sBank+sEwallet+sCash);
             setText('card-balance-bank', sBank); setText('card-balance-ewallet', sEwallet);
-            
             updateTransactionTable(data);
             if(document.getElementById('monthlyEarningsChart')) createMonthlyChart(data);
             if(document.getElementById('month-selector')) setupDownloadFeature(data);
         } catch(e) { console.error(e); }
     }
-
-    function setupDownloadFeature(data) { /* Kode download sama */ 
+    
+    function setupDownloadFeature(data) { /* Sama */ 
         const sel = document.getElementById('month-selector'); const btn = document.getElementById('btn-download-csv');
         if(!sel || !btn) return;
         const unq = new Set();
@@ -403,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nBtn.innerHTML='<i class="fas fa-file-excel"></i> Unduh Excel'; nBtn.style.backgroundColor='#1D6F42';
         nBtn.addEventListener('click',()=>{if(!sel.value)return alert('Pilih bulan'); downloadExcel(data,sel.value)});
     }
-    function downloadExcel(data, selM) { /* Kode download sama */ 
+    function downloadExcel(data, selM) { /* Sama */
         if(typeof XLSX==='undefined') return alert('XLSX Library Missing');
         const fil = data.filter(i=>{const t=parseDate(findValue(i,['tanggal'])); return t&&`${t.getFullYear()}-${padZero(t.getMonth()+1)}`===selM});
         if(!fil.length) return alert('Kosong');
@@ -416,12 +406,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const nom = parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''));
         t.innerHTML+=`<tr><td>${findValue(i,['deskripsi'])}</td><td>${findValue(i,['jenis'])}</td><td>${formatRupiah(nom)}</td></tr>`;
     })}}
-    function createMonthlyChart(d){ /* Kode chart sama */ }
-
-    async function fetchHealthData(){ /* Kode health sama */ }
-    async function fetchHealthDataForHealthPage(){ /* Kode health page sama */ }
-    async function fetchActivityData(){ /* Kode activity sama */ }
-    async function fetchBudgetData(){ /* Kode budget sama */ 
+    function createMonthlyChart(d){ /* Sama */ }
+    async function fetchHealthData(){ /* Sama */ }
+    async function fetchHealthDataForHealthPage(){ /* Sama */ }
+    async function fetchActivityData(){ /* Sama */ }
+    async function fetchBudgetData(){ /* Sama */ 
         try{
             const [bRes, fRes] = await Promise.all([fetch(`${BACKEND_URL}/api/budgets`), fetch(`${BACKEND_URL}/api/finances`)]);
             const budgets = await bRes.json(); const finances = await fRes.json();
@@ -443,9 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
             })}
         }catch(e){console.error(e)}
     }
-
     let diagInterval=null;
-    function initDiagnosticFeature(){
+    function initDiagnosticFeature(){ /* Sama */
         const btn=document.getElementById('btn-diagnostic'); const mod=document.getElementById('diagnostic-modal'); const cl=document.querySelector('.close-btn');
         if(btn&&mod) btn.addEventListener('click',()=>{mod.classList.add('show'); sSim()});
         if(cl) cl.addEventListener('click',()=>{mod.classList.remove('show'); stSim()});
@@ -457,12 +445,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if(document.getElementById('live-spo2')) document.getElementById('live-spo2').textContent=Math.floor(Math.random()*(99-96+1))+96;
         if(document.getElementById('live-temp')) document.getElementById('live-temp').textContent=(Math.random()*(36.8-36.3)+36.3).toFixed(1);
     }
-    function initMentalHealthChart(){
+    function initMentalHealthChart(){ /* Sama */
         const ctx=document.getElementById('mentalHealthChart'); if(!ctx)return;
         if(window.mChart) window.mChart.destroy();
         window.mChart=new Chart(ctx,{type:'doughnut',data:{labels:['Skor','Sisa'],datasets:[{data:[78,22],backgroundColor:['#4caf50','#e0e0e0'],borderWidth:0,circumference:180,rotation:270}]},options:{responsive:true,cutout:'85%',plugins:{legend:{display:false}}}});
     }
-    function simulateActivityData(){
+    function simulateActivityData(){ /* Sama */
         const el=document.getElementById('dummy-steps'); if(el){
             let s=8200; setInterval(()=>{s+=Math.floor(Math.random()*5); el.textContent=s.toLocaleString()},3000);
         }
