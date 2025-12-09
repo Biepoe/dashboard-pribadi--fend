@@ -88,24 +88,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- PERSONAL DATA ---
-    const STORAGE_KEY = 'dashboard_personal_data_v3'; // Versi baru biar refresh
+    // --- PERSONAL DATA (VERSI CLOUD / API) ---
     
     let personalData = {
         profile: { name: "Nama Kamu", role: "Pekerjaan", bio: "Bio singkat..." },
-        skills: [], 
-        goals: [],  
-        books: []   
+        skills: [], goals: [], books: []
     };
 
-    function loadPersonalData() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) personalData = JSON.parse(stored);
-        renderPersonalUI();
+    // FUNGSI LOAD DARI SERVER (BUKAN LOCALSTORAGE)
+    async function loadPersonalData() {
+        // Tampilkan loading state jika perlu
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/personal`);
+            if (!res.ok) throw new Error("Gagal ambil data");
+            
+            const cloudData = await res.json();
+            
+            // Jika ada data di cloud, pakai itu. Jika tidak, pakai default.
+            if (cloudData) {
+                personalData = cloudData;
+            }
+            renderPersonalUI();
+        } catch (error) {
+            console.error("Gagal load personal data:", error);
+            // Fallback: Coba cek localStorage kalau internet mati (opsional)
+        }
     }
-    function saveDataStorage() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(personalData));
+
+    // FUNGSI SAVE KE SERVER
+    async function saveDataStorage() {
+        // 1. Update Tampilan Dulu (Biar terasa cepat/snappy)
         renderPersonalUI();
+
+        // 2. Kirim ke Backend di Background
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/personal`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(personalData)
+            });
+            
+            if (!res.ok) throw new Error("Gagal simpan ke server");
+            console.log("✅ Data Personal tersimpan di Cloud!");
+            
+        } catch (error) {
+            console.error("Gagal save data:", error);
+            alert("Gagal menyimpan ke server. Cek koneksi internet!");
+        }
     }
 
     // --- HELPER: CONVERT GDRIVE LINK TO IMAGE ---
