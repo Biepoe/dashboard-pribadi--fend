@@ -54,9 +54,19 @@
 .book-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
 .book-item { min-width: 100px; text-align: center; position: relative; cursor: pointer; }
 .book-cover {
-    height: 140px; background: #ddd; border-radius: 8px; margin-bottom: 8px;
-    display:flex; align-items:center; justify-content:center; color:#777; font-size: 20px;
-    background-size: cover; background-position: center; position: relative;
+    height: 140px; 
+    background: #ddd; 
+    border-radius: 8px; 
+    margin-bottom: 8px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #777; 
+    font-size: 20px;
+    background-size: cover; 
+    background-position: center; 
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Tambah bayangan dikit */
 }
 .book-cover.read::after {
     content: '✓'; position: absolute; bottom: 5px; right: 5px;
