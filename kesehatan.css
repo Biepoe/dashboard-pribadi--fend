@@ -238,6 +238,17 @@
 .diag-value-box.heart { color: #e91e63; animation: heartbeat 1s infinite; }
 @keyframes heartbeat { 0%{transform:scale(1);} 50%{transform:scale(1.1);} 100%{transform:scale(1);} }
 
+/* Tracker Style */
+.water-controls { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
+.btn-water { width: 30px; height: 30px; border-radius: 50%; border: none; background: #e3f2fd; color: #2196f3; font-weight: bold; cursor: pointer; font-size: 16px; }
+.water-display { font-size: 24px; font-weight: 700; color: #333; }
+.water-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+.water-bar-fill { height: 100%; width: 0%; background: #2196f3; transition: width 0.3s ease; }
+.mood-selector { display: flex; justify-content: space-between; margin-top: 10px; }
+.btn-mood { font-size: 24px; background: none; border: none; cursor: pointer; filter: grayscale(100%); opacity: 0.6; }
+.btn-mood.active { transform: scale(1.2); filter: grayscale(0%); opacity: 1; }
+
+
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {
     .health-layout { grid-template-columns: 1fr; }
