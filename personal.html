@@ -72,6 +72,20 @@
                         </div>
                     </div>
 
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header">
+                            <div class="card-header-actions">
+                                <h2><i class="fas fa-film" style="color: #ff5722;"></i> Movie List</h2>
+                                <button class="edit-btn" onclick="openModal('modal-movie')"><i class="fas fa-plus-circle"></i> Tambah</button>
+                            </div>
+                        </div>
+                        <div class="card-body" style="display: block;">
+                            <div class="book-grid" id="movie-container">
+                                <div class="empty-state">Memuat data...</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </section>
 
             <div id="modal-profile" class="modal-overlay">
@@ -98,14 +112,11 @@
                 <div class="modal-box">
                     <span class="close-modal" onclick="closeModal('modal-skill')">&times;</span>
                     <h3 id="skill-modal-title">Kelola Skill</h3>
-                    
                     <input type="hidden" id="edit-skill-index" value="-1">
-
                     <div class="form-group">
                         <label>Nama Skill</label>
                         <input type="text" id="input-skill-name" placeholder="Contoh: Belajar Python">
                     </div>
-                    
                     <div class="form-group">
                         <label>Daftar Materi (Checklist)</label>
                         <div class="add-material-row">
@@ -114,7 +125,6 @@
                         </div>
                         <ul id="material-list-container" class="material-list"></ul>
                     </div>
-
                     <button class="btn-save" onclick="saveSkill()">Simpan Skill</button>
                 </div>
             </div>
@@ -145,6 +155,22 @@
                         <small style="font-size: 10px; color: #888;">Bisa pakai link Google Drive yang 'Anyone with the link'</small>
                     </div>
                     <button class="btn-save" onclick="saveBook()">Tambahkan Buku</button>
+                </div>
+            </div>
+
+            <div id="modal-movie" class="modal-overlay">
+                <div class="modal-box">
+                    <span class="close-modal" onclick="closeModal('modal-movie')">&times;</span>
+                    <h3>Tambah Film</h3>
+                    <div class="form-group">
+                        <label>Judul Film</label>
+                        <input type="text" id="input-movie-title" placeholder="Judul film...">
+                    </div>
+                    <div class="form-group">
+                        <label>Link Poster (Opsional)</label>
+                        <input type="text" id="input-movie-img" placeholder="URL Gambar Poster...">
+                    </div>
+                    <button class="btn-save" onclick="saveMovie()">Tambahkan Film</button>
                 </div>
             </div>
             
