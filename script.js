@@ -327,9 +327,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="book-title ${readClass}">${title}</span>
                         <div class="book-delete" onclick="event.stopPropagation(); deleteItem('books', ${i})">×</div>
                     </div>`;
-            });
+                });
+            }
         }
-    }
 
         // [BARU] Movies
         const movieContainer = document.getElementById('movie-container');
@@ -344,15 +344,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 let coverStyle = img ? `background-image: url('${img}'); background-size: cover; color: transparent;` : 'background-color: #eee;';
                 let coverContent = img ? '' : title.charAt(0);
 
-                movieContainer.innerHTML += `
+                movieContainer.innerHTML += `    
                     <div class="book-item" onclick="toggleMovie(${i})">
                         <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
                         <span class="book-title ${readClass}">${title}</span>
                         <div class="book-delete" onclick="event.stopPropagation(); deleteItem('movies', ${i})">×</div>
                     </div>`;
-            });
+                });
+            }
         }
-    }
                           
     let tempMaterials = []; 
     function openModal(id) {
