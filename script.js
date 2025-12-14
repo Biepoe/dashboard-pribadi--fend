@@ -1,11 +1,12 @@
 // =========================================================
-// SCRIPT.JS (FULL CODE - NO "SAMA" COMMENTS)
+// SCRIPT.JS (FIXED VERSION)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
+    let activeIntervals = []; // Penampung interval agar bisa di-clear saat ganti halaman
 
     // --- STRUKTUR DATA CLOUD ---
     let personalData = {
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         skills: [],
         goals: [],
         books: [],
+        movies: [],
         tracker: { water: { count: 0, date: "" }, mood: { status: "", date: "" } },
         bills: [] 
     };
@@ -21,6 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. SISTEM NAVIGASI (SPA)
     // =========================================================
     
+    function clearPageIntervals() {
+        // Hentikan semua timer yang berjalan sebelum pindah halaman
+        activeIntervals.forEach(clearInterval);
+        activeIntervals = [];
+    }
+
     function runPageInit() {
         const bodyId = document.body.id;
         if (bodyId === 'halaman-beranda') initBeranda();
@@ -30,8 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadPage(url) {
+        clearPageIntervals(); // Bersihkan interval lama
         const cw = document.getElementById('content-wrapper');
         if(!cw) return;
+        
         cw.style.opacity = '0.5';
         try {
             const res = await fetch(url);
@@ -39,15 +49,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const text = await res.text();
             const doc = new DOMParser().parseFromString(text, 'text/html');
             const newContent = doc.getElementById('content-wrapper');
+            
             if(newContent) {
                 document.title = doc.title;
                 document.body.id = doc.body.id;
                 cw.innerHTML = newContent.innerHTML;
                 runPageInit();
                 history.pushState({path:url},'',url);
-            } else window.location.href = url;
-        } catch(e) { cw.style.opacity='1'; }
-        cw.style.opacity='1';
+            } else {
+                window.location.href = url;
+            }
+        } catch(e) { 
+            console.error("Gagal load page SPA, redirecting...", e);
+            window.location.href = url; 
+        } finally {
+            cw.style.opacity='1';
+        }
     }
 
     function initNavListeners() {
@@ -55,9 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const link = e.target.closest('.bottom-nav a');
             if(!link) return;
             e.preventDefault();
-            loadPage(link.href);
+            
+            // Update UI Navigasi Aktif
             document.querySelectorAll('.bottom-nav a').forEach(l=>l.classList.remove('active'));
             link.classList.add('active');
+
+            loadPage(link.href);
         });
     }
 
@@ -66,8 +86,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
 
     function initBeranda() {
-        setDate(); setTime(); setInterval(setTime, 1000);
-        fetchFinancialData(); fetchHealthData(); fetchActivityData();
+        setDate(); 
+        setTime(); 
+        // Simpan interval ID agar bisa dimatikan nanti
+        activeIntervals.push(setInterval(setTime, 1000));
+        fetchFinancialData(); 
+        fetchHealthData(); 
+        fetchActivityData();
     }
     
     function initKeuangan() { 
@@ -78,7 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function initKesehatan() {
         fetchHealthDataForHealthPage();
-        initDiagnosticFeature(); initMentalHealthChart(); simulateActivityData();  
+        initDiagnosticFeature(); 
+        initMentalHealthChart(); 
+        simulateActivityData();  
         loadPersonalData().then(renderTracker);
     }
 
@@ -86,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setDate();
         loadPersonalData();
         
+        // Expose fungsi ke window agar bisa dipanggil via HTML onclick
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.saveProfile = saveProfile;
@@ -124,17 +152,23 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (cloudData && !Array.isArray(cloudData)) {
                 personalData = { ...personalData, ...cloudData };
+                // Pastikan struktur objek ada
                 if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
                 if(!personalData.bills) personalData.bills = [];
                 if(!personalData.movies) personalData.movies = [];
+                if(!personalData.books) personalData.books = [];
+                if(!personalData.skills) personalData.skills = [];
+                if(!personalData.goals) personalData.goals = [];
             }
             
+            // Render UI sesuai halaman yang aktif
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
             if(document.getElementById('bill-list')) renderBills();
 
         } catch (error) {
             console.warn("Offline/Server Busy:", error);
+            // Tetap render apa yang ada di memori lokal jika gagal fetch
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
             if(document.getElementById('bill-list')) renderBills();
@@ -142,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function saveData() {
+        // Render ulang UI agar terlihat responsif langsung
         if(document.getElementById('profile-name')) renderPersonalUI();
         if(document.getElementById('water-count')) renderTracker();
         if(document.getElementById('bill-list')) renderBills();
@@ -264,12 +299,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. RENDER PERSONAL UI
     // =========================================================
     function renderPersonalUI() {
+        // --- 1. Render Profile ---
         if(document.getElementById('profile-name')) {
             document.getElementById('profile-name').textContent = personalData.profile.name;
             document.getElementById('profile-role').textContent = personalData.profile.role;
             document.getElementById('profile-bio').textContent = personalData.profile.bio;
         }
 
+        // --- 2. Render Skills ---
         const skillContainer = document.getElementById('skill-container');
         if (skillContainer) {
             skillContainer.innerHTML = personalData.skills.length ? '' : '<div class="empty-state">Belum ada skill. Klik Tambah.</div>';
@@ -290,6 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // --- 3. Render Goals ---
         const goalContainer = document.getElementById('goal-container');
         if (goalContainer) {
             goalContainer.innerHTML = personalData.goals.length ? '<ul class="goal-list"></ul>' : '<div class="empty-state">Belum ada target.</div>';
@@ -310,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // --- 4. Render Books ---
         const bookContainer = document.getElementById('book-container');
         if (bookContainer) {
             bookContainer.innerHTML = personalData.books.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada buku.</div>';
@@ -329,9 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>`;
             });
         }
-    }
 
-        // [BARU] Movies
+        // --- 5. Render Movies (Dipindahkan ke dalam fungsi agar tidak error) ---
         const movieContainer = document.getElementById('movie-container');
         if (movieContainer) {
             const movies = personalData.movies || [];
@@ -340,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const title = typeof m === 'object' ? m.title : m;
                 const isDone = typeof m === 'object' ? m.done : false;
                 const img = typeof m === 'object' ? m.img : null;
-                const readClass = isDone ? 'read' : ''; // Kita pakai class 'read' juga biar sama
+                const readClass = isDone ? 'read' : ''; 
                 let coverStyle = img ? `background-image: url('${img}'); background-size: cover; color: transparent;` : 'background-color: #eee;';
                 let coverContent = img ? '' : title.charAt(0);
 
@@ -403,10 +441,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveGoal() { const t=document.getElementById('input-goal-text').value; if(t){ personalData.goals.push({text:t, done:false}); saveData(); closeModal('modal-goal'); } }
     function toggleGoal(i) { const g=personalData.goals[i]; if(typeof g==='string') personalData.goals[i]={text:g, done:true}; else g.done=!g.done; saveData(); }
     
-    function getImgUrl(url) { if(url && url.includes('drive.google.com')) return `https://lh3.googleusercontent.com/d/${url.split('/d/')[1].split('/')[0]}`; return url; }
+    // Perbaikan Helper getImgUrl dengan Syntax yang Benar
+    function getImgUrl(url) { 
+        if(url && url.includes('drive.google.com')) {
+            // Memperbaiki string interpolation yang sebelumnya salah (0{...} jadi ${...})
+            return `http://googleusercontent.com/profile/picture/${url.split('/d/')[1].split('/')[0]}`; 
+        }
+        return url; 
+    }
+
     function saveBook() { const t=document.getElementById('input-book-title').value; if(t){ personalData.books.push({title:t, done:false, img:getImgUrl(document.getElementById('input-book-img').value)}); saveData(); closeModal('modal-book'); } }
     function toggleBook(i) { const b=personalData.books[i]; if(typeof b==='string') personalData.books[i]={title:b, done:true, img:null}; else b.done=!b.done; saveData(); }
     
+    // Fungsi Movie (Baru)
+    function saveMovie() { const t=document.getElementById('input-movie-title').value; if(t){ personalData.movies.push({title:t, done:false, img:getImgUrl(document.getElementById('input-movie-img').value)}); saveData(); closeModal('modal-movie'); } }
+    function toggleMovie(i) { const b=personalData.movies[i]; if(typeof b==='string') personalData.movies[i]={title:b, done:true, img:null}; else b.done=!b.done; saveData(); }
+
     function saveProfile() {
         personalData.profile.name = document.getElementById('input-name').value;
         personalData.profile.role = document.getElementById('input-role').value;
@@ -494,9 +544,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateTransactionTable(d){ const t=document.querySelector('#transaction-table tbody'); if(t){ t.innerHTML=''; d.slice(-5).reverse().forEach(i=>{ t.innerHTML+=`<tr><td>${findValue(i,['deskripsi','note'])}</td><td>${findValue(i,['jenis'])}</td><td>${formatRupiah(parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,'')))}</td></tr>`; })}}
     function createMonthlyChart(data) { if(!document.getElementById('monthlyEarningsChart')) return; const ctx=document.getElementById('monthlyEarningsChart'); const inc=Array(12).fill(0), exp=Array(12).fill(0); const y=new Date().getFullYear(); data.forEach(i=>{ const t=parseDate(findValue(i,['tanggal'])); const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0; const j=String(findValue(i,['jenis'])).toLowerCase(); if(t&&t.getFullYear()===y){ if(j.includes('masuk')) inc[t.getMonth()]+=a; else if(j.includes('keluar')) exp[t.getMonth()]+=a; } }); if(window.myC) window.myC.destroy(); window.myC=new Chart(ctx,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],datasets:[{label:'Masuk',data:inc,borderColor:'#4caf50',fill:true},{label:'Keluar',data:exp,borderColor:'#f44336',fill:true}]},options:{responsive:true,maintainAspectRatio:false}}); }
-    function setupDownloadFeature(d) { /* Logika download sama - tidak krusial untuk display */ }
+    function setupDownloadFeature(d) { /* Logika download sama */ }
 
-    // --- [FIX] DATA KESEHATAN FULL ---
     async function fetchHealthData() {
         try {
             const res = await fetch(`${BACKEND_URL}/api/health`);
@@ -504,12 +553,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!data.length) return;
             const last = data[data.length - 1];
             
-            // Update Text Status
             const cond = findValue(last, ['kondisi', 'tubuh', 'status']) || 'Sehat';
             const statusEl = document.getElementById('body-status');
             if (statusEl) statusEl.textContent = cond;
             
-            // Update Gambar Tubuh (Merah/Hijau)
             const vec = document.getElementById('body-vector');
             if (vec) {
                 if (cond.toLowerCase().includes('sakit') || cond.toLowerCase().includes('demam')) {
@@ -519,7 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // Update Tidur
             const sleepEl = document.getElementById('sleep-duration');
             const lastSleep = [...data].reverse().find(i => findValue(i, ['tidur']));
             if(sleepEl && lastSleep) {
@@ -531,7 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Update Obat
             if(document.getElementById('last-medicine')) {
                 const lastMed = [...data].reverse().find(i => findValue(i, ['obat', 'medicine']));
                 document.getElementById('last-medicine').textContent = lastMed ? findValue(lastMed, ['obat', 'medicine']) : '-';
@@ -546,14 +591,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!data.length) return;
             const last = data[data.length - 1];
             
-            // Update Mental Score jika ada kolomnya
             const mental = findValue(last, ['mental', 'jiwa']);
             if (mental && document.getElementById('mental-score')) document.getElementById('mental-score').textContent = mental;
 
         } catch (e) { console.error(e); }
     }
 
-    // --- [FIX] DATA ACTIVITY FULL ---
     async function fetchActivityData() {
         try {
             const res = await fetch(`${BACKEND_URL}/api/activities`);
@@ -580,7 +623,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
-    // --- [FIX] DATA BUDGET FULL ---
     async function fetchBudgetData(){
         try{
             const [bRes, fRes] = await Promise.all([fetch(`${BACKEND_URL}/api/budgets`), fetch(`${BACKEND_URL}/api/finances`)]);
@@ -621,7 +663,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initDiagnosticFeature(){ const b=document.getElementById('btn-diagnostic'); const m=document.getElementById('diagnostic-modal'); if(b&&m){ b.onclick=()=>{m.classList.add('show')}; document.querySelector('.close-btn').onclick=()=>{m.classList.remove('show')}; }}
     function initMentalHealthChart(){ if(document.getElementById('mentalHealthChart')) new Chart(document.getElementById('mentalHealthChart'),{type:'doughnut',data:{labels:['Skor','Sisa'],datasets:[{data:[78,22],backgroundColor:['#4caf50','#eee']}]},options:{cutout:'85%',plugins:{legend:{display:false}}}}); }
-    function simulateActivityData(){ const el=document.getElementById('dummy-steps'); if(el) setInterval(()=>{el.textContent=(parseInt(el.textContent.replace('.',''))+Math.floor(Math.random()*5)).toLocaleString()},3000); }
+    
+    function simulateActivityData(){ 
+        const el=document.getElementById('dummy-steps'); 
+        if(el) {
+            // Gunakan activeIntervals agar bisa di-stop saat ganti halaman
+            activeIntervals.push(setInterval(()=>{
+                el.textContent=(parseInt(el.textContent.replace('.',''))+Math.floor(Math.random()*5)).toLocaleString()
+            },3000));
+        }
+    }
 
     initNavListeners();
     runPageInit();
