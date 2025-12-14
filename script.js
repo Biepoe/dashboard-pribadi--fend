@@ -1,12 +1,12 @@
 // =========================================================
-// SCRIPT.JS (GABUNGAN FINAL: FITUR CANGGIH + BACKEND JALAN)
+// SCRIPT.JS (FINAL: PERSONAL MANAGER CLOUD + FIX CHART/BUDGET)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
-    const STORAGE_KEY = 'dashboard_personal_data'; // Kunci penyimpanan lokal
+    // const STORAGE_KEY = 'dashboard_personal_data'; // HAPUS INI KARENA KITA PAKAI CLOUD
 
     // =========================================================
     // 1. SISTEM NAVIGASI (SPA)
@@ -68,9 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initPersonal() {
         setDate();
-        loadPersonalData();
+        loadPersonalData(); // Sekarang mengambil dari Cloud
         
-        // EXPOSE FUNGSI KE WINDOW (Supaya HTML bisa baca onclick="")
+        // EXPOSE FUNGSI KE WINDOW
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.saveProfile = saveProfile;
@@ -95,48 +95,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 3. PERSONAL MANAGER (VERSI CANGGIH + LOCALSTORAGE)
+    // 3. PERSONAL MANAGER (VERSI CLOUD / API)
     // =========================================================
     
+    // Struktur Data Awal
     let personalData = {
         profile: { name: "Nama Kamu", role: "Pekerjaan", bio: "Bio singkat..." },
         skills: [], goals: [], books: []
     };
 
-    // Load Data (Pakai LocalStorage agar aman & cepat, tapi struktur datanya canggih)
-    function loadPersonalData() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            personalData = JSON.parse(stored);
+    // --- FUNGSI LOAD DARI SERVER ---
+    async function loadPersonalData() {
+        // Tampilkan loading state jika perlu
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/personal`);
+            if (!res.ok) throw new Error("Gagal ambil data");
+            
+            const cloudData = await res.json();
+            
+            // Jika ada data di cloud, pakai itu. Jika tidak, pakai default.
+            // Asumsi cloudData mengembalikan object { profile:..., skills:..., ... }
+            if (cloudData && !Array.isArray(cloudData)) { 
+                personalData = cloudData;
+            } else if (Array.isArray(cloudData) && cloudData.length > 0) {
+                // Jika backend mengembalikan array, ambil item terakhir (terbaru)
+                personalData = cloudData[cloudData.length - 1];
+            }
+            
+            renderPersonalUI();
+        } catch (error) {
+            console.error("Gagal load personal data:", error);
+            // Fallback: Jika gagal load, tetap render data default/kosong agar UI tidak rusak
+            renderPersonalUI();
         }
-        renderPersonalUI();
     }
 
-    function saveData() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(personalData));
+    // --- FUNGSI SAVE KE SERVER ---
+    async function saveData() {
+        // 1. Update Tampilan Dulu (Optimistic UI) agar terasa cepat
         renderPersonalUI();
+
+        // 2. Kirim ke Backend
+        try {
+            // Kita kirim seluruh object personalData sebagai satu entry baru/update
+            const res = await fetch(`${BACKEND_URL}/api/personal`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(personalData)
+            });
+            
+            if (!res.ok) throw new Error("Gagal simpan ke server");
+            console.log("✅ Data Personal tersimpan di Cloud!");
+            
+        } catch (error) {
+            console.error("Gagal save data:", error);
+            alert("Gagal menyimpan perubahan ke server. Cek koneksi internet!");
+        }
     }
 
-    // --- RENDER UI (LOGIKA TAMPILAN CANGGIH) ---
     function renderPersonalUI() {
-        // Profil
         if(document.getElementById('profile-name')) {
             document.getElementById('profile-name').textContent = personalData.profile.name;
             document.getElementById('profile-role').textContent = personalData.profile.role;
             document.getElementById('profile-bio').textContent = personalData.profile.bio;
         }
 
-        // Skills (Dengan Progress Bar Otomatis dari Checklist)
         const skillContainer = document.getElementById('skill-container');
         if (skillContainer) {
             skillContainer.innerHTML = personalData.skills.length ? '' : '<div class="empty-state">Belum ada skill. Klik Tambah.</div>';
             personalData.skills.forEach((s, i) => {
-                // Hitung progress dari materials
-                const materials = s.materials || []; // Jaga-jaga kalau undefined
+                const materials = s.materials || [];
                 const total = materials.length;
                 const done = materials.filter(m => m.done).length;
-                
-                // Jika tidak ada materi manual, pakai progress manual (backward compatibility)
                 let progress = 0;
                 if (total > 0) {
                     progress = Math.round((done / total) * 100);
@@ -155,20 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Goals
         const goalContainer = document.getElementById('goal-container');
         if (goalContainer) {
             goalContainer.innerHTML = personalData.goals.length ? '<ul class="goal-list"></ul>' : '<div class="empty-state">Belum ada target.</div>';
             const list = goalContainer.querySelector('ul');
             if(list) {
                 personalData.goals.forEach((g, i) => {
-                    // Support format lama (string) dan baru (object)
                     const text = typeof g === 'object' ? g.text : g;
                     const isDone = typeof g === 'object' ? g.done : false;
-                    
                     const checkClass = isDone ? 'checked' : '';
                     const textClass = isDone ? 'done' : '';
-                    
                     list.innerHTML += `
                         <li class="goal-item" onclick="toggleGoal(${i})">
                             <div class="goal-check ${checkClass}"><i class="fas fa-check" style="font-size: 10px; color:${isDone?'#fff':'#ccc'};"></i></div>
@@ -179,26 +205,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Books (Dengan Gambar Cover)
         const bookContainer = document.getElementById('book-container');
         if (bookContainer) {
             bookContainer.innerHTML = personalData.books.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada buku.</div>';
             personalData.books.forEach((b, i) => {
-                // Support format lama (string) dan baru (object)
                 const title = typeof b === 'object' ? b.title : b;
                 const isDone = typeof b === 'object' ? b.done : false;
                 const img = typeof b === 'object' ? b.img : null;
-                
                 const readClass = isDone ? 'read' : '';
-                
                 let coverStyle = 'background-color: #eee;';
                 let coverContent = title.charAt(0);
-                
                 if (img) {
                     coverStyle = `background-image: url('${img}'); background-size: cover; background-position: center; color: transparent;`;
                     coverContent = '';
                 }
-
                 bookContainer.innerHTML += `
                     <div class="book-item" onclick="toggleBook(${i})">
                         <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
@@ -209,9 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- MODAL & LOGIC ---
     let tempMaterials = []; 
-
     function openModal(id) {
         const modal = document.getElementById(id);
         if(modal) {
@@ -245,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
             title.textContent = "Edit Skill & Materi";
             const skill = personalData.skills[index];
             nameInput.value = skill.name;
-            // Pastikan materials ada (kalau data lama mungkin belum ada)
             tempMaterials = skill.materials ? JSON.parse(JSON.stringify(skill.materials)) : [];
         }
         renderMaterialList();
@@ -293,13 +310,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('input-skill-name').value;
         const index = parseInt(document.getElementById('edit-skill-index').value);
         if (!name) return alert("Nama skill harus diisi!");
-        
-        // Simpan data skill dengan format object lengkap
         const newSkillData = { name: name, materials: tempMaterials, progress: 0 };
-        
         if (index === -1) personalData.skills.push(newSkillData);
         else personalData.skills[index] = newSkillData;
-        
         saveData();
         closeModal('modal-skill');
     }
@@ -307,14 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveGoal() {
         const text = document.getElementById('input-goal-text').value;
         if(text) {
-            // Simpan sebagai object agar bisa di-checklist
             personalData.goals.push({ text: text, done: false });
             saveData(); closeModal('modal-goal'); document.getElementById('input-goal-text').value = '';
         }
     }
     
     function toggleGoal(index) {
-        // Handle format lama (string)
         if (typeof personalData.goals[index] === 'string') {
             personalData.goals[index] = { text: personalData.goals[index], done: true };
         } else {
@@ -327,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!url) return '';
         if (url.includes('drive.google.com') && url.includes('/d/')) {
             const id = url.split('/d/')[1].split('/')[0];
-            return `https://lh3.googleusercontent.com/d/${id}=s220`; // Link gambar GDrive yg valid
+            return `https://lh3.googleusercontent.com/d/${id}=s220`; 
         }
         return url;
     }
@@ -335,13 +346,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveBook() {
         const title = document.getElementById('input-book-title').value;
         const imgLink = document.getElementById('input-book-img').value;
-        
         if(title) {
-            personalData.books.push({ 
-                title: title, 
-                done: false,
-                img: getImgUrl(imgLink)
-            });
+            personalData.books.push({ title: title, done: false, img: getImgUrl(imgLink) });
             saveData();
             closeModal('modal-book');
             document.getElementById('input-book-title').value = '';
@@ -350,7 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function toggleBook(index) {
-        // Handle format lama
         if (typeof personalData.books[index] === 'string') {
             personalData.books[index] = { title: personalData.books[index], done: true, img: null };
         } else {
@@ -385,10 +390,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function setTime(){const e=document.getElementById('current-time');if(e)e.innerHTML=`<i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('id-ID')}`}
     const formatRupiah = (n) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n);
     function parseDate(s){if(!s)return null;if(s.includes('/')){const p=s.split('/');return new Date(p[2],p[1]-1,p[0])}return new Date(s)}
-    function findValue(o,k){const ks=Object.keys(o);for(let key of ks){const ck=key.toLowerCase().replace(/[^a-z0-9]/g,'');for(let kw of k){if(ck.includes(kw.toLowerCase().replace(/[^a-z0-9]/g,'')))return o[key]}}return undefined}
+    
+    function findValue(o, k) {
+        const ks = Object.keys(o);
+        for (let key of ks) {
+            const ck = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+            for (let kw of k) {
+                if (ck.includes(kw.toLowerCase().replace(/[^a-z0-9]/g, ''))) return o[key];
+            }
+        }
+        return undefined;
+    }
 
     // =========================================================
-    // 5. DATA BACKEND (KEUANGAN & KESEHATAN YANG JALAN)
+    // 5. DATA BACKEND (KEUANGAN & KESEHATAN)
     // =========================================================
 
     async function fetchFinancialData() {
@@ -397,41 +412,46 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             let pemasukan=0, pengeluaran=0, sBank=0, sEwallet=0, sCash=0;
             const now = new Date(); const m = now.getMonth(); const y = now.getFullYear();
+            
             data.forEach(item => {
-                const nom = parseFloat(String(findValue(item,['nominal','amount'])||'0').replace(/[^0-9]/g,''))||0;
-                const jenis = String(findValue(item,['jenis','transaksi'])||'').toLowerCase().trim();
-                const src = String(findValue(item,['sumber','bank'])||'').toLowerCase();
-                const dst = String(findValue(item,['tujuan','ke'])||'').toLowerCase();
-                const tgl = parseDate(findValue(item,['tanggal','date']));
+                const nom = parseFloat(String(findValue(item,['nominal','amount','jumlah','harga'])||'0').replace(/[^0-9]/g,''))||0;
+                const jenis = String(findValue(item,['jenis','transaksi','tipe','type'])||'').toLowerCase().trim();
+                const src = String(findValue(item,['sumber','bank','source'])||'').toLowerCase();
+                const dst = String(findValue(item,['tujuan','ke','dest'])||'').toLowerCase();
+                const tgl = parseDate(findValue(item,['tanggal','date','tgl']));
+                
                 const isCur = (tgl && tgl.getMonth()===m && tgl.getFullYear()===y);
-                if(jenis.includes('masuk')||jenis==='pemasukan'){
+                
+                if(jenis.includes('masuk')||jenis==='pemasukan' || jenis === 'income'){
                     if(isCur) pemasukan+=nom;
-                    if(src.includes('bank')||src.includes('bsi')) sBank+=nom; else if(src.includes('wallet')) sEwallet+=nom; else if(src.includes('cash')) sCash+=nom;
-                } else if(jenis.includes('keluar')||jenis==='pengeluaran'){
+                    if(src.includes('bank')||src.includes('bsi')) sBank+=nom; else if(src.includes('wallet')||src.includes('dana')||src.includes('ovo')||src.includes('pay')) sEwallet+=nom; else if(src.includes('cash')) sCash+=nom;
+                } else if(jenis.includes('keluar')||jenis==='pengeluaran' || jenis === 'expense'){
                     if(isCur) pengeluaran+=nom;
-                    if(src.includes('bank')||src.includes('bsi')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else if(src.includes('cash')) sCash-=nom;
+                    if(src.includes('bank')||src.includes('bsi')) sBank-=nom; else if(src.includes('wallet')||src.includes('dana')||src.includes('ovo')||src.includes('pay')) sEwallet-=nom; else if(src.includes('cash')) sCash-=nom;
                 } else if(jenis.includes('tf')||jenis.includes('transfer')){
                     if(src.includes('bank')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else if(src.includes('cash')) sCash-=nom;
                     if(dst.includes('bank')) sBank+=nom; else if(dst.includes('wallet')) sEwallet+=nom; else if(dst.includes('cash')) sCash+=nom;
                 }
             });
+
             const setText = (id,v) => {const el=document.getElementById(id);if(el)el.textContent=formatRupiah(v)};
             setText('pemasukan-value', pemasukan); setText('pengeluaran-value', pengeluaran);
             setText('pemasukan-bulan-ini', pemasukan); setText('pengeluaran-bulan-ini', pengeluaran);
             setText('saldo-bank', sBank); setText('saldo-ewallet', sEwallet); setText('saldo-cash', sCash);
             setText('sisa-saldo-value', sBank+sEwallet+sCash);
             setText('card-balance-bank', sBank); setText('card-balance-ewallet', sEwallet);
+            
             updateTransactionTable(data);
             if(document.getElementById('monthlyEarningsChart')) createMonthlyChart(data);
             if(document.getElementById('month-selector')) setupDownloadFeature(data);
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error('Finance Error:', e); }
     }
     
     function setupDownloadFeature(data) {
         const sel = document.getElementById('month-selector'); const btn = document.getElementById('btn-download-csv');
         if(!sel || !btn) return;
         const unq = new Set();
-        data.forEach(i=>{const t=parseDate(findValue(i,['tanggal']));if(t)unq.add(`${t.getFullYear()}-${padZero(t.getMonth()+1)}`)});
+        data.forEach(i=>{const t=parseDate(findValue(i,['tanggal','date']));if(t)unq.add(`${t.getFullYear()}-${padZero(t.getMonth()+1)}`)});
         const srt = Array.from(unq).sort().reverse();
         sel.innerHTML='<option value="">Pilih Bulan...</option>';
         srt.forEach(m=>{sel.innerHTML+=`<option value="${m}">${m}</option>`});
@@ -439,43 +459,64 @@ document.addEventListener('DOMContentLoaded', () => {
         nBtn.innerHTML='<i class="fas fa-file-excel"></i> Unduh Excel'; nBtn.style.backgroundColor='#1D6F42';
         nBtn.addEventListener('click',()=>{if(!sel.value)return alert('Pilih bulan'); downloadExcel(data,sel.value)});
     }
+    
     function downloadExcel(data, selM) {
         if(typeof XLSX==='undefined') return alert('XLSX Library Missing');
-        const fil = data.filter(i=>{const t=parseDate(findValue(i,['tanggal'])); return t&&`${t.getFullYear()}-${padZero(t.getMonth()+1)}`===selM});
+        const fil = data.filter(i=>{const t=parseDate(findValue(i,['tanggal','date'])); return t&&`${t.getFullYear()}-${padZero(t.getMonth()+1)}`===selM});
         if(!fil.length) return alert('Kosong');
         const ex = fil.map(i=>({
-            "Tanggal": findValue(i,['tanggal']), "Ket": findValue(i,['deskripsi']), "Nominal": parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,'')), "Jenis": findValue(i,['jenis'])
+            "Tanggal": findValue(i,['tanggal','date']), 
+            "Ket": findValue(i,['deskripsi','ket','note']), 
+            "Nominal": parseFloat(String(findValue(i,['nominal','amount'])).replace(/[^0-9]/g,'')), 
+            "Jenis": findValue(i,['jenis','tipe'])
         }));
         const ws=XLSX.utils.json_to_sheet(ex); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Lap"); XLSX.writeFile(wb,`Lap_${selM}.xlsx`);
     }
-    function updateTransactionTable(d){ const t=document.querySelector('#transaction-table tbody'); if(t){t.innerHTML=''; d.slice(-5).reverse().forEach(i=>{
-        const nom = parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''));
-        t.innerHTML+=`<tr><td>${findValue(i,['deskripsi'])}</td><td>${findValue(i,['jenis'])}</td><td>${formatRupiah(nom)}</td></tr>`;
-    })}}
+    
+    function updateTransactionTable(d){ 
+        const t=document.querySelector('#transaction-table tbody'); 
+        if(t){
+            t.innerHTML=''; 
+            d.slice(-5).reverse().forEach(i=>{
+                const nom = parseFloat(String(findValue(i,['nominal','amount'])).replace(/[^0-9]/g,''));
+                const ket = findValue(i,['deskripsi','ket','note']) || '-';
+                const jen = findValue(i,['jenis','tipe']) || '-';
+                t.innerHTML+=`<tr><td>${ket}</td><td>${jen}</td><td>${formatRupiah(nom)}</td></tr>`;
+            });
+        }
+    }
     
     function createMonthlyChart(data) {
         if (typeof Chart === 'undefined' || !document.getElementById('monthlyEarningsChart')) return;
         const ctx = document.getElementById('monthlyEarningsChart');
         const income = Array(12).fill(0), expense = Array(12).fill(0);
         const year = new Date().getFullYear();
+        
         data.forEach(item => {
-            const tgl = parseDate(findValue(item, ['Tanggal', 'date']));
-            const jenis = String(findValue(item, ['jenis', 'tipe'])).toLowerCase();
-            const amount = parseFloat(String(findValue(item, ['nominal'])).replace(/[^0-9]/g, '')) || 0;
+            const tgl = parseDate(findValue(item, ['Tanggal', 'date', 'tgl']));
+            const jenis = String(findValue(item, ['jenis', 'tipe', 'transaksi', 'type']) || '').toLowerCase();
+            const amount = parseFloat(String(findValue(item, ['nominal', 'amount', 'jumlah']) || '0').replace(/[^0-9]/g, '')) || 0;
+            
             if (tgl && tgl.getFullYear() === year) {
-                if (jenis.includes('masuk')) income[tgl.getMonth()] += amount;
-                else if (jenis.includes('keluar')) expense[tgl.getMonth()] += amount;
+                if (jenis.includes('masuk') || jenis.includes('income')) income[tgl.getMonth()] += amount;
+                else if (jenis.includes('keluar') || jenis.includes('expense')) expense[tgl.getMonth()] += amount;
             }
         });
+        
         if (window.myFinanceChart instanceof Chart) window.myFinanceChart.destroy();
         window.myFinanceChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'], datasets: [{ label: 'Pemasukan', data: income, borderColor: '#667eea', backgroundColor: 'rgba(102, 126, 234, 0.1)', fill: true }, { label: 'Pengeluaran', data: expense, borderColor: '#f44336', backgroundColor: 'rgba(244, 67, 54, 0.1)', fill: true }] },
+            data: { 
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'], 
+                datasets: [
+                    { label: 'Pemasukan', data: income, borderColor: '#667eea', backgroundColor: 'rgba(102, 126, 234, 0.1)', fill: true }, 
+                    { label: 'Pengeluaran', data: expense, borderColor: '#f44336', backgroundColor: 'rgba(244, 67, 54, 0.1)', fill: true }
+                ] 
+            },
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
 
-    // --- FUNGSI BACKEND KESEHATAN & AKTIVITAS (YANG JALAN) ---
     async function fetchHealthData() {
         try {
             const res = await fetch(`${BACKEND_URL}/api/health`);
@@ -483,12 +524,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!data.length) return;
             const last = data[data.length - 1];
             
-            // Update Text
-            const cond = findValue(last, ['kondisi', 'tubuh']) || 'Sehat';
+            const cond = findValue(last, ['kondisi', 'tubuh', 'status']) || 'Sehat';
             const statusEl = document.getElementById('body-status');
             if (statusEl) statusEl.textContent = cond;
             
-            // Update Gambar Tubuh (Merah/Hijau)
             const vec = document.getElementById('body-vector');
             if (vec) {
                 if (cond.toLowerCase().includes('sakit')) {
@@ -498,7 +537,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // Update Tidur
             const sleepEl = document.getElementById('sleep-duration');
             const lastSleep = [...data].reverse().find(i => findValue(i, ['tidur']));
             if(sleepEl && lastSleep) {
@@ -510,7 +548,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Update Obat
             if(document.getElementById('last-medicine')) {
                 const lastMed = [...data].reverse().find(i => findValue(i, ['obat']));
                 document.getElementById('last-medicine').textContent = lastMed ? findValue(lastMed, ['obat']) : '-';
@@ -524,11 +561,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (!data.length) return;
             const last = data[data.length - 1];
-            
-            // Update Mental Score
             const mental = findValue(last, ['mental', 'jiwa']);
             if (mental && document.getElementById('mental-score')) document.getElementById('mental-score').textContent = mental;
-
         } catch (e) { console.error(e); }
     }
 
@@ -545,22 +579,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 recent.forEach(i => {
-                    const t = findValue(i, ['kapan', 'date']) || '';
-                    const k = findValue(i, ['ngapain', 'kegiatan']) || '-';
-                    // Parse tanggal biar cantik
+                    const t = findValue(i, ['kapan', 'date', 'waktu']) || '';
+                    const k = findValue(i, ['ngapain', 'kegiatan', 'activity']) || '-';
                     let dateDisplay = t;
                     const dObj = new Date(t);
                     if(!isNaN(dObj.getTime())) {
                         dateDisplay = dObj.toLocaleDateString('id-ID') + ' ' + dObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
                     }
-                    
-                    list.innerHTML += `
-                    <li class="activity-log-item">
-                        <div class="activity-log-time" style="font-size:11px;">${dateDisplay}</div>
-                        <div class="activity-log-details">
-                            <span class="title" style="font-size:14px;">${k}</span>
-                        </div>
-                    </li>`;
+                    list.innerHTML += `<li class="activity-log-item"><div class="activity-log-time" style="font-size:11px;">${dateDisplay}</div><div class="activity-log-details"><span class="title" style="font-size:14px;">${k}</span></div></li>`;
                 });
             }
         } catch (e) { console.error(e); }
@@ -571,23 +597,37 @@ document.addEventListener('DOMContentLoaded', () => {
             const [bRes, fRes] = await Promise.all([fetch(`${BACKEND_URL}/api/budgets`), fetch(`${BACKEND_URL}/api/finances`)]);
             const budgets = await bRes.json(); const finances = await fRes.json();
             const used={}; const now=new Date();
+            
             finances.forEach(i=>{
-                const j=String(findValue(i,['jenis'])).toLowerCase();
-                const t=parseDate(findValue(i,['tanggal']));
-                if((j.includes('keluar')||j==='pengeluaran') && t && t.getMonth()===now.getMonth()){
-                    const c=String(findValue(i,['kategori'])).toLowerCase();
-                    const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0;
-                    budgets.forEach(b=>{if(c.includes(String(findValue(b,['kategori'])).toLowerCase())) used[String(findValue(b,['kategori'])).toLowerCase()]=(used[String(findValue(b,['kategori'])).toLowerCase()]||0)+a});
+                const j = String(findValue(i,['jenis','transaksi','tipe','type'])||'').toLowerCase();
+                const t = parseDate(findValue(i,['tanggal','date','tgl']));
+                
+                if((j.includes('keluar')||j==='pengeluaran'||j.includes('expense')) && t && t.getMonth()===now.getMonth()){
+                    const c = String(findValue(i,['kategori','category','cat'])||'lainnya').toLowerCase();
+                    const a = parseFloat(String(findValue(i,['nominal','amount','jumlah'])).replace(/[^0-9]/g,''))||0;
+                    
+                    budgets.forEach(b=>{
+                        const budgetCat = String(findValue(b,['kategori','category'])).toLowerCase();
+                        if(c.includes(budgetCat) || budgetCat.includes(c)) {
+                            used[budgetCat] = (used[budgetCat]||0) + a;
+                        }
+                    });
                 }
             });
+            
             const c=document.getElementById('budget-container');
-            if(c){c.innerHTML=''; budgets.forEach(b=>{
-                const n=findValue(b,['kategori']); const l=parseFloat(String(findValue(b,['alokasi'])).replace(/[^0-9]/g,''));
-                const u=used[n.toLowerCase()]||0; const p=(u/l)*100;
-                const col = p > 90 ? 'danger' : (p > 70 ? 'warning' : '');
-                c.innerHTML+=`<div class="budget-item"><div class="budget-item-header"><span>${n}</span><span>${formatRupiah(l-u)}</span></div><div class="progress-bar-container"><div class="progress-bar ${col}" style="width:${Math.min(p,100)}%"></div></div></div>`;
-            })}
-        }catch(e){console.error(e)}
+            if(c){
+                c.innerHTML=''; 
+                budgets.forEach(b=>{
+                    const n = findValue(b,['kategori','category']); 
+                    const l = parseFloat(String(findValue(b,['alokasi','limit','budget'])).replace(/[^0-9]/g,''))||0;
+                    const u = used[String(n).toLowerCase()]||0; 
+                    const p = (u/l)*100;
+                    const col = p > 90 ? 'danger' : (p > 70 ? 'warning' : '');
+                    c.innerHTML+=`<div class="budget-item"><div class="budget-item-header"><span>${n}</span><span>${formatRupiah(l-u)}</span></div><div class="progress-bar-container"><div class="progress-bar ${col}" style="width:${Math.min(p,100)}%"></div></div></div>`;
+                });
+            }
+        }catch(e){console.error('Budget Error:', e)}
     }
 
     let diagInterval=null;
