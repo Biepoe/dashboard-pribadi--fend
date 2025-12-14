@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.saveSkill = saveSkill;
         window.saveGoal = saveGoal;
         window.saveBook = saveBook;
+        window.saveMovie = saveMovie;
         window.deleteItem = deleteItem;
         
         window.openSkillModal = openSkillModal;
@@ -101,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         window.toggleGoal = toggleGoal;
         window.toggleBook = toggleBook;
+        window.toggleMovie = toggleMovie;
         
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
@@ -124,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 personalData = { ...personalData, ...cloudData };
                 if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
                 if(!personalData.bills) personalData.bills = [];
+                if(!personalData.movies) personalData.movies = [];
             }
             
             if(document.getElementById('profile-name')) renderPersonalUI();
@@ -328,6 +331,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+        // [BARU] Movies
+        const movieContainer = document.getElementById('movie-container');
+        if (movieContainer) {
+            const movies = personalData.movies || [];
+            movieContainer.innerHTML = movies.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada film.</div>';
+            movies.forEach((m, i) => {
+                const title = typeof m === 'object' ? m.title : m;
+                const isDone = typeof m === 'object' ? m.done : false;
+                const img = typeof m === 'object' ? m.img : null;
+                const readClass = isDone ? 'read' : ''; // Kita pakai class 'read' juga biar sama
+                let coverStyle = img ? `background-image: url('${img}'); background-size: cover; color: transparent;` : 'background-color: #eee;';
+                let coverContent = img ? '' : title.charAt(0);
+
+                movieContainer.innerHTML += `
+                    <div class="book-item" onclick="toggleMovie(${i})">
+                        <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
+                        <span class="book-title ${readClass}">${title}</span>
+                        <div class="book-delete" onclick="event.stopPropagation(); deleteItem('movies', ${i})">×</div>
+                    </div>`;
+            });
+        }
+    }
+                          
     let tempMaterials = []; 
     function openModal(id) {
         const modal = document.getElementById(id);
