@@ -109,6 +109,37 @@
                         </div>
                     </div>
 
+                    <div class="activity-grid" style="margin-top: 20px;">
+    <div class="stat-card water-card">
+        <div class="stat-top">
+            <span class="stat-title">Hidrasi (Gelas)</span>
+            <span class="stat-badge blue"><i class="fas fa-tint"></i> Hari Ini</span>
+        </div>
+        <div class="water-controls">
+            <button class="btn-water" onclick="updateWater(-1)">-</button>
+            <div class="water-display">
+                <span id="water-count">0</span><small>/8</small>
+            </div>
+            <button class="btn-water" onclick="updateWater(1)">+</button>
+        </div>
+        <div class="water-bar-bg"><div class="water-bar-fill" id="water-bar"></div></div>
+    </div>
+
+    <div class="stat-card mood-card">
+        <div class="stat-top">
+            <span class="stat-title">Mood Hari Ini</span>
+            <span class="stat-badge purple"><i class="fas fa-smile"></i> Check-in</span>
+        </div>
+        <div class="mood-selector">
+            <button class="btn-mood" onclick="setMood('happy')">😄</button>
+            <button class="btn-mood" onclick="setMood('neutral')">😐</button>
+            <button class="btn-mood" onclick="setMood('sad')">😔</button>
+            <button class="btn-mood" onclick="setMood('tired')">😫</button>
+        </div>
+        <p id="mood-status" style="font-size: 12px; margin-top: 10px; color: #777;">Bagaimana perasaanmu?</p>
+    </div>
+</div>
+
                     <div class="middle-grid">
                         <div class="wide-card">
                             <div class="card-head">
