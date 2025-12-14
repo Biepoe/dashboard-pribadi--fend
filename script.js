@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (FIXED: MOVIE LIST & SYNTAX ERROR)
+// SCRIPT.JS (FULL CLOUD FEATURES: TRACKER, BILLS, AI, MOVIES)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,14 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
-    // --- STRUKTUR DATA CLOUD ---
-    // [FIX] Menambahkan movies: [] agar tidak error saat load
+    // --- STRUKTUR DATA CLOUD (DIPERLUAS) ---
     let personalData = {
         profile: { name: "Nama Kamu", role: "Pekerjaan", bio: "Bio..." },
         skills: [],
         goals: [],
         books: [],
-        movies: [], 
+        movies: [], // [BARU] Tempat simpan data film
         tracker: { water: { count: 0, date: "" }, mood: { status: "", date: "" } },
         bills: [] 
     };
@@ -86,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initPersonal() {
         setDate();
-        loadPersonalData();
+        loadPersonalData(); // Render UI otomatis dipanggil di dalam loadPersonalData
         
         // Expose fungsi ke window
         window.openModal = openModal;
@@ -95,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.saveSkill = saveSkill;
         window.saveGoal = saveGoal;
         window.saveBook = saveBook;
-        window.saveMovie = saveMovie;
+        window.saveMovie = saveMovie; // [BARU]
         window.deleteItem = deleteItem;
         
         window.openSkillModal = openSkillModal;
@@ -105,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         window.toggleGoal = toggleGoal;
         window.toggleBook = toggleBook;
-        window.toggleMovie = toggleMovie;
+        window.toggleMovie = toggleMovie; // [BARU]
         
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
@@ -129,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 personalData = { ...personalData, ...cloudData };
                 if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
                 if(!personalData.bills) personalData.bills = [];
-                if(!personalData.movies) personalData.movies = [];
+                if(!personalData.movies) personalData.movies = []; // [BARU] Safety check
             }
             
             if(document.getElementById('profile-name')) renderPersonalUI();
@@ -137,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(document.getElementById('bill-list')) renderBills();
 
         } catch (error) {
-            console.warn("Offline/Server Busy:", error);
+            console.warn("Sedang offline atau server sibuk. Menggunakan data default.", error);
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
             if(document.getElementById('bill-list')) renderBills();
@@ -157,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             console.log("✅ Tersimpan ke Cloud");
         } catch (error) {
-            console.error("Gagal simpan:", error);
+            alert("Gagal menyimpan ke server. Cek koneksi!");
         }
     }
 
@@ -287,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // [BARU & FIXED] Movies
+        // [BARU] Movies
         const movieContainer = document.getElementById('movie-container');
         if (movieContainer) {
             const movies = personalData.movies || [];
@@ -296,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const title = typeof m === 'object' ? m.title : m;
                 const isDone = typeof m === 'object' ? m.done : false;
                 const img = typeof m === 'object' ? m.img : null;
-                const readClass = isDone ? 'read' : ''; 
+                const readClass = isDone ? 'read' : ''; // Kita pakai class 'read' juga biar sama
                 let coverStyle = img ? `background-image: url('${img}'); background-size: cover; color: transparent;` : 'background-color: #eee;';
                 let coverContent = img ? '' : title.charAt(0);
 
@@ -360,8 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveGoal() { const t=document.getElementById('input-goal-text').value; if(t){ personalData.goals.push({text:t, done:false}); saveData(); closeModal('modal-goal'); } }
     function toggleGoal(i) { const g=personalData.goals[i]; if(typeof g==='string') personalData.goals[i]={text:g, done:true}; else g.done=!g.done; saveData(); }
     
-    // [FIX] Tambahkan '$' pada template literal yang kurang
-    function getImgUrl(url) { if(url && url.includes('drive.google.com')) return `https://lh3.googleusercontent.com/d/$${url.split('/d/')[1].split('/')[0]}`; return url; }
+    function getImgUrl(url) { if(url && url.includes('drive.google.com')) return `https://lh3.googleusercontent.com/d/${url.split('/d/')[1].split('/')[0]}`; return url; }
     
     function saveBook() { const t=document.getElementById('input-book-title').value; if(t){ personalData.books.push({title:t, done:false, img:getImgUrl(document.getElementById('input-book-img').value)}); saveData(); closeModal('modal-book'); } }
     function toggleBook(i) { const b=personalData.books[i]; if(typeof b==='string') personalData.books[i]={title:b, done:true, img:null}; else b.done=!b.done; saveData(); }
