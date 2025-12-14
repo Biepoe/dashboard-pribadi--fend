@@ -1,12 +1,12 @@
 // =========================================================
-// SCRIPT.JS (FIXED VERSION)
+// SCRIPT.JS (FIXED VERSION - PENGELUARAN & MOVIES)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
-    let activeIntervals = []; // Penampung interval agar bisa di-clear saat ganti halaman
+    let activeIntervals = []; 
 
     // --- STRUKTUR DATA CLOUD ---
     let personalData = {
@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     
     function clearPageIntervals() {
-        // Hentikan semua timer yang berjalan sebelum pindah halaman
         activeIntervals.forEach(clearInterval);
         activeIntervals = [];
     }
@@ -38,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadPage(url) {
-        clearPageIntervals(); // Bersihkan interval lama
+        clearPageIntervals(); 
         const cw = document.getElementById('content-wrapper');
         if(!cw) return;
         
@@ -72,11 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const link = e.target.closest('.bottom-nav a');
             if(!link) return;
             e.preventDefault();
-            
-            // Update UI Navigasi Aktif
             document.querySelectorAll('.bottom-nav a').forEach(l=>l.classList.remove('active'));
             link.classList.add('active');
-
             loadPage(link.href);
         });
     }
@@ -88,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function initBeranda() {
         setDate(); 
         setTime(); 
-        // Simpan interval ID agar bisa dimatikan nanti
         activeIntervals.push(setInterval(setTime, 1000));
         fetchFinancialData(); 
         fetchHealthData(); 
@@ -113,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setDate();
         loadPersonalData();
         
-        // Expose fungsi ke window agar bisa dipanggil via HTML onclick
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.saveProfile = saveProfile;
@@ -122,12 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.saveBook = saveBook;
         window.saveMovie = saveMovie;
         window.deleteItem = deleteItem;
-        
         window.openSkillModal = openSkillModal;
         window.addMaterialToList = addMaterialToList;
         window.toggleMaterialTemp = toggleMaterialTemp;
         window.deleteMaterialTemp = deleteMaterialTemp;
-        
         window.toggleGoal = toggleGoal;
         window.toggleBook = toggleBook;
         window.toggleMovie = toggleMovie;
@@ -147,12 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(`${BACKEND_URL}/api/personal`);
             if (!res.ok) throw new Error("Gagal ambil data");
-            
             const cloudData = await res.json();
             
             if (cloudData && !Array.isArray(cloudData)) {
                 personalData = { ...personalData, ...cloudData };
-                // Pastikan struktur objek ada
                 if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
                 if(!personalData.bills) personalData.bills = [];
                 if(!personalData.movies) personalData.movies = [];
@@ -160,15 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(!personalData.skills) personalData.skills = [];
                 if(!personalData.goals) personalData.goals = [];
             }
-            
-            // Render UI sesuai halaman yang aktif
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
             if(document.getElementById('bill-list')) renderBills();
 
         } catch (error) {
             console.warn("Offline/Server Busy:", error);
-            // Tetap render apa yang ada di memori lokal jika gagal fetch
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
             if(document.getElementById('bill-list')) renderBills();
@@ -176,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function saveData() {
-        // Render ulang UI agar terlihat responsif langsung
         if(document.getElementById('profile-name')) renderPersonalUI();
         if(document.getElementById('water-count')) renderTracker();
         if(document.getElementById('bill-list')) renderBills();
@@ -203,11 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (personalData.tracker.water.date !== today) {
             personalData.tracker.water = { count: 0, date: today };
         }
-        
         let count = personalData.tracker.water.count + change;
-        if (count < 0) count = 0;
-        if (count > 8) count = 8;
-        
+        if (count < 0) count = 0; if (count > 8) count = 8;
         personalData.tracker.water.count = count;
         personalData.tracker.water.date = today;
         saveData();
@@ -235,12 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mBtns && personalData.tracker && personalData.tracker.mood) {
             const today = new Date().toDateString();
             const currentMood = personalData.tracker.mood.date === today ? personalData.tracker.mood.status : null;
-            
             mBtns.forEach(btn => {
                 btn.classList.remove('active');
                 if (currentMood && btn.getAttribute('onclick').includes(currentMood)) btn.classList.add('active');
             });
-            
             if (mStat) {
                 const text = { 'happy': 'Senang! Pertahankan 😄', 'neutral': 'Biasa saja 😐', 'sad': 'Sedih, semangat ya! 😔', 'tired': 'Lelah, istirahatlah 😫' };
                 mStat.textContent = text[currentMood] || 'Bagaimana perasaanmu?';
@@ -268,23 +249,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderBills() {
         const list = document.getElementById('bill-list');
         if (!list) return;
-        
         const bills = personalData.bills || [];
         list.innerHTML = '';
-        
         if (bills.length === 0) {
             list.innerHTML = '<li style="text-align:center; color:#999; font-size:12px; padding:10px;">Belum ada tagihan.</li>';
             return;
         }
-
         bills.sort((a, b) => a.date - b.date);
         const today = new Date().getDate();
-
         bills.forEach((b, i) => {
             const diff = b.date - today;
             let status = diff < 0 ? 'Telat!' : (diff === 0 ? 'Hari ini!' : `${diff} hari lagi`);
             let color = diff < 0 ? 'red' : (diff <= 3 ? '#ff9800' : '#4caf50');
-            
             list.innerHTML += `
                 <li class="bill-item">
                     <span class="bill-date">Tgl ${b.date}</span>
@@ -299,14 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. RENDER PERSONAL UI
     // =========================================================
     function renderPersonalUI() {
-        // --- 1. Render Profile ---
         if(document.getElementById('profile-name')) {
             document.getElementById('profile-name').textContent = personalData.profile.name;
             document.getElementById('profile-role').textContent = personalData.profile.role;
             document.getElementById('profile-bio').textContent = personalData.profile.bio;
         }
 
-        // --- 2. Render Skills ---
         const skillContainer = document.getElementById('skill-container');
         if (skillContainer) {
             skillContainer.innerHTML = personalData.skills.length ? '' : '<div class="empty-state">Belum ada skill. Klik Tambah.</div>';
@@ -315,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const total = materials.length;
                 const done = materials.filter(m => m.done).length;
                 let progress = total > 0 ? Math.round((done / total) * 100) : (s.progress || 0);
-
                 skillContainer.innerHTML += `
                     <div class="skill-item" onclick="openSkillModal(${i})">
                         <div class="skill-head">
@@ -327,7 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- 3. Render Goals ---
         const goalContainer = document.getElementById('goal-container');
         if (goalContainer) {
             goalContainer.innerHTML = personalData.goals.length ? '<ul class="goal-list"></ul>' : '<div class="empty-state">Belum ada target.</div>';
@@ -348,7 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // --- 4. Render Books ---
         const bookContainer = document.getElementById('book-container');
         if (bookContainer) {
             bookContainer.innerHTML = personalData.books.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada buku.</div>';
@@ -359,7 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const readClass = isDone ? 'read' : '';
                 let coverStyle = img ? `background-image: url('${img}'); background-size: cover; color: transparent;` : 'background-color: #eee;';
                 let coverContent = img ? '' : title.charAt(0);
-
                 bookContainer.innerHTML += `
                     <div class="book-item" onclick="toggleBook(${i})">
                         <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
@@ -369,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- 5. Render Movies (Dipindahkan ke dalam fungsi agar tidak error) ---
         const movieContainer = document.getElementById('movie-container');
         if (movieContainer) {
             const movies = personalData.movies || [];
@@ -381,7 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const readClass = isDone ? 'read' : ''; 
                 let coverStyle = img ? `background-image: url('${img}'); background-size: cover; color: transparent;` : 'background-color: #eee;';
                 let coverContent = img ? '' : title.charAt(0);
-
                 movieContainer.innerHTML += `
                     <div class="book-item" onclick="toggleMovie(${i})">
                         <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
@@ -441,10 +409,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveGoal() { const t=document.getElementById('input-goal-text').value; if(t){ personalData.goals.push({text:t, done:false}); saveData(); closeModal('modal-goal'); } }
     function toggleGoal(i) { const g=personalData.goals[i]; if(typeof g==='string') personalData.goals[i]={text:g, done:true}; else g.done=!g.done; saveData(); }
     
-    // Perbaikan Helper getImgUrl dengan Syntax yang Benar
     function getImgUrl(url) { 
         if(url && url.includes('drive.google.com')) {
-            // Memperbaiki string interpolation yang sebelumnya salah (0{...} jadi ${...})
             return `http://googleusercontent.com/profile/picture/${url.split('/d/')[1].split('/')[0]}`; 
         }
         return url; 
@@ -453,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveBook() { const t=document.getElementById('input-book-title').value; if(t){ personalData.books.push({title:t, done:false, img:getImgUrl(document.getElementById('input-book-img').value)}); saveData(); closeModal('modal-book'); } }
     function toggleBook(i) { const b=personalData.books[i]; if(typeof b==='string') personalData.books[i]={title:b, done:true, img:null}; else b.done=!b.done; saveData(); }
     
-    // Fungsi Movie (Baru)
     function saveMovie() { const t=document.getElementById('input-movie-title').value; if(t){ personalData.movies.push({title:t, done:false, img:getImgUrl(document.getElementById('input-movie-img').value)}); saveData(); closeModal('modal-movie'); } }
     function toggleMovie(i) { const b=personalData.movies[i]; if(typeof b==='string') personalData.movies[i]={title:b, done:true, img:null}; else b.done=!b.done; saveData(); }
 
@@ -465,14 +430,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function deleteItem(type, index) { if(confirm("Hapus?")) { personalData[type].splice(index, 1); saveData(); } }
 
-    // --- HELPER UTILS ---
     function padZero(n){return n<10?'0'+n:n}
     function setDate(){const e=document.getElementById('current-date');if(e)e.innerHTML=`<i class="fas fa-calendar"></i> ${new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`}
     function setTime(){const e=document.getElementById('current-time');if(e)e.innerHTML=`<i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('id-ID')}`}
     const formatRupiah=(n)=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n);
     function parseDate(s){if(!s)return null;if(s.includes('/')){const p=s.split('/');return new Date(p[2],p[1]-1,p[0])}return new Date(s)}
     
-    // FUNGSI PENCARIAN YANG LEBIH LUAS
     function findValue(o,k){
         const ks=Object.keys(o);
         for(let key of ks){
@@ -485,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 6. FETCH DATA UTAMA (VERSI LENGKAP)
+    // 6. FETCH DATA UTAMA (VERSI LENGKAP & FIXED)
     // =========================================================
 
     async function fetchFinancialData() {
@@ -499,17 +462,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nom = parseFloat(String(findValue(item,['nominal','amount','jumlah'])||'0').replace(/[^0-9]/g,''))||0;
                 const jenis = String(findValue(item,['jenis','tipe'])||'').toLowerCase();
                 const src = String(findValue(item,['sumber','bank'])||'').toLowerCase();
-                const dst = String(findValue(item,['tujuan','ke'])||'').toLowerCase();
+                
+                // Helper untuk cek jenis transaksi (FIXED LOGIC)
+                const isMasuk = jenis.includes('masuk') || jenis.includes('income');
+                const isKeluar = jenis.includes('keluar') || jenis.includes('pengeluaran') || jenis.includes('expense') || jenis.includes('outcome');
+
                 const tgl = parseDate(findValue(item,['tanggal','date']));
                 
                 if(tgl && tgl.getMonth()===m && tgl.getFullYear()===y) {
-                    if(jenis.includes('masuk')) pemasukan+=nom;
-                    if(jenis.includes('keluar')) pengeluaran+=nom;
+                    if(isMasuk) pemasukan+=nom;
+                    if(isKeluar) pengeluaran+=nom;
                 }
                 
                 // Logic Saldo
-                if(jenis.includes('masuk')) { if(src.includes('bank')) sBank+=nom; else if(src.includes('wallet')) sEwallet+=nom; else sCash+=nom; }
-                else if(jenis.includes('keluar')) { if(src.includes('bank')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else sCash-=nom; }
+                if(isMasuk) { if(src.includes('bank')) sBank+=nom; else if(src.includes('wallet')) sEwallet+=nom; else sCash+=nom; }
+                else if(isKeluar) { if(src.includes('bank')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else sCash-=nom; }
             });
 
             const setText = (id,v) => {const el=document.getElementById(id);if(el)el.textContent=formatRupiah(v)};
@@ -522,7 +489,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateTransactionTable(data);
             if(document.getElementById('monthlyEarningsChart')) createMonthlyChart(data);
-            if(document.getElementById('month-selector')) setupDownloadFeature(data);
         } catch(e) { console.error(e); }
     }
 
@@ -543,8 +509,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateTransactionTable(d){ const t=document.querySelector('#transaction-table tbody'); if(t){ t.innerHTML=''; d.slice(-5).reverse().forEach(i=>{ t.innerHTML+=`<tr><td>${findValue(i,['deskripsi','note'])}</td><td>${findValue(i,['jenis'])}</td><td>${formatRupiah(parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,'')))}</td></tr>`; })}}
-    function createMonthlyChart(data) { if(!document.getElementById('monthlyEarningsChart')) return; const ctx=document.getElementById('monthlyEarningsChart'); const inc=Array(12).fill(0), exp=Array(12).fill(0); const y=new Date().getFullYear(); data.forEach(i=>{ const t=parseDate(findValue(i,['tanggal'])); const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0; const j=String(findValue(i,['jenis'])).toLowerCase(); if(t&&t.getFullYear()===y){ if(j.includes('masuk')) inc[t.getMonth()]+=a; else if(j.includes('keluar')) exp[t.getMonth()]+=a; } }); if(window.myC) window.myC.destroy(); window.myC=new Chart(ctx,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],datasets:[{label:'Masuk',data:inc,borderColor:'#4caf50',fill:true},{label:'Keluar',data:exp,borderColor:'#f44336',fill:true}]},options:{responsive:true,maintainAspectRatio:false}}); }
-    function setupDownloadFeature(d) { /* Logika download sama */ }
+    
+    function createMonthlyChart(data) { 
+        if(!document.getElementById('monthlyEarningsChart')) return; 
+        const ctx=document.getElementById('monthlyEarningsChart'); 
+        const inc=Array(12).fill(0), exp=Array(12).fill(0); 
+        const y=new Date().getFullYear(); 
+        
+        data.forEach(i=>{ 
+            const t=parseDate(findValue(i,['tanggal'])); 
+            const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0; 
+            const j=String(findValue(i,['jenis'])).toLowerCase(); 
+            
+            // LOGIK GRAFIK FIXED JUGA
+            const isMasuk = j.includes('masuk') || j.includes('income');
+            const isKeluar = j.includes('keluar') || j.includes('pengeluaran') || j.includes('expense');
+
+            if(t&&t.getFullYear()===y){ 
+                if(isMasuk) inc[t.getMonth()]+=a; 
+                else if(isKeluar) exp[t.getMonth()]+=a; 
+            } 
+        }); 
+        
+        if(window.myC) window.myC.destroy(); 
+        window.myC=new Chart(ctx,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],datasets:[{label:'Masuk',data:inc,borderColor:'#4caf50',fill:true},{label:'Keluar',data:exp,borderColor:'#f44336',fill:true}]},options:{responsive:true,maintainAspectRatio:false}}); 
+    }
 
     async function fetchHealthData() {
         try {
@@ -590,10 +579,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (!data.length) return;
             const last = data[data.length - 1];
-            
             const mental = findValue(last, ['mental', 'jiwa']);
             if (mental && document.getElementById('mental-score')) document.getElementById('mental-score').textContent = mental;
-
         } catch (e) { console.error(e); }
     }
 
@@ -633,7 +620,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const j = String(findValue(i,['jenis','transaksi','tipe','type'])||'').toLowerCase();
                 const t = parseDate(findValue(i,['tanggal','date','tgl']));
                 
-                if((j.includes('keluar')||j==='pengeluaran'||j.includes('expense')) && t && t.getMonth()===now.getMonth()){
+                // Cek Keyword FIXED
+                const isKeluar = j.includes('keluar') || j.includes('pengeluaran') || j.includes('expense');
+                
+                if(isKeluar && t && t.getMonth()===now.getMonth()){
                     const c = String(findValue(i,['kategori','category','cat'])||'lainnya').toLowerCase();
                     const a = parseFloat(String(findValue(i,['nominal','amount','jumlah'])).replace(/[^0-9]/g,''))||0;
                     
@@ -667,7 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function simulateActivityData(){ 
         const el=document.getElementById('dummy-steps'); 
         if(el) {
-            // Gunakan activeIntervals agar bisa di-stop saat ganti halaman
             activeIntervals.push(setInterval(()=>{
                 el.textContent=(parseInt(el.textContent.replace('.',''))+Math.floor(Math.random()*5)).toLocaleString()
             },3000));
