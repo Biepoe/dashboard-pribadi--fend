@@ -73,82 +73,82 @@
                     </div>
 
                 </section>
-            </main>
-        </div>
-    </div>
 
-    <div id="modal-profile" class="modal-overlay">
-        <div class="modal-box">
-            <span class="close-modal" onclick="closeModal('modal-profile')">&times;</span>
-            <h3>Edit Profil</h3>
-            <div class="form-group">
-                <label>Nama Lengkap</label>
-                <input type="text" id="input-name" placeholder="Nama Kamu">
-            </div>
-            <div class="form-group">
-                <label>Pekerjaan / Role</label>
-                <input type="text" id="input-role" placeholder="Contoh: Mahasiswa / Developer">
-            </div>
-            <div class="form-group">
-                <label>Bio Singkat</label>
-                <textarea id="input-bio" rows="3" placeholder="Tulis sedikit tentang dirimu..."></textarea>
-            </div>
-            <button class="btn-save" onclick="saveProfile()">Simpan Perubahan</button>
-        </div>
-    </div>
-
-    <div id="modal-skill" class="modal-overlay">
-        <div class="modal-box">
-            <span class="close-modal" onclick="closeModal('modal-skill')">&times;</span>
-            <h3 id="skill-modal-title">Kelola Skill</h3>
-            
-            <input type="hidden" id="edit-skill-index" value="-1">
-
-            <div class="form-group">
-                <label>Nama Skill</label>
-                <input type="text" id="input-skill-name" placeholder="Contoh: Belajar Python">
-            </div>
-            
-            <div class="form-group">
-                <label>Daftar Materi (Checklist)</label>
-                <div class="add-material-row">
-                    <input type="text" id="input-material-text" placeholder="Tambah materi (misal: Variabel)">
-                    <button class="btn-add-mini" onclick="addMaterialToList()">+</button>
+            <div id="modal-profile" class="modal-overlay">
+                <div class="modal-box">
+                    <span class="close-modal" onclick="closeModal('modal-profile')">&times;</span>
+                    <h3>Edit Profil</h3>
+                    <div class="form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="input-name" placeholder="Nama Kamu">
+                    </div>
+                    <div class="form-group">
+                        <label>Pekerjaan / Role</label>
+                        <input type="text" id="input-role" placeholder="Contoh: Mahasiswa / Developer">
+                    </div>
+                    <div class="form-group">
+                        <label>Bio Singkat</label>
+                        <textarea id="input-bio" rows="3" placeholder="Tulis sedikit tentang dirimu..."></textarea>
+                    </div>
+                    <button class="btn-save" onclick="saveProfile()">Simpan Perubahan</button>
                 </div>
-                <ul id="material-list-container" class="material-list"></ul>
             </div>
 
-            <button class="btn-save" onclick="saveSkill()">Simpan Skill</button>
-        </div>
-    </div>
+            <div id="modal-skill" class="modal-overlay">
+                <div class="modal-box">
+                    <span class="close-modal" onclick="closeModal('modal-skill')">&times;</span>
+                    <h3 id="skill-modal-title">Kelola Skill</h3>
+                    
+                    <input type="hidden" id="edit-skill-index" value="-1">
 
-    <div id="modal-goal" class="modal-overlay">
-        <div class="modal-box">
-            <span class="close-modal" onclick="closeModal('modal-goal')">&times;</span>
-            <h3>Tambah Target Baru</h3>
-            <div class="form-group">
-                <label>Apa target kamu?</label>
-                <input type="text" id="input-goal-text" placeholder="Contoh: Lulus Cumlaude, Beli Laptop">
-            </div>
-            <button class="btn-save" onclick="saveGoal()">Tambahkan Target</button>
-        </div>
-    </div>
+                    <div class="form-group">
+                        <label>Nama Skill</label>
+                        <input type="text" id="input-skill-name" placeholder="Contoh: Belajar Python">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Daftar Materi (Checklist)</label>
+                        <div class="add-material-row">
+                            <input type="text" id="input-material-text" placeholder="Tambah materi (misal: Variabel)">
+                            <button class="btn-add-mini" onclick="addMaterialToList()">+</button>
+                        </div>
+                        <ul id="material-list-container" class="material-list"></ul>
+                    </div>
 
-    <div id="modal-book" class="modal-overlay">
-        <div class="modal-box">
-            <span class="close-modal" onclick="closeModal('modal-book')">&times;</span>
-            <h3>Tambah Buku</h3>
-            <div class="form-group">
-                <label>Judul Buku</label>
-                <input type="text" id="input-book-title" placeholder="Judul buku...">
+                    <button class="btn-save" onclick="saveSkill()">Simpan Skill</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Link Gambar Cover (Opsional)</label>
-                <input type="text" id="input-book-img" placeholder="Link Google Drive / URL Gambar...">
-                <small style="font-size: 10px; color: #888;">Bisa pakai link Google Drive yang 'Anyone with the link'</small>
+
+            <div id="modal-goal" class="modal-overlay">
+                <div class="modal-box">
+                    <span class="close-modal" onclick="closeModal('modal-goal')">&times;</span>
+                    <h3>Tambah Target Baru</h3>
+                    <div class="form-group">
+                        <label>Apa target kamu?</label>
+                        <input type="text" id="input-goal-text" placeholder="Contoh: Lulus Cumlaude, Beli Laptop">
+                    </div>
+                    <button class="btn-save" onclick="saveGoal()">Tambahkan Target</button>
+                </div>
             </div>
-            <button class="btn-save" onclick="saveBook()">Tambahkan Buku</button>
-        </div>
+
+            <div id="modal-book" class="modal-overlay">
+                <div class="modal-box">
+                    <span class="close-modal" onclick="closeModal('modal-book')">&times;</span>
+                    <h3>Tambah Buku</h3>
+                    <div class="form-group">
+                        <label>Judul Buku</label>
+                        <input type="text" id="input-book-title" placeholder="Judul buku...">
+                    </div>
+                    <div class="form-group">
+                        <label>Link Gambar Cover (Opsional)</label>
+                        <input type="text" id="input-book-img" placeholder="Link Google Drive / URL Gambar...">
+                        <small style="font-size: 10px; color: #888;">Bisa pakai link Google Drive yang 'Anyone with the link'</small>
+                    </div>
+                    <button class="btn-save" onclick="saveBook()">Tambahkan Buku</button>
+                </div>
+            </div>
+            
+            </div> 
     </div>
 
     <nav class="bottom-nav">
