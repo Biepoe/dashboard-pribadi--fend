@@ -138,7 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if(document.getElementById('bill-list')) renderBills();
 
         } catch (error) {
-            console.error("Gagal load data:", error);
+            console.warn("Sedang offline atau server sibuk. Menggunakan data default.", error);
+            // Fallback: Tetap render UI dengan data default (kosong) agar tidak blank
+            if(document.getElementById('profile-name')) renderPersonalUI();
+            if(document.getElementById('water-count')) renderTracker();
+            if(document.getElementById('bill-list')) renderBills();
         }
     }
 
