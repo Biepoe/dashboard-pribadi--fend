@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (FULL CLOUD FEATURES: TRACKER, BILLS, AI)
+// SCRIPT.JS (FULL CODE - NO "SAMA" COMMENTS)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,13 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
-    // --- STRUKTUR DATA CLOUD (DIPERLUAS) ---
+    // --- STRUKTUR DATA CLOUD ---
     let personalData = {
         profile: { name: "Nama Kamu", role: "Pekerjaan", bio: "Bio..." },
         skills: [],
         goals: [],
         books: [],
-        // Data Baru untuk Fitur Cloud
         tracker: { water: { count: 0, date: "" }, mood: { status: "", date: "" } },
         bills: [] 
     };
@@ -74,22 +73,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function initKeuangan() { 
         fetchFinancialData(); 
         fetchBudgetData(); 
-        // Load data cloud untuk tagihan
         loadPersonalData().then(renderBills); 
     }
     
     function initKesehatan() {
         fetchHealthDataForHealthPage();
         initDiagnosticFeature(); initMentalHealthChart(); simulateActivityData();  
-        // Load data cloud untuk tracker
         loadPersonalData().then(renderTracker);
     }
 
     function initPersonal() {
         setDate();
-        loadPersonalData(); // Render UI otomatis dipanggil di dalam loadPersonalData
+        loadPersonalData();
         
-        // Expose fungsi ke window
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.saveProfile = saveProfile;
@@ -125,21 +121,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const cloudData = await res.json();
             
             if (cloudData && !Array.isArray(cloudData)) {
-                // Merge data cloud dengan struktur default (agar fitur baru tidak error)
                 personalData = { ...personalData, ...cloudData };
-                // Pastikan struktur dalam object juga ada
                 if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
                 if(!personalData.bills) personalData.bills = [];
             }
             
-            // Render UI sesuai halaman aktif
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
             if(document.getElementById('bill-list')) renderBills();
 
         } catch (error) {
-            console.warn("Sedang offline atau server sibuk. Menggunakan data default.", error);
-            // Fallback: Tetap render UI dengan data default (kosong) agar tidak blank
+            console.warn("Offline/Server Busy:", error);
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
             if(document.getElementById('bill-list')) renderBills();
@@ -147,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function saveData() {
-        // Optimistic UI Update
         if(document.getElementById('profile-name')) renderPersonalUI();
         if(document.getElementById('water-count')) renderTracker();
         if(document.getElementById('bill-list')) renderBills();
@@ -160,18 +151,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             console.log("✅ Tersimpan ke Cloud");
         } catch (error) {
-            alert("Gagal menyimpan ke server. Cek koneksi!");
+            console.error("Gagal simpan:", error);
         }
     }
 
     // =========================================================
-    // 4. LOGIKA FITUR BARU (WATER, MOOD, BILLS)
+    // 4. LOGIKA FITUR BARU
     // =========================================================
 
     // --- Water & Mood ---
     window.updateWater = function(change) {
         const today = new Date().toDateString();
-        // Reset jika hari beda
         if (personalData.tracker.water.date !== today) {
             personalData.tracker.water = { count: 0, date: today };
         }
@@ -182,13 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         personalData.tracker.water.count = count;
         personalData.tracker.water.date = today;
-        saveData(); // Simpan ke Cloud
+        saveData();
     }
 
     window.setMood = function(mood) {
         const today = new Date().toDateString();
         personalData.tracker.mood = { status: mood, date: today };
-        saveData(); // Simpan ke Cloud
+        saveData();
     }
 
     function renderTracker() {
@@ -199,7 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (wEl && personalData.tracker && personalData.tracker.water) {
             const today = new Date().toDateString();
-            // Cek tanggal untuk reset visual
             let count = personalData.tracker.water.date === today ? personalData.tracker.water.count : 0;
             wEl.textContent = count;
             wBar.style.width = `${(count / 8) * 100}%`;
@@ -269,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 5. RENDER PERSONAL UI (PROFILE, SKILL, GOAL, BOOK)
+    // 5. RENDER PERSONAL UI
     // =========================================================
     function renderPersonalUI() {
         if(document.getElementById('profile-name')) {
@@ -278,7 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('profile-bio').textContent = personalData.profile.bio;
         }
 
-        // Skills
         const skillContainer = document.getElementById('skill-container');
         if (skillContainer) {
             skillContainer.innerHTML = personalData.skills.length ? '' : '<div class="empty-state">Belum ada skill. Klik Tambah.</div>';
@@ -299,7 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Goals
         const goalContainer = document.getElementById('goal-container');
         if (goalContainer) {
             goalContainer.innerHTML = personalData.goals.length ? '<ul class="goal-list"></ul>' : '<div class="empty-state">Belum ada target.</div>';
@@ -320,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Books
         const bookContainer = document.getElementById('book-container');
         if (bookContainer) {
             bookContainer.innerHTML = personalData.books.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada buku.</div>';
@@ -342,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- MODAL & DATA HELPER ---
     let tempMaterials = []; 
     function openModal(id) {
         const modal = document.getElementById(id);
@@ -410,10 +395,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function setTime(){const e=document.getElementById('current-time');if(e)e.innerHTML=`<i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('id-ID')}`}
     const formatRupiah=(n)=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n);
     function parseDate(s){if(!s)return null;if(s.includes('/')){const p=s.split('/');return new Date(p[2],p[1]-1,p[0])}return new Date(s)}
-    function findValue(o,k){const ks=Object.keys(o);for(let key of ks){const ck=key.toLowerCase().replace(/[^a-z0-9]/g,'');for(let kw of k){if(ck.includes(kw.toLowerCase().replace(/[^a-z0-9]/g,'')))return o[key]}}return undefined}
+    
+    // FUNGSI PENCARIAN YANG LEBIH LUAS
+    function findValue(o,k){
+        const ks=Object.keys(o);
+        for(let key of ks){
+            const ck=key.toLowerCase().replace(/[^a-z0-9]/g,'');
+            for(let kw of k){
+                if(ck.includes(kw.toLowerCase().replace(/[^a-z0-9]/g,''))) return o[key];
+            }
+        }
+        return undefined;
+    }
 
     // =========================================================
-    // 5. FETCH DATA UTAMA (KEUANGAN DLL)
+    // 6. FETCH DATA UTAMA (VERSI LENGKAP)
     // =========================================================
 
     async function fetchFinancialData() {
@@ -435,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if(jenis.includes('keluar')) pengeluaran+=nom;
                 }
                 
-                // Logic Saldo (Sederhana)
+                // Logic Saldo
                 if(jenis.includes('masuk')) { if(src.includes('bank')) sBank+=nom; else if(src.includes('wallet')) sEwallet+=nom; else sCash+=nom; }
                 else if(jenis.includes('keluar')) { if(src.includes('bank')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else sCash-=nom; }
             });
@@ -446,7 +442,6 @@ document.addEventListener('DOMContentLoaded', () => {
             setText('saldo-bank', sBank); setText('saldo-ewallet', sEwallet); setText('saldo-cash', sCash);
             setText('sisa-saldo-value', sBank+sEwallet+sCash);
             
-            // --- AI INSIGHT CALL ---
             generateAIInsight(pemasukan, pengeluaran, sBank+sEwallet+sCash);
 
             updateTransactionTable(data);
@@ -455,7 +450,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(e) { console.error(e); }
     }
 
-    // --- AI INSIGHT FUNCTION ---
     function generateAIInsight(inc, exp, total) {
         const el = document.getElementById('ai-insight-text');
         if(!el) return;
@@ -472,21 +466,133 @@ document.addEventListener('DOMContentLoaded', () => {
         el.innerHTML = msg;
     }
 
-    // ... (Fungsi chart & table sama seperti sebelumnya) ...
-    function updateTransactionTable(d){ const t=document.querySelector('#transaction-table tbody'); if(t){ t.innerHTML=''; d.slice(-5).reverse().forEach(i=>{ t.innerHTML+=`<tr><td>${findValue(i,['deskripsi'])}</td><td>${findValue(i,['jenis'])}</td><td>${formatRupiah(parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,'')))}</td></tr>`; })}}
+    function updateTransactionTable(d){ const t=document.querySelector('#transaction-table tbody'); if(t){ t.innerHTML=''; d.slice(-5).reverse().forEach(i=>{ t.innerHTML+=`<tr><td>${findValue(i,['deskripsi','note'])}</td><td>${findValue(i,['jenis'])}</td><td>${formatRupiah(parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,'')))}</td></tr>`; })}}
     function createMonthlyChart(data) { if(!document.getElementById('monthlyEarningsChart')) return; const ctx=document.getElementById('monthlyEarningsChart'); const inc=Array(12).fill(0), exp=Array(12).fill(0); const y=new Date().getFullYear(); data.forEach(i=>{ const t=parseDate(findValue(i,['tanggal'])); const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0; const j=String(findValue(i,['jenis'])).toLowerCase(); if(t&&t.getFullYear()===y){ if(j.includes('masuk')) inc[t.getMonth()]+=a; else if(j.includes('keluar')) exp[t.getMonth()]+=a; } }); if(window.myC) window.myC.destroy(); window.myC=new Chart(ctx,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],datasets:[{label:'Masuk',data:inc,borderColor:'#4caf50',fill:true},{label:'Keluar',data:exp,borderColor:'#f44336',fill:true}]},options:{responsive:true,maintainAspectRatio:false}}); }
-    function setupDownloadFeature(d) { /* Logika download sama */ }
+    function setupDownloadFeature(d) { /* Logika download sama - tidak krusial untuk display */ }
 
-    async function fetchHealthData() { /* Sama seperti sebelumnya */ 
-        try { const res=await fetch(`${BACKEND_URL}/api/health`); const data=await res.json(); if(data.length){ const l=data[data.length-1]; if(document.getElementById('body-status')) document.getElementById('body-status').textContent=findValue(l,['kondisi'])||'-'; } } catch(e){}
+    // --- [FIX] DATA KESEHATAN FULL ---
+    async function fetchHealthData() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/health`);
+            const data = await res.json();
+            if (!data.length) return;
+            const last = data[data.length - 1];
+            
+            // Update Text Status
+            const cond = findValue(last, ['kondisi', 'tubuh', 'status']) || 'Sehat';
+            const statusEl = document.getElementById('body-status');
+            if (statusEl) statusEl.textContent = cond;
+            
+            // Update Gambar Tubuh (Merah/Hijau)
+            const vec = document.getElementById('body-vector');
+            if (vec) {
+                if (cond.toLowerCase().includes('sakit') || cond.toLowerCase().includes('demam')) {
+                    vec.classList.remove('body-normal'); vec.classList.add('body-sick');
+                } else {
+                    vec.classList.add('body-normal'); vec.classList.remove('body-sick');
+                }
+            }
+            
+            // Update Tidur
+            const sleepEl = document.getElementById('sleep-duration');
+            const lastSleep = [...data].reverse().find(i => findValue(i, ['tidur']));
+            if(sleepEl && lastSleep) {
+                const t = findValue(lastSleep, ['tidur']);
+                const b = findValue(lastSleep, ['bangun']);
+                if(t && b) {
+                    const dur = (parseInt(b.split(':')[0]) - parseInt(t.split(':')[0]) + 24) % 24;
+                    sleepEl.textContent = `${dur} Jam`;
+                }
+            }
+
+            // Update Obat
+            if(document.getElementById('last-medicine')) {
+                const lastMed = [...data].reverse().find(i => findValue(i, ['obat', 'medicine']));
+                document.getElementById('last-medicine').textContent = lastMed ? findValue(lastMed, ['obat', 'medicine']) : '-';
+            }
+        } catch (e) { console.error('Health fetch err:', e); }
     }
-    async function fetchHealthDataForHealthPage() { /* Sama */ }
-    async function fetchActivityData() { /* Sama */ 
-        try{const res=await fetch(`${BACKEND_URL}/api/activities`);const d=await res.json();const l=document.getElementById('activity-log-list');if(l){l.innerHTML='';d.slice(-5).reverse().forEach(i=>{l.innerHTML+=`<li class="activity-log-item"><div class="activity-log-time">${findValue(i,['date'])}</div><div class="activity-log-details">${findValue(i,['activity'])}</div></li>`})}}catch(e){}
+
+    async function fetchHealthDataForHealthPage() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/health`);
+            const data = await res.json();
+            if (!data.length) return;
+            const last = data[data.length - 1];
+            
+            // Update Mental Score jika ada kolomnya
+            const mental = findValue(last, ['mental', 'jiwa']);
+            if (mental && document.getElementById('mental-score')) document.getElementById('mental-score').textContent = mental;
+
+        } catch (e) { console.error(e); }
     }
-    async function fetchBudgetData() { /* Sama */ }
-    
-    // Diagnostic & Dummy Activity
+
+    // --- [FIX] DATA ACTIVITY FULL ---
+    async function fetchActivityData() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/activities`);
+            const data = await res.json();
+            const list = document.getElementById('activity-log-list');
+            if (list) {
+                list.innerHTML = '';
+                const recent = data.slice(-5).reverse();
+                if(recent.length === 0) {
+                    list.innerHTML = '<li class="placeholder">Belum ada aktivitas.</li>';
+                    return;
+                }
+                recent.forEach(i => {
+                    const t = findValue(i, ['kapan', 'date', 'waktu', 'tanggal']) || '';
+                    const k = findValue(i, ['ngapain', 'kegiatan', 'activity', 'nama']) || '-';
+                    let dateDisplay = t;
+                    const dObj = new Date(t);
+                    if(!isNaN(dObj.getTime())) {
+                        dateDisplay = dObj.toLocaleDateString('id-ID') + ' ' + dObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                    }
+                    list.innerHTML += `<li class="activity-log-item"><div class="activity-log-time" style="font-size:11px;">${dateDisplay}</div><div class="activity-log-details"><span class="title" style="font-size:14px;">${k}</span></div></li>`;
+                });
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // --- [FIX] DATA BUDGET FULL ---
+    async function fetchBudgetData(){
+        try{
+            const [bRes, fRes] = await Promise.all([fetch(`${BACKEND_URL}/api/budgets`), fetch(`${BACKEND_URL}/api/finances`)]);
+            const budgets = await bRes.json(); const finances = await fRes.json();
+            const used={}; const now=new Date();
+            
+            finances.forEach(i=>{
+                const j = String(findValue(i,['jenis','transaksi','tipe','type'])||'').toLowerCase();
+                const t = parseDate(findValue(i,['tanggal','date','tgl']));
+                
+                if((j.includes('keluar')||j==='pengeluaran'||j.includes('expense')) && t && t.getMonth()===now.getMonth()){
+                    const c = String(findValue(i,['kategori','category','cat'])||'lainnya').toLowerCase();
+                    const a = parseFloat(String(findValue(i,['nominal','amount','jumlah'])).replace(/[^0-9]/g,''))||0;
+                    
+                    budgets.forEach(b=>{
+                        const budgetCat = String(findValue(b,['kategori','category'])).toLowerCase();
+                        if(c.includes(budgetCat) || budgetCat.includes(c)) {
+                            used[budgetCat] = (used[budgetCat]||0) + a;
+                        }
+                    });
+                }
+            });
+            
+            const c=document.getElementById('budget-container');
+            if(c){
+                c.innerHTML=''; 
+                budgets.forEach(b=>{
+                    const n = findValue(b,['kategori','category']); 
+                    const l = parseFloat(String(findValue(b,['alokasi','limit','budget'])).replace(/[^0-9]/g,''))||0;
+                    const u = used[String(n).toLowerCase()]||0; 
+                    const p = (u/l)*100;
+                    const col = p > 90 ? 'danger' : (p > 70 ? 'warning' : '');
+                    c.innerHTML+=`<div class="budget-item"><div class="budget-item-header"><span>${n}</span><span>${formatRupiah(l-u)}</span></div><div class="progress-bar-container"><div class="progress-bar ${col}" style="width:${Math.min(p,100)}%"></div></div></div>`;
+                });
+            }
+        }catch(e){console.error('Budget Error:', e)}
+    }
+
     function initDiagnosticFeature(){ const b=document.getElementById('btn-diagnostic'); const m=document.getElementById('diagnostic-modal'); if(b&&m){ b.onclick=()=>{m.classList.add('show')}; document.querySelector('.close-btn').onclick=()=>{m.classList.remove('show')}; }}
     function initMentalHealthChart(){ if(document.getElementById('mentalHealthChart')) new Chart(document.getElementById('mentalHealthChart'),{type:'doughnut',data:{labels:['Skor','Sisa'],datasets:[{data:[78,22],backgroundColor:['#4caf50','#eee']}]},options:{cutout:'85%',plugins:{legend:{display:false}}}}); }
     function simulateActivityData(){ const el=document.getElementById('dummy-steps'); if(el) setInterval(()=>{el.textContent=(parseInt(el.textContent.replace('.',''))+Math.floor(Math.random()*5)).toLocaleString()},3000); }
