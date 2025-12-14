@@ -134,3 +134,10 @@
         grid-template-columns: 1fr; /* Jadi 1 kolom untuk HP */
     }
 }
+
+/* Bill Style */
+.bill-list { list-style: none; padding: 0; width: 100%; }
+.bill-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 13px; }
+.bill-date { font-weight: 600; color: #ff9800; width: 60px; }
+.bill-name { flex-grow: 1; }
+.btn-add-bill { width: 100%; padding: 8px; margin-top: 10px; background: #e8eff7; color: #667eea; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
