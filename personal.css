@@ -50,21 +50,16 @@
 }
 .goal-check.checked { background: #4caf50; border-color: #4caf50; color: white; }
 
-/* =========================================
-   UPDATE: BOOK GRID & MOVIE LIST (SCROLLABLE)
-   ========================================= */
-
+/* --- BOOK & MOVIE GRID (SCROLLABLE) --- */
 .book-grid {
     display: flex;
-    gap: 15px; /* Jarak antar item */
+    gap: 15px;
     
     /* Fitur Scroll ke Samping */
     overflow-x: auto; 
-    padding-bottom: 15px; /* Memberi ruang untuk scrollbar di bawah */
-    scroll-behavior: smooth; /* Agar gesernya halus */
-    
-    /* Memastikan elemen tidak turun ke bawah (wrap) */
-    flex-wrap: nowrap;
+    padding-bottom: 15px;
+    scroll-behavior: smooth;
+    flex-wrap: nowrap; /* Jangan turun ke bawah */
     
     /* Styling Scrollbar (Firefox) */
     scrollbar-width: thin;
@@ -72,27 +67,13 @@
 }
 
 /* Styling Scrollbar (Chrome, Edge, Safari) */
-.book-grid::-webkit-scrollbar {
-    height: 8px; /* Ketebalan bar geser */
-}
-
-.book-grid::-webkit-scrollbar-track {
-    background: #eef2f7; /* Warna jalur track */
-    border-radius: 4px;
-}
-
-.book-grid::-webkit-scrollbar-thumb {
-    background: #bbb; /* Warna batang geser */
-    border-radius: 4px;
-}
-
-.book-grid::-webkit-scrollbar-thumb:hover {
-    background: #999;
-}
+.book-grid::-webkit-scrollbar { height: 8px; }
+.book-grid::-webkit-scrollbar-track { background: #eef2f7; border-radius: 4px; }
+.book-grid::-webkit-scrollbar-thumb { background: #bbb; border-radius: 4px; }
+.book-grid::-webkit-scrollbar-thumb:hover { background: #999; }
 
 .book-item {
-    /* RUMUS AGAR MUNCUL 4 ITEM: */
-    /* 100% dibagi 4 = 25%. Kita kurangi 12px agar pas dengan gap */
+    /* Muncul 4 item (100% / 4) dikurang gap */
     flex: 0 0 calc(25% - 12px);
     min-width: calc(25% - 12px);
     
@@ -101,12 +82,36 @@
     cursor: pointer;
 }
 
-/* RESPONSIF: Kalau di HP (Layar Kecil), muncul 2 item saja biar jelas */
-@media (max-width: 768px) {
-    .book-item {
-        flex: 0 0 calc(50% - 12px);
-        min-width: calc(50% - 12px);
-    }
+/* --- GAYA COVER BUKU/FILM (PENTING AGAR GAMBAR MUNCUL) --- */
+.book-cover {
+    height: 140px; 
+    background: #ddd; 
+    border-radius: 8px; 
+    margin-bottom: 8px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #777; 
+    font-size: 20px;
+    background-size: cover; 
+    background-position: center; 
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.book-cover.read::after {
+    content: '✓'; position: absolute; bottom: 5px; right: 5px;
+    background: #4caf50; color: white; width: 24px; height: 24px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+
+.book-title { font-size: 12px; font-weight: 600; display:block; line-height: 1.3; }
+.book-title.read { text-decoration: line-through; color: #aaa; }
+
+.book-delete { 
+    position: absolute; top: -5px; right: -5px; background: red; color: white; 
+    width: 20px; height: 20px; border-radius: 50%; font-size: 10px; 
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 
 /* --- Modal Styles --- */
@@ -129,5 +134,16 @@
 }
 .form-group input:focus { border-color: #667eea; }
 .btn-save { width: 100%; background: #667eea; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; margin-top: 10px; }
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@media (max-width: 768px) { .personal-layout { grid-template-columns: 1fr; } }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) { 
+    .personal-layout { grid-template-columns: 1fr; } 
+    
+    /* Di HP muncul 2 item saja biar jelas */
+    .book-item {
+        flex: 0 0 calc(50% - 12px);
+        min-width: calc(50% - 12px);
+    }
+}
