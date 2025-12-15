@@ -1,21 +1,20 @@
 // =========================================================
-// SCRIPT.JS (FIXED: ERROR 500 HANDLING & VALIDATION)
+// SCRIPT.JS (ULTIMATE VERSION: ALL FEATURES INCLUDED)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
-    let activeIntervals = []; 
+    let activeIntervals = []; // Penampung interval agar bisa di-clear saat ganti halaman
 
-    // --- STRUKTUR DATA CLOUD (DEFAULT) ---
-    // Kita pastikan strukturnya lengkap agar server tidak menolak
+    // --- STRUKTUR DATA UTAMA (DEFAULT) ---
     let personalData = {
         profile: { name: "Nama Kamu", role: "Pekerjaan", bio: "Bio..." },
         skills: [],
         goals: [],
         books: [],
-        movies: [], 
+        movies: [],
         tracker: { water: { count: 0, date: "" }, mood: { status: "", date: "" } },
         bills: [] 
     };
@@ -25,42 +24,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     function showNotification(message, type = 'success') {
         const div = document.createElement('div');
-        div.style.position = 'fixed';
-        div.style.bottom = '20px';
-        div.style.right = '20px';
-        div.style.padding = '12px 24px';
-        div.style.borderRadius = '8px';
-        div.style.color = 'white';
-        div.style.fontWeight = '500';
-        div.style.zIndex = '9999';
-        div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.gap = '10px';
-        div.style.fontSize = '14px';
-        div.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s';
-        div.style.transform = 'translateY(100px)';
-        div.style.opacity = '0';
+        Object.assign(div.style, {
+            position: 'fixed', bottom: '20px', right: '20px',
+            padding: '12px 24px', borderRadius: '8px', color: 'white',
+            fontWeight: '500', zIndex: '9999',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px',
+            transition: 'transform 0.3s ease-in-out, opacity 0.3s',
+            transform: 'translateY(100px)', opacity: '0'
+        });
 
         if (type === 'error') {
-            div.style.backgroundColor = '#f44336';
+            div.style.backgroundColor = '#f44336'; // Merah
             div.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
         } else {
-            div.style.backgroundColor = '#4caf50';
+            div.style.backgroundColor = '#4caf50'; // Hijau
             div.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
         }
 
         document.body.appendChild(div);
-
+        
         // Animasi Masuk
-        requestAnimationFrame(() => {
-            div.style.transform = 'translateY(0)';
-            div.style.opacity = '1';
+        requestAnimationFrame(() => { 
+            div.style.transform = 'translateY(0)'; 
+            div.style.opacity = '1'; 
         });
 
-        // Hilang Otomatis
+        // Hilang Otomatis setelah 3 detik
         setTimeout(() => {
-            div.style.transform = 'translateY(100px)';
+            div.style.transform = 'translateY(100px)'; 
             div.style.opacity = '0';
             setTimeout(() => div.remove(), 300);
         }, 3000);
@@ -73,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearPageIntervals() {
         activeIntervals.forEach(clearInterval);
         activeIntervals = [];
-        if (typeof stSim === 'function') stSim();
+        if (typeof stSim === 'function') stSim(); // Stop simulasi jantung jika ada
     }
 
     function runPageInit() {
@@ -126,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 2. INIT HALAMAN
+    // 2. INIT PER HALAMAN
     // =========================================================
 
     function initBeranda() {
@@ -156,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setDate();
         loadPersonalData();
         
+        // Expose fungsi ke window agar HTML onclick bisa baca
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.saveProfile = saveProfile;
@@ -188,45 +181,31 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPersonalData() {
         try {
             const res = await fetch(`${BACKEND_URL}/api/personal`);
-            if (!res.ok) throw new Error("Gagal ambil data");
-            const cloudData = await res.json();
+            let cloudData = {};
+            if (res.ok) cloudData = await res.json();
             
-            // Validasi & Merge Data (PENTING untuk mencegah error 500 saat save balik)
+            // Validasi & Merge Data
             if (cloudData && typeof cloudData === 'object' && !Array.isArray(cloudData)) {
-                personalData = { 
-                    ...personalData, // Default values
-                    ...cloudData     // Data dari server
-                };
-                
-                // Pastikan array tidak null/undefined
-                if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
-                if(!personalData.bills) personalData.bills = [];
-                if(!personalData.movies) personalData.movies = [];
-                if(!personalData.books) personalData.books = [];
-                if(!personalData.skills) personalData.skills = [];
-                if(!personalData.goals) personalData.goals = [];
+                personalData = { ...personalData, ...cloudData };
             }
             
+            // Pastikan array tidak null/undefined
+            ['skills','goals','books','movies','bills'].forEach(k => { if(!personalData[k]) personalData[k] = []; });
+            if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
+            
             // Render UI
-            if(document.getElementById('profile-name')) renderPersonalUI();
-            if(document.getElementById('water-count')) renderTracker();
-            if(document.getElementById('bill-list')) renderBills();
+            updateAllUI();
 
         } catch (error) {
             console.warn("Offline/Server Busy:", error);
-            // Render default jika gagal
-            if(document.getElementById('profile-name')) renderPersonalUI();
-            if(document.getElementById('bill-list')) renderBills();
+            updateAllUI();
         }
     }
 
     async function saveData(silent = false) {
         // Optimistic UI Update
-        if(document.getElementById('profile-name')) renderPersonalUI();
-        if(document.getElementById('water-count')) renderTracker();
-        if(document.getElementById('bill-list')) renderBills();
+        updateAllUI();
 
-        // Debugging: Lihat data apa yang dikirim di Console
         console.log("📤 Mengirim data ke server:", personalData);
 
         try {
@@ -237,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (!res.ok) {
-                // Jika server error (500), lempar error agar ditangkap catch
                 throw new Error(`Server Error: ${res.status}`);
             }
             
@@ -246,19 +224,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("❌ Gagal simpan:", error);
-            showNotification("Gagal menyimpan ke server! Data mungkin tidak valid.", 'error');
+            showNotification("Gagal menyimpan ke server! Cek internet/Backend.", 'error');
         }
     }
 
+    function updateAllUI() {
+        if(document.getElementById('profile-name')) renderPersonalUI();
+        if(document.getElementById('water-count')) renderTracker();
+        if(document.getElementById('bill-list')) renderBills();
+    }
+
     // =========================================================
-    // 4. LOGIKA FITUR BILLS (DENGAN VALIDASI)
+    // 4. LOGIKA TAGIHAN (BILLS)
     // =========================================================
 
     window.addBill = function() {
         const name = prompt("Nama Tagihan (misal: Netflix):");
         const dateStr = prompt("Tanggal jatuh tempo (1-31):");
-        
-        // Validasi Input agar Server tidak Error 500
         const date = parseInt(dateStr);
 
         if (name && !isNaN(date) && date >= 1 && date <= 31) {
@@ -307,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 5. KEUANGAN & BUDGET
+    // 5. KEUANGAN (FINANCE) & BUDGET
     // =========================================================
 
     async function fetchFinancialData() {
@@ -318,22 +300,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const now = new Date(); const m = now.getMonth(); const y = now.getFullYear();
             
             data.forEach(item => {
-                const nom = parseFloat(String(findValue(item,['nominal','amount'])||'0').replace(/[^0-9]/g,''))||0;
-                const jenis = String(findValue(item,['jenis','transaksi'])||'').toLowerCase().trim();
+                const nom = parseFloat(String(findValue(item,['nominal','amount','jumlah'])||'0').replace(/[^0-9]/g,''))||0;
+                const jenis = String(findValue(item,['jenis','transaksi','tipe'])||'').toLowerCase().trim();
                 const src = String(findValue(item,['sumber','bank'])||'').toLowerCase();
                 const dst = String(findValue(item,['tujuan','ke'])||'').toLowerCase();
                 const tgl = parseDate(findValue(item,['tanggal','date']));
                 const isCur = (tgl && tgl.getMonth()===m && tgl.getFullYear()===y);
                 
-                if(jenis.includes('masuk')||jenis==='pemasukan'){
+                if(jenis.includes('masuk')||jenis==='pemasukan'||jenis.includes('income')){
                     if(isCur) pemasukan+=nom;
-                    if(src.includes('bank')||src.includes('bsi')) sBank+=nom; else if(src.includes('wallet')) sEwallet+=nom; else if(src.includes('cash')) sCash+=nom;
-                } else if(jenis.includes('keluar')||jenis==='pengeluaran'){
+                    if(src.includes('bank')||src.includes('bsi')) sBank+=nom; else if(src.includes('wallet')) sEwallet+=nom; else sCash+=nom;
+                } else if(jenis.includes('keluar')||jenis==='pengeluaran'||jenis.includes('expense')){
                     if(isCur) pengeluaran+=nom;
-                    if(src.includes('bank')||src.includes('bsi')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else if(src.includes('cash')) sCash-=nom;
+                    if(src.includes('bank')||src.includes('bsi')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else sCash-=nom;
                 } else if(jenis.includes('tf')||jenis.includes('transfer')){
-                    if(src.includes('bank')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else if(src.includes('cash')) sCash-=nom;
-                    if(dst.includes('bank')) sBank+=nom; else if(dst.includes('wallet')) sEwallet+=nom; else if(dst.includes('cash')) sCash+=nom;
+                    if(src.includes('bank')) sBank-=nom; else if(src.includes('wallet')) sEwallet-=nom; else sCash-=nom;
+                    if(dst.includes('bank')) sBank+=nom; else if(dst.includes('wallet')) sEwallet+=nom; else sCash+=nom;
                 }
             });
 
@@ -362,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             finances.forEach(i=>{
                 const j=String(findValue(i,['jenis'])).toLowerCase();
                 const t=parseDate(findValue(i,['tanggal']));
-                if((j.includes('keluar')||j==='pengeluaran') && t && t.getMonth()===now.getMonth()){
+                if((j.includes('keluar')||j.includes('pengeluaran')) && t && t.getMonth()===now.getMonth()){
                     const c=String(findValue(i,['kategori'])).toLowerCase();
                     const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0;
                     budgets.forEach(b=>{if(c.includes(String(findValue(b,['kategori'])).toLowerCase())) used[String(findValue(b,['kategori'])).toLowerCase()]=(used[String(findValue(b,['kategori'])).toLowerCase()]||0)+a});
@@ -373,7 +355,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 c.innerHTML=''; 
                 budgets.forEach(b=>{
                     const n = findValue(b,['kategori', 'category', 'nama']); 
-                    // FIX: Perluas pencarian key untuk angka budget agar tidak NaN
                     const rawLimit = findValue(b,['alokasi', 'budget', 'limit', 'amount', 'nominal', 'target']);
                     const l = parseFloat(String(rawLimit || '0').replace(/[^0-9]/g,'')) || 0;
                     
@@ -392,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateTransactionTable(d){ const t=document.querySelector('#transaction-table tbody'); if(t){t.innerHTML=''; d.slice(-5).reverse().forEach(i=>{
         const nom = parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''));
-        t.innerHTML+=`<tr><td>${findValue(i,['deskripsi'])}</td><td>${findValue(i,['jenis'])}</td><td>${formatRupiah(nom)}</td></tr>`;
+        t.innerHTML+=`<tr><td>${findValue(i,['deskripsi','note'])}</td><td>${findValue(i,['jenis'])}</td><td>${formatRupiah(nom)}</td></tr>`;
     })}}
 
     function generateAIInsight(inc, exp, total) {
@@ -457,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 6. KESEHATAN (API + SIMULASI)
+    // 6. KESEHATAN & AKTIVITAS (API + SIMULASI)
     // =========================================================
     
     async function fetchHealthData() {
@@ -570,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 7. RENDER PERSONAL UI
+    // 7. RENDER PERSONAL UI (PERSONAL PAGE)
     // =========================================================
     
     function renderPersonalUI() {
@@ -580,6 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('profile-bio').textContent = personalData.profile.bio;
         }
 
+        // Skills
         const skillContainer = document.getElementById('skill-container');
         if (skillContainer) {
             skillContainer.innerHTML = personalData.skills.length ? '' : '<div class="empty-state">Belum ada skill. Klik Tambah.</div>';
@@ -599,6 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Goals
         const goalContainer = document.getElementById('goal-container');
         if (goalContainer) {
             goalContainer.innerHTML = personalData.goals.length ? '<ul class="goal-list"></ul>' : '<div class="empty-state">Belum ada target.</div>';
@@ -619,48 +602,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Books Grid
         const bookContainer = document.getElementById('book-container');
-        if (bookContainer) {
-            bookContainer.innerHTML = personalData.books.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada buku.</div>';
-            personalData.books.forEach((b, i) => {
-                const title = typeof b === 'object' ? b.title : b;
-                const isDone = typeof b === 'object' ? b.done : false;
-                const img = typeof b === 'object' ? b.img : null;
-                const readClass = isDone ? 'read' : '';
-                
-                let coverStyle = img ? `background-image: url('${img}'); background-size: cover; color: transparent;` : 'background-color: #eee;';
-                let coverContent = img ? '' : title.charAt(0);
+        if (bookContainer) renderGrid(bookContainer, personalData.books, 'books');
 
-                bookContainer.innerHTML += `
-                    <div class="book-item" onclick="toggleBook(${i})">
-                        <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
-                        <span class="book-title ${readClass}">${title}</span>
-                        <div class="book-delete" onclick="event.stopPropagation(); deleteItem('books', ${i})">×</div>
-                    </div>`;
-            });
-        }
-
+        // Movies Grid
         const movieContainer = document.getElementById('movie-container');
-        if (movieContainer) {
-            const movies = personalData.movies || [];
-            movieContainer.innerHTML = movies.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada film.</div>';
-            movies.forEach((m, i) => {
-                const title = typeof m === 'object' ? m.title : m;
-                const isDone = typeof m === 'object' ? m.done : false;
-                const img = typeof m === 'object' ? m.img : null;
-                const readClass = isDone ? 'read' : ''; 
-                let coverStyle = img ? `background-image: url('${img}'); background-size: cover; color: transparent;` : 'background-color: #eee;';
-                let coverContent = img ? '' : title.charAt(0);
-
-                movieContainer.innerHTML += `
-                    <div class="book-item" onclick="toggleMovie(${i})">
-                        <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
-                        <span class="book-title ${readClass}">${title}</span>
-                        <div class="book-delete" onclick="event.stopPropagation(); deleteItem('movies', ${i})">×</div>
-                    </div>`;
-            });
-        }
+        if (movieContainer) renderGrid(movieContainer, personalData.movies, 'movies');
     }
+
+    // Helper untuk render Grid Buku/Movie agar rapi
+    function renderGrid(container, data, type) {
+        container.innerHTML = data.length ? '' : `<div class="empty-state" style="width:100%;">Belum ada item.</div>`;
+        data.forEach((item, i) => {
+            const readClass = item.done ? 'read' : '';
+            let coverStyle = item.img ? `background-image: url('${item.img}'); background-size: cover; background-position: center; color: transparent;` : 'background-color: #eee;';
+            let coverContent = item.img ? '' : item.title.charAt(0);
+            
+            // Tentukan fungsi toggle yang benar
+            const toggleFn = type === 'books' ? 'toggleBook' : 'toggleMovie';
+
+            container.innerHTML += `
+                <div class="book-item" onclick="${toggleFn}(${i})">
+                    <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
+                    <span class="book-title ${readClass}">${item.title}</span>
+                    <div class="book-delete" onclick="event.stopPropagation(); deleteItem('${type}', ${i})">×</div>
+                </div>`;
+        });
+    }
+
+    // =========================================================
+    // 8. MODAL & HELPER LAINNYA
+    // =========================================================
 
     let tempMaterials = []; 
 
@@ -718,6 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveData(); closeModal('modal-skill');
     }
 
+    // Helper Convert GDrive Link (PENTING)
     function getImgUrl(url) {
         if (!url) return '';
         if (url.includes('drive.google.com') && url.includes('/d/')) {
@@ -742,9 +716,10 @@ document.addEventListener('DOMContentLoaded', () => {
         personalData.profile.bio = document.getElementById('input-bio').value;
         saveData(); closeModal('modal-profile');
     }
+    
     function deleteItem(type, index) { if(confirm("Hapus?")) { personalData[type].splice(index, 1); saveData(); } }
 
-    // --- HELPER UTILS ---
+    // --- UTILS HELPER ---
     function padZero(n){return n<10?'0'+n:n}
     function setDate(){const e=document.getElementById('current-date');if(e)e.innerHTML=`<i class="fas fa-calendar"></i> ${new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`}
     function setTime(){const e=document.getElementById('current-time');if(e)e.innerHTML=`<i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('id-ID')}`}
@@ -762,14 +737,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return undefined;
     }
 
-    // --- Water & Mood ---
+    // --- TRACKER (Water & Mood) ---
     window.updateWater = function(change) {
         const today = new Date().toDateString();
         if (personalData.tracker.water.date !== today) { personalData.tracker.water = { count: 0, date: today }; }
         let count = personalData.tracker.water.count + change;
         if (count < 0) count = 0; if (count > 8) count = 8;
         personalData.tracker.water.count = count; personalData.tracker.water.date = today;
-        saveData(true); // Silent update (no notification)
+        saveData(true); // Silent update
     }
     window.setMood = function(mood) {
         const today = new Date().toDateString();
