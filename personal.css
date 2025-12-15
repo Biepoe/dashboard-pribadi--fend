@@ -1,5 +1,5 @@
 /* =========================================
-   GAYA KHUSUS HALAMAN PERSONAL (personal.css)
+   GAYA KHUSUS HALAMAN PERSONAL (FIXED MOVIE RATIO)
    ========================================= */
 
 .personal-layout {
@@ -50,16 +50,17 @@
 }
 .goal-check.checked { background: #4caf50; border-color: #4caf50; color: white; }
 
-/* --- BOOK & MOVIE GRID (SCROLLABLE) --- */
+/* --- BOOK & MOVIE GRID (SCROLLABLE & FIXED RATIO) --- */
 .book-grid {
     display: flex;
     gap: 15px;
+    width: 100%; /* Pastikan tidak melebihi lebar container */
     
     /* Fitur Scroll ke Samping */
     overflow-x: auto; 
     padding-bottom: 15px;
     scroll-behavior: smooth;
-    flex-wrap: nowrap; /* Jangan turun ke bawah */
+    flex-wrap: nowrap; /* Item berjejer ke samping, tidak turun */
     
     /* Styling Scrollbar (Firefox) */
     scrollbar-width: thin;
@@ -73,19 +74,24 @@
 .book-grid::-webkit-scrollbar-thumb:hover { background: #999; }
 
 .book-item {
-    /* Muncul 4 item (100% / 4) dikurang gap */
-    flex: 0 0 calc(25% - 12px);
-    min-width: calc(25% - 12px);
+    /* Muncul 4 item per layar (100% / 4) dikurang gap */
+    /* flex-shrink: 0 agar tidak mengecil saat banyak item */
+    flex: 0 0 calc(25% - 12px); 
+    width: calc(25% - 12px);
+    max-width: 160px; /* Batasi lebar maksimal agar tidak terlalu raksasa di layar lebar */
     
     text-align: center;
     position: relative;
     cursor: pointer;
 }
 
-/* --- GAYA COVER BUKU/FILM (PENTING AGAR GAMBAR MUNCUL) --- */
+/* --- GAYA COVER BUKU/FILM (ASPECT RATIO 2:3) --- */
 .book-cover {
-    height: 140px; 
-    background: #ddd; 
+    width: 100%; /* Ikuti lebar item */
+    height: auto; /* Tinggi otomatis menyesuaikan rasio */
+    aspect-ratio: 2 / 3; /* KUNCI: Memaksa bentuk poster (Portrait) */
+    
+    background-color: #ddd; 
     border-radius: 8px; 
     margin-bottom: 8px;
     display: flex; 
@@ -93,10 +99,15 @@
     justify-content: center; 
     color: #777; 
     font-size: 20px;
+    
+    /* Agar gambar full cover tanpa gepeng */
     background-size: cover; 
     background-position: center; 
+    background-repeat: no-repeat;
+    
     position: relative;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    overflow: hidden; /* Mencegah gambar keluar radius */
 }
 
 .book-cover.read::after {
@@ -105,13 +116,21 @@
     border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;
 }
 
-.book-title { font-size: 12px; font-weight: 600; display:block; line-height: 1.3; }
+.book-title { 
+    font-size: 12px; font-weight: 600; display: block; line-height: 1.3; 
+    /* Batasi judul max 2 baris agar rapi */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 .book-title.read { text-decoration: line-through; color: #aaa; }
 
 .book-delete { 
-    position: absolute; top: -5px; right: -5px; background: red; color: white; 
-    width: 20px; height: 20px; border-radius: 50%; font-size: 10px; 
+    position: absolute; top: 5px; right: 5px; background: rgba(255, 0, 0, 0.8); color: white; 
+    width: 22px; height: 22px; border-radius: 50%; font-size: 12px; 
     display: flex; align-items: center; justify-content: center; cursor: pointer;
+    z-index: 10;
 }
 
 /* --- Modal Styles --- */
@@ -141,9 +160,10 @@
 @media (max-width: 768px) { 
     .personal-layout { grid-template-columns: 1fr; } 
     
-    /* Di HP muncul 2 item saja biar jelas */
+    /* Di HP muncul 2.5 item (biar kelihatan bisa discroll) */
     .book-item {
-        flex: 0 0 calc(50% - 12px);
-        min-width: calc(50% - 12px);
+        flex: 0 0 calc(40% - 10px);
+        width: calc(40% - 10px);
+        max-width: none;
     }
 }
