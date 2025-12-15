@@ -1,5 +1,5 @@
 /* =========================================
-   GAYA KHUSUS HALAMAN PERSONAL (FIXED 4 ITEMS & NORMAL SIZE)
+   GAYA KHUSUS HALAMAN PERSONAL (FIXED CONTAINER WIDTH)
    ========================================= */
 
 .personal-layout {
@@ -50,43 +50,56 @@
 .goal-check.checked { background: #4caf50; border-color: #4caf50; color: white; }
 
 /* =======================================================
-   GRID BUKU & MOVIE (SOLUSI FINAL: 4 ITEM + NORMAL SIZE)
+   GRID BUKU & MOVIE (SOLUSI: CONTAINER DIBATASI LEBARNYA)
    ======================================================= */
 
 .book-grid {
     display: flex;
-    gap: 15px;
-    width: 100%;
+    gap: 10px; /* Jarak antar poster */
     
-    /* Scroll Samping Aktif */
-    overflow-x: auto; 
-    padding-bottom: 15px; 
+    /* KUNCI LEBAR CONTAINER */
+    /* 140px (lebar item) x 4 = 560px */
+    /* ditambah gap 10px x 3 = 30px */
+    /* Total = 590px. Kita set 600px biar aman */
+    max-width: 600px; 
+    
+    /* Pastikan lebar container tidak melebihi layar HP */
+    width: 100%; 
+    
+    overflow-x: auto; /* Scrollbar aktif */
+    padding-bottom: 15px;
     scroll-behavior: smooth;
     flex-wrap: nowrap;
     
-    /* Agar scroll berhenti pas di item (Snap) */
-    scroll-snap-type: x mandatory;
-    
-    /* Scrollbar Styling (Firefox) */
-    scrollbar-width: auto;
-    scrollbar-color: #888 #f0f0f0; 
+    /* Styling Scrollbar (Firefox) */
+    scrollbar-width: thin;
+    scrollbar-color: #888 #eee; 
 }
 
-/* Scrollbar (Chrome/Edge/Safari) */
-.book-grid::-webkit-scrollbar { height: 10px; }
-.book-grid::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 5px; }
-.book-grid::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; border: 2px solid #f0f0f0; }
-.book-grid::-webkit-scrollbar-thumb:hover { background: #555; }
+/* Styling Scrollbar (Chrome/Edge) - TEBAL & JELAS */
+.book-grid::-webkit-scrollbar {
+    height: 10px; 
+}
+.book-grid::-webkit-scrollbar-track {
+    background: #eee; 
+    border-radius: 5px;
+}
+.book-grid::-webkit-scrollbar-thumb {
+    background-color: #888; /* Abu gelap */
+    border-radius: 5px;
+}
+.book-grid::-webkit-scrollbar-thumb:hover {
+    background-color: #555; 
+}
 
-/* --- ITEM (SLOT 25%) --- */
+/* --- ITEM (UKURAN TETAP/NORMAL) --- */
 .book-item {
-    /* MUNCUL 4 ITEM: */
-    /* Lebar slot kita paksa 25% layar dikurangi jarak */
-    flex: 0 0 calc(25% - 12px);
-    width: calc(25% - 12px);
-    min-width: calc(25% - 12px);
+    /* Lebar dikunci mati di 140px (Normal) */
+    /* Tidak akan membesar walaupun layar lebar */
+    flex: 0 0 140px; 
+    width: 140px;
+    min-width: 140px; 
     
-    scroll-snap-align: start;
     text-align: center;
     position: relative;
     cursor: pointer;
@@ -97,31 +110,29 @@
     transform: translateY(-5px);
 }
 
-/* --- GAMBAR POSTER (DIBATASI BIAR GAK RAKSASA) --- */
+/* --- GAMBAR POSTER (RASIO 2:3) --- */
 .book-cover {
     width: 100%; 
-    
-    /* BATAS LEBAR: Inilah yang mencegah gambar jadi raksasa di layar lebar */
-    /* Gambar maksimal cuma 160px, sisanya ruang kosong di kiri kanan */
-    max-width: 160px; 
-    margin: 0 auto 10px auto; /* Tengah-kan gambar */
-    
-    /* Rasio Tetap 2:3 (Portrait) */
-    aspect-ratio: 2 / 3; 
+    height: 210px; /* Tinggi proporsional */
     
     background-color: #ddd; 
     border-radius: 8px; 
+    margin-bottom: 8px;
     
     display: flex; align-items: center; justify-content: center; 
     color: #777; font-size: 24px;
     
+    /* Gambar cover */
     background-size: cover; 
     background-position: center; 
     background-repeat: no-repeat;
     
     position: relative;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
     overflow: hidden;
+    
+    /* Kunci rasio agar tidak gepeng */
+    aspect-ratio: 2 / 3;
 }
 
 .book-cover.read::after {
@@ -132,20 +143,21 @@
 }
 
 .book-title { 
-    font-size: 13px; font-weight: 600; display: block; line-height: 1.4; color: #333;
+    font-size: 12px; font-weight: 600; display: block; line-height: 1.3; color: #333;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .book-title.read { text-decoration: line-through; color: #aaa; }
 
 .book-delete { 
-    position: absolute; top: 5px; right: 5px; background: rgba(220, 53, 69, 0.9); color: white; 
-    width: 24px; height: 24px; border-radius: 50%; font-size: 12px; 
+    position: absolute; top: 5px; right: 5px; 
+    background: rgba(220, 53, 69, 0.9); color: white; 
+    width: 22px; height: 22px; border-radius: 50%; font-size: 11px; 
     display: flex; align-items: center; justify-content: center; cursor: pointer;
     opacity: 0; transition: opacity 0.2s; z-index: 10;
 }
 .book-item:hover .book-delete { opacity: 1; }
 
-/* --- Modal Styles --- */
+/* --- Modal Styles (Tetap Sama) --- */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
 .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease-out; }
 .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 16px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s; }
@@ -158,14 +170,17 @@
 .btn-save { width: 100%; background: #667eea; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; margin-top: 10px; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* --- RESPONSIVE (HP) --- */
+/* --- RESPONSIVE --- */
 @media (max-width: 768px) { 
     .personal-layout { grid-template-columns: 1fr; } 
     
-    /* Di HP muncul 2 item */
+    /* Di HP, container bisa full width */
+    .book-grid { max-width: 100%; }
+    
+    /* Item sedikit lebih kecil di HP */
     .book-item {
-        flex: 0 0 calc(50% - 12px);
-        width: calc(50% - 12px);
-        min-width: calc(50% - 12px);
+        flex: 0 0 120px;
+        width: 120px;
+        min-width: 120px;
     }
 }
