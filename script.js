@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (UPDATED: BUDGET FIX & NEW BILLS LOGIC)
+// SCRIPT.JS (FINAL: BUDGET FIX, BILLS FIX, & NOTIFICATIONS)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,6 +18,51 @@ document.addEventListener('DOMContentLoaded', () => {
         tracker: { water: { count: 0, date: "" }, mood: { status: "", date: "" } },
         bills: [] 
     };
+
+    // =========================================================
+    // 0. FITUR NOTIFIKASI (TOAST)
+    // =========================================================
+    function showNotification(message, type = 'success') {
+        // Buat elemen notifikasi secara dinamis
+        const div = document.createElement('div');
+        div.style.position = 'fixed';
+        div.style.bottom = '20px';
+        div.style.right = '20px';
+        div.style.padding = '12px 24px';
+        div.style.borderRadius = '8px';
+        div.style.color = 'white';
+        div.style.fontWeight = '500';
+        div.style.zIndex = '9999';
+        div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.gap = '10px';
+        div.style.fontSize = '14px';
+        div.style.transition = 'all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+        div.style.transform = 'translateY(100px)'; // Mulai dari bawah (tersembunyi)
+
+        if (type === 'error') {
+            div.style.backgroundColor = '#f44336'; // Merah
+            div.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        } else {
+            div.style.backgroundColor = '#4caf50'; // Hijau
+            div.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+        }
+
+        document.body.appendChild(div);
+
+        // Animasi Masuk
+        requestAnimationFrame(() => {
+            div.style.transform = 'translateY(0)';
+        });
+
+        // Hilangkan setelah 3 detik
+        setTimeout(() => {
+            div.style.transform = 'translateY(100px)';
+            div.style.opacity = '0';
+            setTimeout(() => div.remove(), 300);
+        }, 3000);
+    }
 
     // =========================================================
     // 1. SISTEM NAVIGASI (SPA)
@@ -159,39 +204,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.warn("Offline/Server Busy:", error);
+            // Tetap render apa yang ada di memori (kosong/default) jika gagal load
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('bill-list')) renderBills();
         }
     }
 
-    async function saveData() {
+    // FUNGSI SAVE DENGAN NOTIFIKASI
+    async function saveData(silent = false) {
+        // Render UI langsung (Optimistic UI)
         if(document.getElementById('profile-name')) renderPersonalUI();
         if(document.getElementById('water-count')) renderTracker();
         if(document.getElementById('bill-list')) renderBills();
 
         try {
-            await fetch(`${BACKEND_URL}/api/personal`, {
+            const res = await fetch(`${BACKEND_URL}/api/personal`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(personalData)
             });
+            
+            if (!res.ok) throw new Error("Server Error");
+            
+            // Tampilkan notifikasi sukses jika bukan update silent (seperti water tracker yg sering diklik)
+            if(!silent) showNotification("Data berhasil disimpan!", 'success');
             console.log("✅ Tersimpan ke Cloud");
+
         } catch (error) {
             console.error("Gagal simpan:", error);
+            // TAMPILKAN NOTIFIKASI MERAH JIKA GAGAL
+            showNotification("Gagal menyimpan ke server! Cek internet.", 'error');
         }
     }
 
     // =========================================================
-    // 4. LOGIKA FITUR BILLS (DARI USER)
+    // 4. LOGIKA FITUR BILLS
     // =========================================================
 
-    // --- Bill Calendar ---
     window.addBill = function() {
         const name = prompt("Nama Tagihan (misal: Netflix):");
         const date = prompt("Tanggal jatuh tempo (1-31):");
         if (name && date) {
             personalData.bills.push({ name, date: parseInt(date) });
-            saveData();
+            saveData(); // Akan memicu notifikasi sukses/gagal
         }
     }
 
@@ -233,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 5. KEUANGAN & BUDGET (FIXED)
+    // 5. KEUANGAN & BUDGET
     // =========================================================
 
     async function fetchFinancialData() {
@@ -496,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 6. RENDER PERSONAL UI
+    // 7. RENDER PERSONAL UI
     // =========================================================
     
     function renderPersonalUI() {
@@ -695,12 +750,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let count = personalData.tracker.water.count + change;
         if (count < 0) count = 0; if (count > 8) count = 8;
         personalData.tracker.water.count = count; personalData.tracker.water.date = today;
-        saveData();
+        saveData(true); // Silent update (no notification)
     }
     window.setMood = function(mood) {
         const today = new Date().toDateString();
         personalData.tracker.mood = { status: mood, date: today };
-        saveData();
+        saveData(true); // Silent update
     }
     function renderTracker() {
         const wEl = document.getElementById('water-count'); const wBar = document.getElementById('water-bar');
