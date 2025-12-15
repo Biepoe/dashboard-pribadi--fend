@@ -1,12 +1,12 @@
 // =========================================================
-// SCRIPT.JS (MERGED VERSION: GITHUB + USER FIXES)
+// SCRIPT.JS (UPDATED: BUDGET FIX & NEW BILLS LOGIC)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ Halaman dimuat, script.js berjalan (Merged Version).');
+    console.log('✅ Halaman dimuat, script.js berjalan.');
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
-    let activeIntervals = []; // Penampung interval agar bisa di-clear saat ganti halaman
+    let activeIntervals = []; 
 
     // --- STRUKTUR DATA CLOUD ---
     let personalData = {
@@ -14,20 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
         skills: [],
         goals: [],
         books: [],
-        movies: [], // Tetap pertahankan Movies dari versi GitHub
+        movies: [], 
         tracker: { water: { count: 0, date: "" }, mood: { status: "", date: "" } },
         bills: [] 
     };
 
     // =========================================================
-    // 1. SISTEM NAVIGASI (SPA) - DARI GITHUB (LEBIH STABIL)
+    // 1. SISTEM NAVIGASI (SPA)
     // =========================================================
     
     function clearPageIntervals() {
-        // Hentikan semua timer yang berjalan sebelum pindah halaman
         activeIntervals.forEach(clearInterval);
         activeIntervals = [];
-        // Hentikan juga interval diagnostik khusus jika ada
         if (typeof stSim === 'function') stSim();
     }
 
@@ -88,22 +86,22 @@ document.addEventListener('DOMContentLoaded', () => {
         setDate(); 
         setTime(); 
         activeIntervals.push(setInterval(setTime, 1000));
-        fetchFinancialData(); // Pakai logika User
-        fetchHealthData();    // Pakai logika GitHub (API)
-        fetchActivityData();  // Pakai logika GitHub (API)
+        fetchFinancialData(); 
+        fetchHealthData();    
+        fetchActivityData();  
     }
     
     function initKeuangan() { 
-        fetchFinancialData(); // Pakai logika User
-        fetchBudgetData();    // Pakai logika User
-        // loadPersonalData().then(renderBills); // Jika mau fitur bills
+        fetchFinancialData(); 
+        fetchBudgetData();    
+        loadPersonalData().then(renderBills); 
     }
     
     function initKesehatan() {
-        fetchHealthDataForHealthPage(); // API
-        initDiagnosticFeature(); // Pakai logika User (Simulasi)
-        initMentalHealthChart(); // Pakai logika User
-        simulateActivityData();  // Pakai logika User
+        fetchHealthDataForHealthPage(); 
+        initDiagnosticFeature(); 
+        initMentalHealthChart(); 
+        simulateActivityData();  
         loadPersonalData().then(renderTracker);
     }
 
@@ -111,24 +109,23 @@ document.addEventListener('DOMContentLoaded', () => {
         setDate();
         loadPersonalData();
         
-        // EXPOSE FUNGSI KE WINDOW (Dari Script User)
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.saveProfile = saveProfile;
         window.saveSkill = saveSkill;
         window.saveGoal = saveGoal;
         window.saveBook = saveBook;
-        window.saveMovie = saveMovie; // Tambahan Github
+        window.saveMovie = saveMovie; 
         window.deleteItem = deleteItem;
         
         window.openSkillModal = openSkillModal;
         window.addMaterialToList = addMaterialToList;
-        window.toggleMaterialTemp = toggleMaterialTemp; // Fix User
-        window.deleteMaterialTemp = deleteMaterialTemp; // Fix User
+        window.toggleMaterialTemp = toggleMaterialTemp; 
+        window.deleteMaterialTemp = deleteMaterialTemp; 
         
         window.toggleGoal = toggleGoal;
         window.toggleBook = toggleBook;
-        window.toggleMovie = toggleMovie; // Tambahan Github
+        window.toggleMovie = toggleMovie; 
         
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
@@ -149,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (cloudData && !Array.isArray(cloudData)) {
                 personalData = { ...personalData, ...cloudData };
-                // Pastikan struktur objek ada
                 if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
                 if(!personalData.bills) personalData.bills = [];
                 if(!personalData.movies) personalData.movies = [];
@@ -159,16 +155,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
+            if(document.getElementById('bill-list')) renderBills();
 
         } catch (error) {
             console.warn("Offline/Server Busy:", error);
             if(document.getElementById('profile-name')) renderPersonalUI();
+            if(document.getElementById('bill-list')) renderBills();
         }
     }
 
     async function saveData() {
         if(document.getElementById('profile-name')) renderPersonalUI();
         if(document.getElementById('water-count')) renderTracker();
+        if(document.getElementById('bill-list')) renderBills();
 
         try {
             await fetch(`${BACKEND_URL}/api/personal`, {
@@ -183,7 +182,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 4. KEUANGAN (DARI SCRIPT USER - LOGIKA LEBIH LENGKAP)
+    // 4. LOGIKA FITUR BILLS (DARI USER)
+    // =========================================================
+
+    // --- Bill Calendar ---
+    window.addBill = function() {
+        const name = prompt("Nama Tagihan (misal: Netflix):");
+        const date = prompt("Tanggal jatuh tempo (1-31):");
+        if (name && date) {
+            personalData.bills.push({ name, date: parseInt(date) });
+            saveData();
+        }
+    }
+
+    window.deleteBill = function(index) {
+        if(confirm("Hapus tagihan ini?")) {
+            personalData.bills.splice(index, 1);
+            saveData();
+        }
+    }
+
+    function renderBills() {
+        const list = document.getElementById('bill-list');
+        if (!list) return;
+        
+        const bills = personalData.bills || [];
+        list.innerHTML = '';
+        
+        if (bills.length === 0) {
+            list.innerHTML = '<li style="text-align:center; color:#999; font-size:12px; padding:10px;">Belum ada tagihan.</li>';
+            return;
+        }
+
+        bills.sort((a, b) => a.date - b.date);
+        const today = new Date().getDate();
+
+        bills.forEach((b, i) => {
+            const diff = b.date - today;
+            let status = diff < 0 ? 'Telat!' : (diff === 0 ? 'Hari ini!' : `${diff} hari lagi`);
+            let color = diff < 0 ? 'red' : (diff <= 3 ? '#ff9800' : '#4caf50');
+            
+            list.innerHTML += `
+                <li class="bill-item">
+                    <span class="bill-date">Tgl ${b.date}</span>
+                    <span class="bill-name">${b.name}</span>
+                    <span style="color:${color}; font-weight:600; font-size:11px; margin-right:10px;">${status}</span>
+                    <i class="fas fa-trash" style="cursor:pointer; color:#ccc; font-size:12px;" onclick="deleteBill(${i})"></i>
+                </li>`;
+        });
+    }
+
+    // =========================================================
+    // 5. KEUANGAN & BUDGET (FIXED)
     // =========================================================
 
     async function fetchFinancialData() {
@@ -201,7 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tgl = parseDate(findValue(item,['tanggal','date']));
                 const isCur = (tgl && tgl.getMonth()===m && tgl.getFullYear()===y);
                 
-                // Logika Hitung (Dari Script User)
                 if(jenis.includes('masuk')||jenis==='pemasukan'){
                     if(isCur) pemasukan+=nom;
                     if(src.includes('bank')||src.includes('bsi')) sBank+=nom; else if(src.includes('wallet')) sEwallet+=nom; else if(src.includes('cash')) sCash+=nom;
@@ -246,13 +295,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             const c=document.getElementById('budget-container');
-            if(c){c.innerHTML=''; budgets.forEach(b=>{
-                const n=findValue(b,['kategori']); const l=parseFloat(String(findValue(b,['alokasi'])).replace(/[^0-9]/g,''));
-                const u=used[n.toLowerCase()]||0; const p=(u/l)*100;
-                const col = p > 90 ? 'danger' : (p > 70 ? 'warning' : '');
-                c.innerHTML+=`<div class="budget-item"><div class="budget-item-header"><span>${n}</span><span>${formatRupiah(l-u)}</span></div><div class="progress-bar-container"><div class="progress-bar ${col}" style="width:${Math.min(p,100)}%"></div></div></div>`;
-            })}
-        }catch(e){console.error(e)}
+            if(c){
+                c.innerHTML=''; 
+                budgets.forEach(b=>{
+                    const n = findValue(b,['kategori', 'category', 'nama']); 
+                    // FIX: Perluas pencarian key untuk angka budget agar tidak NaN
+                    const rawLimit = findValue(b,['alokasi', 'budget', 'limit', 'amount', 'nominal', 'target']);
+                    const l = parseFloat(String(rawLimit || '0').replace(/[^0-9]/g,'')) || 0;
+                    
+                    const u = used[String(n).toLowerCase()]||0; 
+                    const p = l > 0 ? (u/l)*100 : 0;
+                    const col = p > 90 ? 'danger' : (p > 70 ? 'warning' : '');
+                    
+                    c.innerHTML+=`<div class="budget-item">
+                        <div class="budget-item-header"><span>${n}</span><span>${formatRupiah(l-u)}</span></div>
+                        <div class="progress-bar-container"><div class="progress-bar ${col}" style="width:${Math.min(p,100)}%"></div></div>
+                    </div>`;
+                });
+            }
+        }catch(e){console.error('Budget Error:', e)}
     }
 
     function updateTransactionTable(d){ const t=document.querySelector('#transaction-table tbody'); if(t){t.innerHTML=''; d.slice(-5).reverse().forEach(i=>{
@@ -286,7 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const t=parseDate(findValue(i,['tanggal'])); 
             const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0; 
             const j=String(findValue(i,['jenis'])).toLowerCase(); 
-            // Cek keyword yang luas agar chart muncul
             const isMasuk = j.includes('masuk') || j.includes('income');
             const isKeluar = j.includes('keluar') || j.includes('pengeluaran') || j.includes('expense');
             if(t&&t.getFullYear()===y){ 
@@ -307,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const srt = Array.from(unq).sort().reverse();
         sel.innerHTML='<option value="">Pilih Bulan...</option>';
         srt.forEach(m=>{sel.innerHTML+=`<option value="${m}">${m}</option>`});
-        // Hindari duplikasi event listener
         const nBtn = btn.cloneNode(true); btn.parentNode.replaceChild(nBtn, btn);
         nBtn.innerHTML='<i class="fas fa-file-excel"></i> Unduh Excel'; nBtn.style.backgroundColor='#1D6F42';
         nBtn.addEventListener('click',()=>{if(!sel.value)return alert('Pilih bulan'); downloadExcel(data,sel.value)});
@@ -324,10 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 5. KESEHATAN (SIMULASI & DIAGNOSTIK DARI SCRIPT USER)
+    // 6. KESEHATAN (API + SIMULASI)
     // =========================================================
     
-    // --- API Fetch (Dari Github - karena Script User kosong) ---
     async function fetchHealthData() {
         try {
             const res = await fetch(`${BACKEND_URL}/api/health`);
@@ -335,12 +393,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!data.length) return;
             const last = data[data.length - 1];
             
-            // Text Status
             const cond = findValue(last, ['kondisi', 'tubuh', 'status']) || 'Sehat';
             const statusEl = document.getElementById('body-status');
             if (statusEl) statusEl.textContent = cond;
             
-            // Gambar Tubuh
             const vec = document.getElementById('body-vector');
             if (vec) {
                 if (cond.toLowerCase().includes('sakit') || cond.toLowerCase().includes('demam')) {
@@ -350,7 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // Tidur
             const sleepEl = document.getElementById('sleep-duration');
             const lastSleep = [...data].reverse().find(i => findValue(i, ['tidur']));
             if(sleepEl && lastSleep) {
@@ -361,7 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     sleepEl.textContent = `${dur} Jam`;
                 }
             }
-            // Obat
             if(document.getElementById('last-medicine')) {
                 const lastMed = [...data].reverse().find(i => findValue(i, ['obat', 'medicine']));
                 document.getElementById('last-medicine').textContent = lastMed ? findValue(lastMed, ['obat', 'medicine']) : '-';
@@ -406,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
-    // --- Simulasi & Diagnostik (Dari Script User) ---
     let diagInterval = null;
     function initDiagnosticFeature(){
         const btn=document.getElementById('btn-diagnostic'); const mod=document.getElementById('diagnostic-modal'); const cl=document.querySelector('.close-btn');
@@ -417,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function sSim(){
         upVal(); 
         diagInterval=setInterval(upVal,1500);
-        activeIntervals.push(diagInterval); // Push ke global intervals agar aman saat ganti halaman
+        activeIntervals.push(diagInterval); 
     }
     function stSim(){if(diagInterval)clearInterval(diagInterval)}
     
@@ -443,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 6. RENDER PERSONAL UI (GABUNGAN GITHUB + FIX USER)
+    // 6. RENDER PERSONAL UI
     // =========================================================
     
     function renderPersonalUI() {
@@ -453,7 +506,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('profile-bio').textContent = personalData.profile.bio;
         }
 
-        // Skills (Fix Checklist dari User)
         const skillContainer = document.getElementById('skill-container');
         if (skillContainer) {
             skillContainer.innerHTML = personalData.skills.length ? '' : '<div class="empty-state">Belum ada skill. Klik Tambah.</div>';
@@ -473,7 +525,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Goals
         const goalContainer = document.getElementById('goal-container');
         if (goalContainer) {
             goalContainer.innerHTML = personalData.goals.length ? '<ul class="goal-list"></ul>' : '<div class="empty-state">Belum ada target.</div>';
@@ -494,7 +545,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Books (Dari Script User - Fix Gambar Google Drive)
         const bookContainer = document.getElementById('book-container');
         if (bookContainer) {
             bookContainer.innerHTML = personalData.books.length ? '' : '<div class="empty-state" style="width:100%;">Belum ada buku.</div>';
@@ -516,7 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Movies (Dari Github - Pertahankan fitur ini)
         const movieContainer = document.getElementById('movie-container');
         if (movieContainer) {
             const movies = personalData.movies || [];
@@ -539,7 +588,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- LOGIKA MODAL SKILL & LAINNYA ---
     let tempMaterials = []; 
 
     function openModal(id) {
@@ -555,7 +603,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function closeModal(id) { const m=document.getElementById(id); if(m) m.classList.remove('show'); }
 
-    // Skill Modal & List (Dari Script User - Fix Checklist)
     function openSkillModal(index = -1) {
         const modal = document.getElementById('modal-skill');
         const title = document.getElementById('skill-modal-title');
@@ -597,7 +644,6 @@ document.addEventListener('DOMContentLoaded', () => {
         saveData(); closeModal('modal-skill');
     }
 
-    // Helper Convert GDrive Link (Dari Script User)
     function getImgUrl(url) {
         if (!url) return '';
         if (url.includes('drive.google.com') && url.includes('/d/')) {
@@ -642,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return undefined;
     }
 
-    // --- Water & Mood (Dari Script User/Github - Sama) ---
+    // --- Water & Mood ---
     window.updateWater = function(change) {
         const today = new Date().toDateString();
         if (personalData.tracker.water.date !== today) { personalData.tracker.water = { count: 0, date: today }; }
