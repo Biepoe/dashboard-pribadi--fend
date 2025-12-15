@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (ULTIMATE VERSION: ALL FEATURES INCLUDED)
+// SCRIPT.JS (ULTIMATE FULL VERSION: NO FEATURE LEFT BEHIND)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -691,12 +691,20 @@ document.addEventListener('DOMContentLoaded', () => {
         saveData(); closeModal('modal-skill');
     }
 
-    // Helper Convert GDrive Link (PENTING)
-    function getImgUrl(url) {
+    // Helper Convert GDrive Link & Validation (PENTING!)
+    function validateAndGetImgUrl(url) {
         if (!url) return '';
+        
+        // Cek Panjang Link (Mencegah Base64 masuk dan error 500)
+        if (url.length > 5000) {
+            alert("❌ Link gambar kepanjangan!\n\nJangan copy 'Image' langsung, tapi copy 'Image Address' (Salin Alamat Gambar).");
+            return null; // Gagal validasi
+        }
+
+        // Convert GDrive Link
         if (url.includes('drive.google.com') && url.includes('/d/')) {
             const id = url.split('/d/')[1].split('/')[0];
-            return `http://googleusercontent.com/profile/picture/${id}`; 
+            return `http://googleusercontent.com/profile/picture/${id}`;
         }
         return url;
     }
@@ -704,11 +712,37 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveGoal() { const t=document.getElementById('input-goal-text').value; if(t){ personalData.goals.push({text:t, done:false}); saveData(); closeModal('modal-goal'); } }
     function toggleGoal(i) { const g=personalData.goals[i]; if(typeof g==='string') personalData.goals[i]={text:g, done:true}; else g.done=!g.done; saveData(); }
     
-    function saveBook() { const t=document.getElementById('input-book-title').value; if(t){ personalData.books.push({title:t, done:false, img:getImgUrl(document.getElementById('input-book-img').value)}); saveData(); closeModal('modal-book'); } }
-    function toggleBook(i) { const b=personalData.books[i]; if(typeof b==='string') personalData.books[i]={title:b, done:true, img:null}; else b.done=!b.done; saveData(); }
+    function saveBook() { 
+        const t=document.getElementById('input-book-title').value; 
+        const imgInput=document.getElementById('input-book-img').value;
+        const finalImg = validateAndGetImgUrl(imgInput);
+
+        if(finalImg === null) return; // Stop jika gambar kepanjangan
+
+        if(t){ 
+            personalData.books.push({title:t, done:false, img:finalImg}); 
+            saveData(); closeModal('modal-book'); 
+            document.getElementById('input-book-title').value=''; 
+            document.getElementById('input-book-img').value='';
+        } 
+    }
+    window.toggleBook = function(i) { personalData.books[i].done = !personalData.books[i].done; saveData(); }
     
-    function saveMovie() { const t=document.getElementById('input-movie-title').value; if(t){ personalData.movies.push({title:t, done:false, img:getImgUrl(document.getElementById('input-movie-img').value)}); saveData(); closeModal('modal-movie'); } }
-    function toggleMovie(i) { const b=personalData.movies[i]; if(typeof b==='string') personalData.movies[i]={title:b, done:true, img:null}; else b.done=!b.done; saveData(); }
+    function saveMovie() { 
+        const t=document.getElementById('input-movie-title').value; 
+        const imgInput=document.getElementById('input-movie-img').value;
+        const finalImg = validateAndGetImgUrl(imgInput);
+
+        if(finalImg === null) return; // Stop jika gambar kepanjangan
+
+        if(t){ 
+            personalData.movies.push({title:t, done:false, img:finalImg}); 
+            saveData(); closeModal('modal-movie'); 
+            document.getElementById('input-movie-title').value=''; 
+            document.getElementById('input-movie-img').value='';
+        } 
+    }
+    window.toggleMovie = function(i) { personalData.movies[i].done = !personalData.movies[i].done; saveData(); }
 
     function saveProfile() {
         personalData.profile.name = document.getElementById('input-name').value;
