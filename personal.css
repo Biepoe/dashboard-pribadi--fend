@@ -1,5 +1,5 @@
 /* =========================================
-   GAYA KHUSUS HALAMAN PERSONAL (FIXED SIZE)
+   GAYA KHUSUS HALAMAN PERSONAL (FINAL FIX)
    ========================================= */
 
 .personal-layout {
@@ -50,7 +50,7 @@
 .goal-check.checked { background: #4caf50; border-color: #4caf50; color: white; }
 
 /* =======================================================
-   PERBAIKAN UTAMA: GRID BOOK & MOVIE BIAR GAK RAKSASA
+   GRID BUKU & MOVIE (SCROLLABLE & FIXED SIZE)
    ======================================================= */
 
 .book-grid {
@@ -58,29 +58,41 @@
     gap: 15px; /* Jarak antar poster */
     width: 100%;
     
-    /* Scroll Samping Aktif */
+    /* SCROLL BAR WAJIB MUNCUL */
     overflow-x: auto; 
-    padding-bottom: 15px;
+    padding-bottom: 15px; /* Ruang untuk scrollbar */
     scroll-behavior: smooth;
-    flex-wrap: nowrap; 
+    flex-wrap: nowrap; /* Item berjejer ke samping */
     
-    /* Scrollbar Styling */
+    /* Scrollbar (Firefox) */
     scrollbar-width: thin;
-    scrollbar-color: #ccc #f4f7fa; 
+    scrollbar-color: #888 #f0f0f0; 
 }
 
-/* Chrome Scrollbar */
-.book-grid::-webkit-scrollbar { height: 8px; }
-.book-grid::-webkit-scrollbar-track { background: #eef2f7; border-radius: 4px; }
-.book-grid::-webkit-scrollbar-thumb { background: #bbb; border-radius: 4px; }
+/* Scrollbar (Chrome/Edge/Safari) - Diperjelas warnanya */
+.book-grid::-webkit-scrollbar { 
+    height: 10px; 
+}
+.book-grid::-webkit-scrollbar-track { 
+    background: #f0f0f0; 
+    border-radius: 5px; 
+}
+.book-grid::-webkit-scrollbar-thumb { 
+    background: #888; /* Warna abu gelap biar kelihatan */
+    border-radius: 5px; 
+    border: 2px solid #f0f0f0; /* Memberi jarak agar tidak nempel track */
+}
+.book-grid::-webkit-scrollbar-thumb:hover { 
+    background: #555; 
+}
 
-/* --- ITEM (UKURAN DIKUNCI PIXEL) --- */
+/* --- ITEM BUKU/FILM --- */
 .book-item {
-    /* KITA KUNCI LEBARNYA 130px SAJA */
-    /* Ini akan membuat ukurannya seperti kotak kaset/poster kecil */
-    flex: 0 0 130px; 
-    width: 130px; 
-    min-width: 130px; 
+    /* UKURAN FIX: Biar nggak raksasa di layar lebar */
+    /* 150px itu ukuran pas untuk poster */
+    flex: 0 0 150px; 
+    width: 150px; 
+    min-width: 150px; 
     
     text-align: center;
     position: relative;
@@ -95,35 +107,36 @@
 /* --- GAMBAR POSTER (RASIO 2:3) --- */
 .book-cover {
     width: 100%; 
-    /* Memaksa rasio Portrait (Poster) */
+    /* Memaksa rasio 2:3 (Portrait) agar tidak gepeng */
     aspect-ratio: 2 / 3; 
     
-    background-color: #ddd; 
+    background-color: #e0e0e0; 
     border-radius: 8px; 
     margin-bottom: 10px;
     
     display: flex; align-items: center; justify-content: center; 
     color: #777; font-size: 24px;
     
-    /* Gambar pas di tengah dan tidak gepeng */
+    /* Gambar mengisi penuh */
     background-size: cover; 
     background-position: center; 
     background-repeat: no-repeat;
     
     position: relative;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     overflow: hidden;
 }
 
 .book-cover.read::after {
-    content: '✓'; position: absolute; bottom: 5px; right: 5px;
-    background: #4caf50; color: white; width: 24px; height: 24px;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;
+    content: '✓'; position: absolute; bottom: 8px; right: 8px;
+    background: #4caf50; color: white; width: 28px; height: 28px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .book-title { 
-    font-size: 12px; font-weight: 600; display: block; line-height: 1.3; color: #333;
-    /* Potong judul kalau kepanjangan (max 2 baris) */
+    font-size: 13px; font-weight: 600; display: block; line-height: 1.4; color: #333;
+    /* Batasi judul max 2 baris */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -132,14 +145,15 @@
 .book-title.read { text-decoration: line-through; color: #aaa; }
 
 .book-delete { 
-    position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; 
-    width: 20px; height: 20px; border-radius: 50%; font-size: 10px; 
+    position: absolute; top: 5px; right: 5px; 
+    background: rgba(220, 53, 69, 0.9); color: white; 
+    width: 24px; height: 24px; border-radius: 50%; font-size: 12px; 
     display: flex; align-items: center; justify-content: center; cursor: pointer;
     opacity: 0; transition: opacity 0.2s; z-index: 10;
 }
 .book-item:hover .book-delete { opacity: 1; }
 
-/* --- Modal Styles (Sama) --- */
+/* --- Modal Styles (Tetap Sama) --- */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
 .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease-out; }
 .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 16px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s; }
@@ -155,4 +169,11 @@
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) { 
     .personal-layout { grid-template-columns: 1fr; } 
+    
+    /* Di HP item agak kecil dikit biar muat banyak */
+    .book-item {
+        flex: 0 0 120px;
+        width: 120px;
+        min-width: 120px;
+    }
 }
