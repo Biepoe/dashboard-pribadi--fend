@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (FINAL: BUDGET FIX, BILLS FIX, & NOTIFICATIONS)
+// SCRIPT.JS (FIXED: ERROR 500 HANDLING & VALIDATION)
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
     let activeIntervals = []; 
 
-    // --- STRUKTUR DATA CLOUD ---
+    // --- STRUKTUR DATA CLOUD (DEFAULT) ---
+    // Kita pastikan strukturnya lengkap agar server tidak menolak
     let personalData = {
         profile: { name: "Nama Kamu", role: "Pekerjaan", bio: "Bio..." },
         skills: [],
@@ -23,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 0. FITUR NOTIFIKASI (TOAST)
     // =========================================================
     function showNotification(message, type = 'success') {
-        // Buat elemen notifikasi secara dinamis
         const div = document.createElement('div');
         div.style.position = 'fixed';
         div.style.bottom = '20px';
@@ -38,14 +38,15 @@ document.addEventListener('DOMContentLoaded', () => {
         div.style.alignItems = 'center';
         div.style.gap = '10px';
         div.style.fontSize = '14px';
-        div.style.transition = 'all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
-        div.style.transform = 'translateY(100px)'; // Mulai dari bawah (tersembunyi)
+        div.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s';
+        div.style.transform = 'translateY(100px)';
+        div.style.opacity = '0';
 
         if (type === 'error') {
-            div.style.backgroundColor = '#f44336'; // Merah
+            div.style.backgroundColor = '#f44336';
             div.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
         } else {
-            div.style.backgroundColor = '#4caf50'; // Hijau
+            div.style.backgroundColor = '#4caf50';
             div.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
         }
 
@@ -54,9 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Animasi Masuk
         requestAnimationFrame(() => {
             div.style.transform = 'translateY(0)';
+            div.style.opacity = '1';
         });
 
-        // Hilangkan setelah 3 detik
+        // Hilang Otomatis
         setTimeout(() => {
             div.style.transform = 'translateY(100px)';
             div.style.opacity = '0';
@@ -189,8 +191,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error("Gagal ambil data");
             const cloudData = await res.json();
             
-            if (cloudData && !Array.isArray(cloudData)) {
-                personalData = { ...personalData, ...cloudData };
+            // Validasi & Merge Data (PENTING untuk mencegah error 500 saat save balik)
+            if (cloudData && typeof cloudData === 'object' && !Array.isArray(cloudData)) {
+                personalData = { 
+                    ...personalData, // Default values
+                    ...cloudData     // Data dari server
+                };
+                
+                // Pastikan array tidak null/undefined
                 if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
                 if(!personalData.bills) personalData.bills = [];
                 if(!personalData.movies) personalData.movies = [];
@@ -198,24 +206,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(!personalData.skills) personalData.skills = [];
                 if(!personalData.goals) personalData.goals = [];
             }
+            
+            // Render UI
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('water-count')) renderTracker();
             if(document.getElementById('bill-list')) renderBills();
 
         } catch (error) {
             console.warn("Offline/Server Busy:", error);
-            // Tetap render apa yang ada di memori (kosong/default) jika gagal load
+            // Render default jika gagal
             if(document.getElementById('profile-name')) renderPersonalUI();
             if(document.getElementById('bill-list')) renderBills();
         }
     }
 
-    // FUNGSI SAVE DENGAN NOTIFIKASI
     async function saveData(silent = false) {
-        // Render UI langsung (Optimistic UI)
+        // Optimistic UI Update
         if(document.getElementById('profile-name')) renderPersonalUI();
         if(document.getElementById('water-count')) renderTracker();
         if(document.getElementById('bill-list')) renderBills();
+
+        // Debugging: Lihat data apa yang dikirim di Console
+        console.log("📤 Mengirim data ke server:", personalData);
 
         try {
             const res = await fetch(`${BACKEND_URL}/api/personal`, {
@@ -224,29 +236,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(personalData)
             });
             
-            if (!res.ok) throw new Error("Server Error");
+            if (!res.ok) {
+                // Jika server error (500), lempar error agar ditangkap catch
+                throw new Error(`Server Error: ${res.status}`);
+            }
             
-            // Tampilkan notifikasi sukses jika bukan update silent (seperti water tracker yg sering diklik)
             if(!silent) showNotification("Data berhasil disimpan!", 'success');
             console.log("✅ Tersimpan ke Cloud");
 
         } catch (error) {
-            console.error("Gagal simpan:", error);
-            // TAMPILKAN NOTIFIKASI MERAH JIKA GAGAL
-            showNotification("Gagal menyimpan ke server! Cek internet.", 'error');
+            console.error("❌ Gagal simpan:", error);
+            showNotification("Gagal menyimpan ke server! Data mungkin tidak valid.", 'error');
         }
     }
 
     // =========================================================
-    // 4. LOGIKA FITUR BILLS
+    // 4. LOGIKA FITUR BILLS (DENGAN VALIDASI)
     // =========================================================
 
     window.addBill = function() {
         const name = prompt("Nama Tagihan (misal: Netflix):");
-        const date = prompt("Tanggal jatuh tempo (1-31):");
-        if (name && date) {
-            personalData.bills.push({ name, date: parseInt(date) });
-            saveData(); // Akan memicu notifikasi sukses/gagal
+        const dateStr = prompt("Tanggal jatuh tempo (1-31):");
+        
+        // Validasi Input agar Server tidak Error 500
+        const date = parseInt(dateStr);
+
+        if (name && !isNaN(date) && date >= 1 && date <= 31) {
+            personalData.bills.push({ name: name, date: date });
+            saveData(); 
+        } else {
+            alert("⚠️ Input tidak valid! Pastikan tanggal adalah angka 1-31.");
         }
     }
 
