@@ -551,39 +551,143 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initKesehatan() {
-    fetchHealthDataForHealthPage(); 
-    initDiagnosticFeature(); 
-    initMentalHealthChart(); 
-    simulateActivityData();  
-    loadPersonalData().then(renderTracker);
-
-    // --- LOGIKA UNTUK MODAL NUTRITION ---
     const btnNutri = document.getElementById('btn-nutrition');
     const modNutri = document.getElementById('nutrition-modal');
-    const clNutri = document.getElementById('close-nutrition');
 
     if (btnNutri && modNutri) {
         btnNutri.addEventListener('click', () => {
             modNutri.classList.add('show');
             
-            // 1. Set Tanggal Otomatis
-            document.getElementById('nutri-date').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            // Set data identitas dari state aplikasi yang sudah ada
+            document.getElementById('nutri-date').textContent = new Date().toLocaleDateString('id-ID', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            });
             
-            // 2. Tarik Data Sinkronisasi dari Kartu Kesehatan Utama
-            const cond = document.getElementById('body-status') ? document.getElementById('body-status').textContent : 'Normal';
-            const med = document.getElementById('last-medicine') ? document.getElementById('last-medicine').textContent : '-';
-            
-            document.getElementById('nutri-kondisi').textContent = cond;
-            document.getElementById('nutri-obat').textContent = med;
+            // Ambil nama dari PersonalData yang sudah di-load di awal
+            if (personalData && personalData.profile) {
+                document.querySelector('#nutrition-modal p:nth-child(3)').innerHTML = `<strong>Nama:</strong> ${personalData.profile.name}`;
+            }
+
+            // Jalankan fetch data aktual
+            fetchNutritionData();
         });
+    }
+}
+
+    async function fetchNutritionData() {
+    try {
+        // Ambil semua data yang dibutuhkan secara paralel
+        const [healthRes, logRes, dbRes] = await Promise.all([
+            fetch(`${BACKEND_URL}/api/health`),
+            fetch(`${BACKEND_URL}/api/nutrition-log`),
+            fetch(`${BACKEND_URL}/api/nutrition-db`)
+        ]);
+
+        const healthData = await healthRes.json();
+        const logs = await logRes.json();
+        const nutritionDb = await dbRes.json();
+
+        // --- 1. LOGIKA BERAT, TINGGI, & BMI (Medical Record Tracker) ---
+        // Mencari data terbaru yang memiliki input berat/tinggi
+        const latestMedical = [...healthData].reverse().find(i => findValue(i, ['berat', 'tinggi']));
+        
+        if (latestMedical) {
+            const bb = parseFloat(findValue(latestMedical, ['berat'])) || 0;
+            const tb = parseFloat(findValue(latestMedical, ['tinggi'])) || 0;
+            const bmi = (bb && tb) ? (bb / ((tb / 100) ** 2)).toFixed(1) : 0;
+            const kondisi = findValue(latestMedical, ['kondisi']) || "Normal";
+            const obat = findValue(latestMedical, ['obat']) || "-";
+
+            // Update UI Identitas & Status Tubuh di Modal
+            document.getElementById('nutri-kondisi').textContent = kondisi;
+            document.getElementById('nutri-obat').textContent = obat;
+            
+            const statusGrid = document.querySelector('.nutri-status-grid');
+            if (statusGrid) {
+                statusGrid.innerHTML = `
+                    <div><small>Berat</small><br><strong>${bb} kg</strong></div>
+                    <div><small>Tinggi</small><br><strong>${tb} cm</strong></div>
+                    <div><small>BMI</small><br><strong>${bmi}</strong></div>
+                    <div><small>Proyek</small><br><strong style="color: #ff9800;">Bulking</strong></div>
+                `;
+            }
+        }
+
+        // --- 2. LOGIKA NUTRISI HARIAN (Log vs Database) ---
+        const todayStr = new Date().toLocaleDateString('en-GB'); // Format DD/MM/YYYY sesuai Google Form
+        const todayLogs = logs.filter(l => findValue(l, ['tanggal']) === todayStr);
+        
+        let currentKal = 0;
+        let currentProt = 0;
+        let listHtml = '';
+
+        todayLogs.forEach(log => {
+            // Cek 3 kolom makanan: siang, malam, dan extra
+            ['makan_siang', 'makan_malam', 'extra_meal'].forEach(slot => {
+                const menu = findValue(log, [slot]);
+                if (menu && menu !== '-') {
+                    // Cari nilai gizinya di Database Nutrition
+                    const info = nutritionDb.find(db => 
+                        findValue(db, ['nama']).toLowerCase().trim() === menu.toLowerCase().trim()
+                    );
+                    
+                    if (info) {
+                        const k = parseInt(findValue(info, ['kalori'])) || 0;
+                        const p = parseInt(findValue(info, ['protein'])) || 0;
+                        currentKal += k;
+                        currentProt += p;
+                        listHtml += `<li><span>${menu}</span> <small>${k} Kkal / ${p}g P</small></li>`;
+                    } else {
+                        listHtml += `<li><span>${menu}</span> <small>(Data Gizi Belum Ada)</small></li>`;
+                    }
+                }
+            });
+
+            // --- 3. LOGIKA WORKOUT ---
+            const sudah = findValue(log, ['sudah']);
+            const bagian = findValue(log, ['bagian_apa']);
+            const workoutBox = document.querySelector('.workout-status-box');
+            if (workoutBox) {
+                workoutBox.innerHTML = `
+                    <span>Sesi: ${bagian || 'Rest Day'}</span>
+                    <span class="stat-badge ${sudah === 'Sudah' ? 'blue' : 'orange'}">
+                        <i class="fas ${sudah === 'Sudah' ? 'fa-check-circle' : 'fa-clock'}"></i> ${sudah || 'Belum'}
+                    </span>
+                `;
+            }
+        });
+
+        // Update Progress Bar & List
+        renderNutritionProgress(currentKal, currentProt, listHtml);
+
+    } catch (err) {
+        console.error("Gagal sinkronisasi data nutrisi:", err);
+    }
+}
+
+function renderNutritionProgress(kal, prot, html) {
+    // Bar Kalori
+    const calBar = document.querySelectorAll('.progress-bar')[0];
+    const calText = document.querySelectorAll('.budget-item-header span:nth-child(2)')[0];
+    if (calBar) {
+        const percent = Math.min((kal / TARGET_KALORI) * 100, 100);
+        calBar.style.width = `${percent}%`;
+        calText.textContent = `${kal} / ${TARGET_KALORI}`;
     }
 
-    if (clNutri) {
-        clNutri.addEventListener('click', () => {
-            modNutri.classList.remove('show');
-        });
+    // Bar Protein
+    const protBar = document.querySelectorAll('.progress-bar')[1];
+    const protText = document.querySelectorAll('.budget-item-header span:nth-child(2)')[1];
+    if (protBar) {
+        const percent = Math.min((prot / TARGET_PROTEIN) * 100, 100);
+        protBar.style.width = `${percent}%`;
+        protText.textContent = `${prot} / ${TARGET_PROTEIN}`;
     }
-    }
+
+    // List Riwayat
+    const list = document.querySelector('.nutri-list');
+    if (list) list.innerHTML = html || '<li style="text-align:center; color:#999;">Belum ada asupan hari ini</li>';
+}
 
     // =========================================================
     // 7. RENDER PERSONAL UI (PERSONAL PAGE)
