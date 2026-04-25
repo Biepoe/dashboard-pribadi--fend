@@ -565,13 +565,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
             });
             
-            // Ambil nama dari PersonalData yang sudah di-load di awal
-            if (personalData && personalData.profile) {
-                document.querySelector('#nutrition-modal p:nth-child(3)').innerHTML = `<strong>Nama:</strong> ${personalData.profile.name}`;
+            const nameEl = document.getElementById('nutri-nama');
+            if (nameEl && personalData && personalData.profile) {
+            nameEl.textContent = personalData.profile.name;
             }
-
-            // Jalankan fetch data aktual
             fetchNutritionData();
+        });
+    }
+    if (clNutri) {
+        clNutri.addEventListener('click', () => {
+            modNutri.classList.remove('show');
         });
     }
 }
