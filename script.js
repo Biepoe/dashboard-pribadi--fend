@@ -550,6 +550,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function initKesehatan() {
+    fetchHealthDataForHealthPage(); 
+    initDiagnosticFeature(); 
+    initMentalHealthChart(); 
+    simulateActivityData();  
+    loadPersonalData().then(renderTracker);
+
+    // --- LOGIKA UNTUK MODAL NUTRITION ---
+    const btnNutri = document.getElementById('btn-nutrition');
+    const modNutri = document.getElementById('nutrition-modal');
+    const clNutri = document.getElementById('close-nutrition');
+
+    if (btnNutri && modNutri) {
+        btnNutri.addEventListener('click', () => {
+            modNutri.classList.add('show');
+            
+            // 1. Set Tanggal Otomatis
+            document.getElementById('nutri-date').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // 2. Tarik Data Sinkronisasi dari Kartu Kesehatan Utama
+            const cond = document.getElementById('body-status') ? document.getElementById('body-status').textContent : 'Normal';
+            const med = document.getElementById('last-medicine') ? document.getElementById('last-medicine').textContent : '-';
+            
+            document.getElementById('nutri-kondisi').textContent = cond;
+            document.getElementById('nutri-obat').textContent = med;
+        });
+    }
+
+    if (clNutri) {
+        clNutri.addEventListener('click', () => {
+            modNutri.classList.remove('show');
+        });
+    }
+    }
+
     // =========================================================
     // 7. RENDER PERSONAL UI (PERSONAL PAGE)
     // =========================================================
