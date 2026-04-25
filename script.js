@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Halaman dimuat, script.js berjalan.');
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
+    const TARGET_KALORI = 2055;
+    const TARGET_PROTEIN = 80;
     let activeIntervals = []; // Penampung interval agar bisa di-clear saat ganti halaman
 
     // --- STRUKTUR DATA UTAMA (DEFAULT) ---
