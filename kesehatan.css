@@ -248,6 +248,72 @@
 .btn-mood { font-size: 24px; background: none; border: none; cursor: pointer; filter: grayscale(100%); opacity: 0.6; }
 .btn-mood.active { transform: scale(1.2); filter: grayscale(0%); opacity: 1; }
 
+/* =========================================
+   GAYA KHUSUS NUTRITION TRACKING
+   ========================================= */
+
+/* Hero Card Orange untuk Nutrisi */
+.sidebar-card.nutrition-hero {
+    background: linear-gradient(135deg, #ffe0b2 0%, #ffb74d 100%);
+    color: #e65100;
+}
+
+/* Bagian Modal Nutrisi */
+.nutri-section {
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: #444;
+}
+.nutri-section h4 {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed #ddd;
+    padding-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.nutri-section p { margin-bottom: 4px; }
+
+.nutri-status-grid {
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+}
+.nutri-status-grid div strong { font-size: 15px; color: #333; }
+
+.nutri-list {
+    list-style: none;
+    padding: 0;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 10px 15px;
+    border: 1px solid #eee;
+}
+.nutri-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+.nutri-list li:last-child { border-bottom: none; }
+.nutri-list li span { font-weight: 500; }
+.nutri-list li small { color: #888; }
+
+.workout-status-box {
+    background: #e8eff7;
+    padding: 12px 15px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 500;
+}
 
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {
