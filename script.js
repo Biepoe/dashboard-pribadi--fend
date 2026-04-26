@@ -8,15 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
     const TARGET_KALORI = 2055;
     const TARGET_PROTEIN = 80;
-    let activeIntervals = []; // Penampung interval agar bisa di-clear saat ganti halaman
+    let activeIntervals = []; 
 
     // --- STRUKTUR DATA UTAMA (DEFAULT) ---
     let personalData = {
         profile: { name: "Nama Kamu", role: "Pekerjaan", bio: "Bio..." },
-        skills: [],
-        goals: [],
-        books: [],
-        movies: [],
+        skills: [], goals: [], books: [], movies: [],
         tracker: { water: { count: 0, date: "" }, mood: { status: "", date: "" } },
         bills: [] 
     };
@@ -37,22 +34,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (type === 'error') {
-            div.style.backgroundColor = '#f44336'; // Merah
+            div.style.backgroundColor = '#f44336'; 
             div.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
         } else {
-            div.style.backgroundColor = '#4caf50'; // Hijau
+            div.style.backgroundColor = '#4caf50'; 
             div.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
         }
 
         document.body.appendChild(div);
         
-        // Animasi Masuk
         requestAnimationFrame(() => { 
             div.style.transform = 'translateY(0)'; 
             div.style.opacity = '1'; 
         });
 
-        // Hilang Otomatis setelah 3 detik
         setTimeout(() => {
             div.style.transform = 'translateY(100px)'; 
             div.style.opacity = '0';
@@ -63,11 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     // 1. SISTEM NAVIGASI (SPA)
     // =========================================================
-    
     function clearPageIntervals() {
         activeIntervals.forEach(clearInterval);
         activeIntervals = [];
-        if (typeof stSim === 'function') stSim(); // Stop simulasi jantung jika ada
+        if (typeof stSim === 'function') stSim(); 
     }
 
     function runPageInit() {
@@ -122,111 +116,72 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     // 2. INIT PER HALAMAN
     // =========================================================
-
     function initBeranda() {
-        setDate(); 
-        setTime(); 
+        setDate(); setTime(); 
         activeIntervals.push(setInterval(setTime, 1000));
-        fetchFinancialData(); 
-        fetchHealthData();    
-        fetchActivityData();  
+        fetchFinancialData(); fetchHealthData(); fetchActivityData();  
     }
     
     function initKeuangan() { 
-        fetchFinancialData(); 
-        fetchBudgetData();    
-        loadPersonalData().then(renderBills); 
-    }
-    
-    function initKesehatan() {
-        fetchHealthDataForHealthPage(); 
-        initDiagnosticFeature(); 
-        initMentalHealthChart(); 
-        simulateActivityData();  
-        loadPersonalData().then(renderTracker);
+        fetchFinancialData(); fetchBudgetData(); loadPersonalData().then(renderBills); 
     }
 
     function initPersonal() {
         setDate();
         loadPersonalData();
         
-        // Expose fungsi ke window agar HTML onclick bisa baca
-        window.openModal = openModal;
-        window.closeModal = closeModal;
-        window.saveProfile = saveProfile;
-        window.saveSkill = saveSkill;
-        window.saveGoal = saveGoal;
-        window.saveBook = saveBook;
-        window.saveMovie = saveMovie; 
-        window.deleteItem = deleteItem;
+        window.openModal = openModal; window.closeModal = closeModal;
+        window.saveProfile = saveProfile; window.saveSkill = saveSkill;
+        window.saveGoal = saveGoal; window.saveBook = saveBook;
+        window.saveMovie = saveMovie; window.deleteItem = deleteItem;
         
         window.openSkillModal = openSkillModal;
         window.addMaterialToList = addMaterialToList;
         window.toggleMaterialTemp = toggleMaterialTemp; 
         window.deleteMaterialTemp = deleteMaterialTemp; 
         
-        window.toggleGoal = toggleGoal;
-        window.toggleBook = toggleBook;
-        window.toggleMovie = toggleMovie; 
+        window.toggleGoal = toggleGoal; window.toggleBook = toggleBook; window.toggleMovie = toggleMovie; 
         
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal-overlay')) {
-                event.target.classList.remove('show');
-            }
+            if (event.target.classList.contains('modal-overlay')) event.target.classList.remove('show');
         }
     }
 
     // =========================================================
-    // 3. FUNGSI DATA CLOUD (LOAD & SAVE)
+    // 3. FUNGSI DATA CLOUD
     // =========================================================
-
     async function loadPersonalData() {
         try {
             const res = await fetch(`${BACKEND_URL}/api/personal`);
             let cloudData = {};
             if (res.ok) cloudData = await res.json();
             
-            // Validasi & Merge Data
             if (cloudData && typeof cloudData === 'object' && !Array.isArray(cloudData)) {
                 personalData = { ...personalData, ...cloudData };
             }
             
-            // Pastikan array tidak null/undefined
             ['skills','goals','books','movies','bills'].forEach(k => { if(!personalData[k]) personalData[k] = []; });
             if(!personalData.tracker) personalData.tracker = { water: {count:0}, mood: {} };
             
-            // Render UI
             updateAllUI();
-
         } catch (error) {
-            console.warn("Offline/Server Busy:", error);
-            updateAllUI();
+            console.warn("Offline/Server Busy:", error); updateAllUI();
         }
     }
 
     async function saveData(silent = false) {
-        // Optimistic UI Update
         updateAllUI();
-
-        console.log("📤 Mengirim data ke server:", personalData);
-
         try {
             const res = await fetch(`${BACKEND_URL}/api/personal`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(personalData)
             });
-            
-            if (!res.ok) {
-                throw new Error(`Server Error: ${res.status}`);
-            }
-            
+            if (!res.ok) throw new Error(`Server Error: ${res.status}`);
             if(!silent) showNotification("Data berhasil disimpan!", 'success');
-            console.log("✅ Tersimpan ke Cloud");
-
         } catch (error) {
             console.error("❌ Gagal simpan:", error);
-            showNotification("Gagal menyimpan ke server! Cek internet/Backend.", 'error');
+            showNotification("Gagal menyimpan ke server!", 'error');
         }
     }
 
@@ -239,37 +194,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     // 4. LOGIKA TAGIHAN (BILLS)
     // =========================================================
-
     window.addBill = function() {
         const name = prompt("Nama Tagihan (misal: Netflix):");
         const dateStr = prompt("Tanggal jatuh tempo (1-31):");
         const date = parseInt(dateStr);
-
         if (name && !isNaN(date) && date >= 1 && date <= 31) {
-            personalData.bills.push({ name: name, date: date });
-            saveData(); 
+            personalData.bills.push({ name: name, date: date }); saveData(); 
         } else {
-            alert("⚠️ Input tidak valid! Pastikan tanggal adalah angka 1-31.");
+            alert("⚠️ Input tidak valid!");
         }
     }
 
     window.deleteBill = function(index) {
-        if(confirm("Hapus tagihan ini?")) {
-            personalData.bills.splice(index, 1);
-            saveData();
-        }
+        if(confirm("Hapus tagihan ini?")) { personalData.bills.splice(index, 1); saveData(); }
     }
 
     function renderBills() {
         const list = document.getElementById('bill-list');
         if (!list) return;
-        
         const bills = personalData.bills || [];
         list.innerHTML = '';
-        
         if (bills.length === 0) {
-            list.innerHTML = '<li style="text-align:center; color:#999; font-size:12px; padding:10px;">Belum ada tagihan.</li>';
-            return;
+            list.innerHTML = '<li style="text-align:center; color:#999; font-size:12px; padding:10px;">Belum ada tagihan.</li>'; return;
         }
 
         bills.sort((a, b) => a.date - b.date);
@@ -279,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const diff = b.date - today;
             let status = diff < 0 ? 'Telat!' : (diff === 0 ? 'Hari ini!' : `${diff} hari lagi`);
             let color = diff < 0 ? 'red' : (diff <= 3 ? '#ff9800' : '#4caf50');
-            
             list.innerHTML += `
                 <li class="bill-item">
                     <span class="bill-date">Tgl ${b.date}</span>
@@ -293,11 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     // 5. KEUANGAN (FINANCE) & BUDGET
     // =========================================================
-
     async function fetchFinancialData() {
         try {
-            const res = await fetch(`${BACKEND_URL}/api/finances`);
-            const data = await res.json();
+            const res = await fetch(`${BACKEND_URL}/api/finances`); const data = await res.json();
             let pemasukan=0, pengeluaran=0, sBank=0, sEwallet=0, sCash=0;
             const now = new Date(); const m = now.getMonth(); const y = now.getFullYear();
             
@@ -344,8 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const used={}; const now=new Date();
             
             finances.forEach(i=>{
-                const j=String(findValue(i,['jenis'])).toLowerCase();
-                const t=parseDate(findValue(i,['tanggal']));
+                const j=String(findValue(i,['jenis'])).toLowerCase(); const t=parseDate(findValue(i,['tanggal']));
                 if((j.includes('keluar')||j.includes('pengeluaran')) && t && t.getMonth()===now.getMonth()){
                     const c=String(findValue(i,['kategori'])).toLowerCase();
                     const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0;
@@ -359,15 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const n = findValue(b,['kategori', 'category', 'nama']); 
                     const rawLimit = findValue(b,['alokasi', 'budget', 'limit', 'amount', 'nominal', 'target']);
                     const l = parseFloat(String(rawLimit || '0').replace(/[^0-9]/g,'')) || 0;
-                    
-                    const u = used[String(n).toLowerCase()]||0; 
-                    const p = l > 0 ? (u/l)*100 : 0;
+                    const u = used[String(n).toLowerCase()]||0; const p = l > 0 ? (u/l)*100 : 0;
                     const col = p > 90 ? 'danger' : (p > 70 ? 'warning' : '');
                     
-                    c.innerHTML+=`<div class="budget-item">
-                        <div class="budget-item-header"><span>${n}</span><span>${formatRupiah(l-u)}</span></div>
-                        <div class="progress-bar-container"><div class="progress-bar ${col}" style="width:${Math.min(p,100)}%"></div></div>
-                    </div>`;
+                    c.innerHTML+=`<div class="budget-item"><div class="budget-item-header"><span>${n}</span><span>${formatRupiah(l-u)}</span></div>
+                        <div class="progress-bar-container"><div class="progress-bar ${col}" style="width:${Math.min(p,100)}%"></div></div></div>`;
                 });
             }
         }catch(e){console.error('Budget Error:', e)}
@@ -379,17 +317,13 @@ document.addEventListener('DOMContentLoaded', () => {
     })}}
 
     function generateAIInsight(inc, exp, total) {
-        const el = document.getElementById('ai-insight-text');
-        if(!el) return;
-        let msg = "";
-        const ratio = exp / (inc || 1);
-        
+        const el = document.getElementById('ai-insight-text'); if(!el) return;
+        let msg = ""; const ratio = exp / (inc || 1);
         if (inc===0 && exp===0) msg = "Data bulan ini masih kosong. Yuk catat!";
         else if (ratio > 1) msg = "⚠️ <strong>Boros!</strong> Pengeluaran lebih besar dari pemasukan.";
         else if (ratio > 0.8) msg = "🚧 <strong>Hati-hati!</strong> Kamu sudah habiskan >80% pemasukan.";
         else if (ratio < 0.5) msg = "🌟 <strong>Hemat Banget!</strong> Pengeluaran di bawah 50%. Tabung sisanya!";
         else msg = "✅ <strong>Sehat!</strong> Keuanganmu stabil.";
-        
         if (total < 100000 && total > 0) msg += " <br>📉 Saldo menipis, hemat dulu ya!";
         el.innerHTML = msg;
     }
@@ -397,21 +331,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function createMonthlyChart(data) { 
         if(!document.getElementById('monthlyEarningsChart')) return; 
         const ctx=document.getElementById('monthlyEarningsChart'); 
-        const inc=Array(12).fill(0), exp=Array(12).fill(0); 
-        const y=new Date().getFullYear(); 
-        
+        const inc=Array(12).fill(0), exp=Array(12).fill(0); const y=new Date().getFullYear(); 
         data.forEach(i=>{ 
-            const t=parseDate(findValue(i,['tanggal'])); 
-            const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0; 
+            const t=parseDate(findValue(i,['tanggal'])); const a=parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,''))||0; 
             const j=String(findValue(i,['jenis'])).toLowerCase(); 
-            const isMasuk = j.includes('masuk') || j.includes('income');
-            const isKeluar = j.includes('keluar') || j.includes('pengeluaran') || j.includes('expense');
-            if(t&&t.getFullYear()===y){ 
-                if(isMasuk) inc[t.getMonth()]+=a; 
-                else if(isKeluar) exp[t.getMonth()]+=a; 
-            } 
+            if(t&&t.getFullYear()===y){ if(j.includes('masuk') || j.includes('income')) inc[t.getMonth()]+=a; else if(j.includes('keluar') || j.includes('pengeluaran')) exp[t.getMonth()]+=a; } 
         }); 
-        
         if(window.myC) window.myC.destroy(); 
         window.myC=new Chart(ctx,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],datasets:[{label:'Masuk',data:inc,borderColor:'#4caf50',fill:true},{label:'Keluar',data:exp,borderColor:'#f44336',fill:true}]},options:{responsive:true,maintainAspectRatio:false}}); 
     }
@@ -421,9 +346,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!sel || !btn) return;
         const unq = new Set();
         data.forEach(i=>{const t=parseDate(findValue(i,['tanggal']));if(t)unq.add(`${t.getFullYear()}-${padZero(t.getMonth()+1)}`)});
-        const srt = Array.from(unq).sort().reverse();
         sel.innerHTML='<option value="">Pilih Bulan...</option>';
-        srt.forEach(m=>{sel.innerHTML+=`<option value="${m}">${m}</option>`});
+        Array.from(unq).sort().reverse().forEach(m=>{sel.innerHTML+=`<option value="${m}">${m}</option>`});
         const nBtn = btn.cloneNode(true); btn.parentNode.replaceChild(nBtn, btn);
         nBtn.innerHTML='<i class="fas fa-file-excel"></i> Unduh Excel'; nBtn.style.backgroundColor='#1D6F42';
         nBtn.addEventListener('click',()=>{if(!sel.value)return alert('Pilih bulan'); downloadExcel(data,sel.value)});
@@ -433,27 +357,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if(typeof XLSX==='undefined') return alert('XLSX Library Missing');
         const fil = data.filter(i=>{const t=parseDate(findValue(i,['tanggal'])); return t&&`${t.getFullYear()}-${padZero(t.getMonth()+1)}`===selM});
         if(!fil.length) return alert('Kosong');
-        const ex = fil.map(i=>({
-            "Tanggal": findValue(i,['tanggal']), "Ket": findValue(i,['deskripsi']), "Nominal": parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,'')), "Jenis": findValue(i,['jenis'])
-        }));
+        const ex = fil.map(i=>({ "Tanggal": findValue(i,['tanggal']), "Ket": findValue(i,['deskripsi']), "Nominal": parseFloat(String(findValue(i,['nominal'])).replace(/[^0-9]/g,'')), "Jenis": findValue(i,['jenis']) }));
         const ws=XLSX.utils.json_to_sheet(ex); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Lap"); XLSX.writeFile(wb,`Lap_${selM}.xlsx`);
     }
 
     // =========================================================
-    // 6. KESEHATAN & AKTIVITAS (API + SIMULASI)
+    // 6. KESEHATAN, NUTRISI & AKTIVITAS (YANG TADI ERROR)
     // =========================================================
     
     async function fetchHealthData() {
         try {
-            const res = await fetch(`${BACKEND_URL}/api/health`);
-            const data = await res.json();
+            const res = await fetch(`${BACKEND_URL}/api/health`); const data = await res.json();
             if (!data.length) return;
             const last = data[data.length - 1];
-            
             const cond = findValue(last, ['kondisi', 'tubuh', 'status']) || 'Sehat';
-            const statusEl = document.getElementById('body-status');
-            if (statusEl) statusEl.textContent = cond;
-            
+            if (document.getElementById('body-status')) document.getElementById('body-status').textContent = cond;
             const vec = document.getElementById('body-vector');
             if (vec) {
                 if (cond.toLowerCase().includes('sakit') || cond.toLowerCase().includes('demam')) {
@@ -462,55 +380,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     vec.classList.add('body-normal'); vec.classList.remove('body-sick');
                 }
             }
-            
-            const sleepEl = document.getElementById('sleep-duration');
             const lastSleep = [...data].reverse().find(i => findValue(i, ['tidur']));
-            if(sleepEl && lastSleep) {
-                const t = findValue(lastSleep, ['tidur']);
-                const b = findValue(lastSleep, ['bangun']);
-                if(t && b) {
-                    const dur = (parseInt(b.split(':')[0]) - parseInt(t.split(':')[0]) + 24) % 24;
-                    sleepEl.textContent = `${dur} Jam`;
-                }
+            if(document.getElementById('sleep-duration') && lastSleep) {
+                const t = findValue(lastSleep, ['tidur']); const b = findValue(lastSleep, ['bangun']);
+                if(t && b) document.getElementById('sleep-duration').textContent = `${(parseInt(b.split(':')[0]) - parseInt(t.split(':')[0]) + 24) % 24} Jam`;
             }
             if(document.getElementById('last-medicine')) {
                 const lastMed = [...data].reverse().find(i => findValue(i, ['obat', 'medicine']));
                 document.getElementById('last-medicine').textContent = lastMed ? findValue(lastMed, ['obat', 'medicine']) : '-';
             }
-        } catch (e) { console.error('Health fetch err:', e); }
+        } catch (e) { console.error(e); }
     }
 
     async function fetchHealthDataForHealthPage() {
         try {
-            const res = await fetch(`${BACKEND_URL}/api/health`);
-            const data = await res.json();
+            const res = await fetch(`${BACKEND_URL}/api/health`); const data = await res.json();
             if (!data.length) return;
-            const last = data[data.length - 1];
-            const mental = findValue(last, ['mental', 'jiwa']);
+            const mental = findValue(data[data.length - 1], ['mental', 'jiwa']);
             if (mental && document.getElementById('mental-score')) document.getElementById('mental-score').textContent = mental;
         } catch (e) { console.error(e); }
     }
 
     async function fetchActivityData() {
         try {
-            const res = await fetch(`${BACKEND_URL}/api/activities`);
-            const data = await res.json();
+            const res = await fetch(`${BACKEND_URL}/api/activities`); const data = await res.json();
             const list = document.getElementById('activity-log-list');
             if (list) {
                 list.innerHTML = '';
                 const recent = data.slice(-5).reverse();
-                if(recent.length === 0) {
-                    list.innerHTML = '<li class="placeholder">Belum ada aktivitas.</li>';
-                    return;
-                }
+                if(recent.length === 0) { list.innerHTML = '<li class="placeholder">Belum ada aktivitas.</li>'; return; }
                 recent.forEach(i => {
                     const t = findValue(i, ['kapan', 'date', 'waktu', 'tanggal']) || '';
                     const k = findValue(i, ['ngapain', 'kegiatan', 'activity', 'nama']) || '-';
-                    let dateDisplay = t;
                     const dObj = new Date(t);
-                    if(!isNaN(dObj.getTime())) {
-                        dateDisplay = dObj.toLocaleDateString('id-ID') + ' ' + dObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-                    }
+                    const dateDisplay = !isNaN(dObj.getTime()) ? `${dObj.toLocaleDateString('id-ID')} ${dObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}` : t;
                     list.innerHTML += `<li class="activity-log-item"><div class="activity-log-time" style="font-size:11px;">${dateDisplay}</div><div class="activity-log-details"><span class="title" style="font-size:14px;">${k}</span></div></li>`;
                 });
             }
@@ -520,23 +423,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let diagInterval = null;
     function initDiagnosticFeature(){
         const btn=document.getElementById('btn-diagnostic'); const mod=document.getElementById('diagnostic-modal'); const cl=document.querySelector('.close-btn');
-        if(btn&&mod) btn.addEventListener('click',()=>{mod.classList.add('show'); sSim()});
-        if(cl) cl.addEventListener('click',()=>{mod.classList.remove('show'); stSim()});
+        if(btn&&mod) btn.addEventListener('click',()=>{mod.classList.add('show'); diagInterval=setInterval(()=>{
+            if(document.getElementById('live-heart-rate')) document.getElementById('live-heart-rate').textContent=Math.floor(Math.random()*(95-65+1))+65;
+            if(document.getElementById('live-spo2')) document.getElementById('live-spo2').textContent=Math.floor(Math.random()*(99-96+1))+96;
+            if(document.getElementById('live-temp')) document.getElementById('live-temp').textContent=(Math.random()*(36.8-36.3)+36.3).toFixed(1);
+        },1500); activeIntervals.push(diagInterval);});
+        if(cl) cl.addEventListener('click',()=>{mod.classList.remove('show'); if(diagInterval)clearInterval(diagInterval);});
     }
-    
-    function sSim(){
-        upVal(); 
-        diagInterval=setInterval(upVal,1500);
-        activeIntervals.push(diagInterval); 
-    }
-    function stSim(){if(diagInterval)clearInterval(diagInterval)}
-    
-    function upVal(){
-        if(document.getElementById('live-heart-rate')) document.getElementById('live-heart-rate').textContent=Math.floor(Math.random()*(95-65+1))+65;
-        if(document.getElementById('live-spo2')) document.getElementById('live-spo2').textContent=Math.floor(Math.random()*(99-96+1))+96;
-        if(document.getElementById('live-temp')) document.getElementById('live-temp').textContent=(Math.random()*(36.8-36.3)+36.3).toFixed(1);
-    }
-    
+
     function initMentalHealthChart(){
         const ctx=document.getElementById('mentalHealthChart'); if(!ctx)return;
         if(window.mChart) window.mChart.destroy();
@@ -544,192 +438,121 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function simulateActivityData(){
-        const el=document.getElementById('dummy-steps'); 
-        if(el){
-            let s=8200; 
-            const int = setInterval(()=>{s+=Math.floor(Math.random()*5); el.textContent=s.toLocaleString()},3000);
-            activeIntervals.push(int);
-        }
+        if(document.getElementById('dummy-steps')){ let s=8200; activeIntervals.push(setInterval(()=>{s+=Math.floor(Math.random()*5); document.getElementById('dummy-steps').textContent=s.toLocaleString()},3000)); }
     }
 
     function initKesehatan() {
-    fetchHealthDataForHealthPage(); 
-    initDiagnosticFeature(); 
-    initMentalHealthChart(); 
-    simulateActivityData();  
-    loadPersonalData().then(renderTracker);
+        fetchHealthDataForHealthPage(); 
+        initDiagnosticFeature(); 
+        initMentalHealthChart(); 
+        simulateActivityData();  
+        loadPersonalData().then(renderTracker);
 
-    const btnNutri = document.getElementById('btn-nutrition');
-    const modNutri = document.getElementById('nutrition-modal');
+        const btnNutri = document.getElementById('btn-nutrition');
+        const modNutri = document.getElementById('nutrition-modal');
 
-    // Mencegah error jika elemen tidak ditemukan
-    if (btnNutri && modNutri) {
-        btnNutri.addEventListener('click', () => {
-            modNutri.classList.add('show');
-            
-            // Pengaturan Identitas
-            document.getElementById('ui-tanggal').textContent = new Date().toLocaleDateString('id-ID', { 
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        if (btnNutri && modNutri) {
+            btnNutri.addEventListener('click', () => {
+                modNutri.classList.add('show');
+                document.getElementById('ui-tanggal').textContent = new Date().toLocaleDateString('id-ID', { 
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                });
+                if (personalData && personalData.profile) {
+                    document.getElementById('ui-nama').textContent = personalData.profile.name;
+                }
+                fetchNutritionData();
             });
-
-            if (personalData && personalData.profile) {
-                document.getElementById('ui-nama').textContent = personalData.profile.name;
-            }
-
-            // Panggil data dari backend
-            fetchNutritionData();
-        }); // <-- Tanda kurung ini yang sering hilang!
-    }
-
-    // Tombol close modal
-    const exitBtn = document.querySelector('.exit-button');
-    if (exitBtn) {
-        exitBtn.addEventListener('click', () => modNutri.classList.remove('show'));
-    }
-}
-    
-    async function fetchNutritionData() {
-    try {
-        // Ambil semua data yang dibutuhkan secara paralel
-        const [healthRes, logRes, dbRes] = await Promise.all([
-            fetch(`${BACKEND_URL}/api/health`),
-            fetch(`${BACKEND_URL}/api/nutrition-log`),
-            fetch(`${BACKEND_URL}/api/nutrition-db`)
-        ]);
-
-        const healthData = await healthRes.json();
-        const logs = await logRes.json();
-        const nutritionDb = await dbRes.json();
-
-        // --- 1. LOGIKA BERAT, TINGGI, & BMI (Medical Record Tracker) ---
-        const latestMedical = [...healthData].reverse().find(i => findValue(i, ['berat', 'tinggi']));
-        
-        if (latestMedical) {
-            const bb = parseFloat(findValue(latestMedical, ['berat'])) || 0;
-            const tb = parseFloat(findValue(latestMedical, ['tinggi'])) || 0;
-            const bmi = (bb && tb) ? (bb / ((tb / 100) ** 2)).toFixed(1) : 0;
-            const kondisi = findValue(latestMedical, ['kondisi']) || "Normal";
-            const obat = findValue(latestMedical, ['obat']) || "-";
-
-            document.getElementById('ui-kondisi').textContent = kondisi;
-            document.getElementById('ui-obat').textContent = obat;
-
-            const statusGrid = document.getElementById('ui-status-grid');
-            if (statusGrid) {
-                statusGrid.innerHTML = `
-                    <div class="status-grid-nutri">
-                        <div class="status-item-nutri"><span>Berat</span><strong>${bb} kg</strong></div>
-                        <div class="status-item-nutri"><span>Tinggi</span><strong>${tb} cm</strong></div>
-                        <div class="status-item-nutri"><span>BMI</span><strong>${bmi}</strong></div>
-                        <div class="status-item-nutri"><span>Proyek</span><strong style="color: #f97316;">Bulking</strong></div>
-                    </div>
-                `;
-            }
         }
 
-        // --- 2. LOGIKA NUTRISI HARIAN ---
-        const todayStr = new Date().toLocaleDateString('en-GB'); // Format DD/MM/YYYY
-        const todayLogs = logs.filter(l => findValue(l, ['tanggal']) === todayStr);
-        
-        let currentKal = 0;
-        let currentProt = 0;
-        let listHtml = '';
-
-        todayLogs.forEach(log => {
-            ['makan_siang', 'makan_malam', 'extra_meal'].forEach(slot => {
-                const menu = findValue(log, [slot]);
-                if (menu && menu !== '-') {
-                    const info = nutritionDb.find(db => 
-                        findValue(db, ['nama']).toLowerCase().trim() === menu.toLowerCase().trim()
-                    );
-                    
-                    if (info) {
-                        const k = parseInt(findValue(info, ['kalori'])) || 0;
-                        const p = parseInt(findValue(info, ['protein'])) || 0;
-                        currentKal += k;
-                        currentProt += p;
-                        listHtml += `<li><span>${menu}</span> <small>${k} Kkal / ${p}g P</small></li>`;
-                    } else {
-                        listHtml += `<li><span>${menu}</span> <small>(Data Gizi Belum Ada)</small></li>`;
-                    }
-                }
-            }); // <-- Tanda kurung ini juga rawan terhapus!
-
-            // --- 3. LOGIKA WORKOUT ---
-            const sudah = findValue(log, ['sudah']);
-            const bagian = findValue(log, ['bagian_apa']);
-            const workoutBox = document.getElementById('ui-workout-box');
-            if (workoutBox) {
-                workoutBox.innerHTML = `
-                    <h4>Workout Status</h4>
-                    <div class="workout-info-nutri">
-                        <span>Sesi: ${bagian || 'Rest Day'}</span>
-                        <span class="stat-badge ${sudah === 'Sudah' ? 'blue' : 'orange'}" style="margin-left: 10px;">
-                            <i class="fas ${sudah === 'Sudah' ? 'fa-check-circle' : 'fa-clock'}"></i> ${sudah || 'Belum'}
-                        </span>
-                    </div>
-                `;
-            }
-        }); // <-- Tanda kurung ini jangan sampai hilang!
-
-        // Update Progress Bar & List
-        renderNutritionProgress(currentKal, currentProt, listHtml);
-
-    } catch (err) {
-        console.error("Gagal sinkronisasi data nutrisi:", err);
+        const exitBtn = document.querySelector('.exit-button');
+        if (exitBtn) exitBtn.addEventListener('click', () => modNutri.classList.remove('show'));
     }
-}
     
-        // Update Progress Bar & List
-        renderNutritionProgress(currentKal, currentProt, listHtml);
+    async function fetchNutritionData() {
+        try {
+            const [healthRes, logRes, dbRes] = await Promise.all([
+                fetch(`${BACKEND_URL}/api/health`), fetch(`${BACKEND_URL}/api/nutrition-log`), fetch(`${BACKEND_URL}/api/nutrition-db`)
+            ]);
 
-    } catch (err) {
-        console.error("Gagal sinkronisasi data nutrisi:", err);
+            const healthData = await healthRes.json(); const logs = await logRes.json(); const nutritionDb = await dbRes.json();
+            const latestMedical = [...healthData].reverse().find(i => findValue(i, ['berat', 'tinggi']));
+            
+            if (latestMedical) {
+                const bb = parseFloat(findValue(latestMedical, ['berat'])) || 0;
+                const tb = parseFloat(findValue(latestMedical, ['tinggi'])) || 0;
+                const bmi = (bb && tb) ? (bb / ((tb / 100) ** 2)).toFixed(1) : 0;
+                
+                document.getElementById('ui-kondisi').textContent = findValue(latestMedical, ['kondisi']) || "Normal";
+                document.getElementById('ui-obat').textContent = findValue(latestMedical, ['obat']) || "-";
+
+                const statusGrid = document.getElementById('ui-status-grid');
+                if (statusGrid) {
+                    statusGrid.innerHTML = `
+                        <div class="status-grid-nutri">
+                            <div class="status-item-nutri"><span>Berat</span><strong>${bb} kg</strong></div>
+                            <div class="status-item-nutri"><span>Tinggi</span><strong>${tb} cm</strong></div>
+                            <div class="status-item-nutri"><span>BMI</span><strong>${bmi}</strong></div>
+                            <div class="status-item-nutri"><span>Proyek</span><strong style="color: #f97316;">Bulking</strong></div>
+                        </div>`;
+                }
+            }
+
+            const todayStr = new Date().toLocaleDateString('en-GB'); 
+            const todayLogs = logs.filter(l => findValue(l, ['tanggal']) === todayStr);
+            let currentKal = 0; let currentProt = 0; let listHtml = '';
+
+            todayLogs.forEach(log => {
+                ['makan_siang', 'makan_malam', 'extra_meal'].forEach(slot => {
+                    const menu = findValue(log, [slot]);
+                    if (menu && menu !== '-') {
+                        const info = nutritionDb.find(db => findValue(db, ['nama']).toLowerCase().trim() === menu.toLowerCase().trim());
+                        if (info) {
+                            const k = parseInt(findValue(info, ['kalori'])) || 0; const p = parseInt(findValue(info, ['protein'])) || 0;
+                            currentKal += k; currentProt += p;
+                            listHtml += `<li><span>${menu}</span> <small>${k} Kkal / ${p}g P</small></li>`;
+                        } else {
+                            listHtml += `<li><span>${menu}</span> <small>(Data Gizi Belum Ada)</small></li>`;
+                        }
+                    }
+                });
+
+                const sudah = findValue(log, ['sudah']); const bagian = findValue(log, ['bagian_apa']);
+                const workoutBox = document.getElementById('ui-workout-box');
+                if (workoutBox) {
+                    workoutBox.innerHTML = `
+                        <h4>Workout Status</h4>
+                        <div class="workout-info-nutri">
+                            <span>Sesi: ${bagian || 'Rest Day'}</span>
+                            <span class="stat-badge ${sudah === 'Sudah' ? 'blue' : 'orange'}" style="margin-left: 10px;">
+                                <i class="fas ${sudah === 'Sudah' ? 'fa-check-circle' : 'fa-clock'}"></i> ${sudah || 'Belum'}
+                            </span>
+                        </div>`;
+                }
+            });
+
+            renderNutritionProgress(currentKal, currentProt, listHtml);
+
+        } catch (err) { console.error("Gagal sinkronisasi data nutrisi:", err); }
     }
-}
 
-function renderNutritionProgress(kal, prot, html) {
-    // Bar Kalori
-    const calBar = document.getElementById('ui-cal-bar');
-    const calText = document.getElementById('ui-cal-text');
-    if (calBar && calText) {
-        const percent = Math.min((kal / TARGET_KALORI) * 100, 100);
-        calBar.style.width = `${percent}%`;
-        calText.textContent = `${kal} / ${TARGET_KALORI}`;
+    function renderNutritionProgress(kal, prot, html) {
+        const calBar = document.getElementById('ui-cal-bar'); const calText = document.getElementById('ui-cal-text');
+        if (calBar && calText) {
+            calBar.style.width = `${Math.min((kal / TARGET_KALORI) * 100, 100)}%`;
+            calText.textContent = `${kal} / ${TARGET_KALORI}`;
+        }
+        const protBar = document.getElementById('ui-prot-bar'); const protText = document.getElementById('ui-prot-text');
+        if (protBar && protText) {
+            protBar.style.width = `${Math.min((prot / TARGET_PROTEIN) * 100, 100)}%`;
+            protText.textContent = `${prot} / ${TARGET_PROTEIN}`;
+        }
+        const list = document.getElementById('ui-riwayat-list');
+        if (list) list.innerHTML = html || '<li style="text-align:center; color:#999; padding-top:10px;">Belum ada asupan hari ini</li>';
     }
-
-    // Bar Protein
-    const protBar = document.getElementById('ui-prot-bar');
-    const protText = document.getElementById('ui-prot-text');
-    if (protBar && protText) {
-        const percent = Math.min((prot / TARGET_PROTEIN) * 100, 100);
-        protBar.style.width = `${percent}%`;
-        protText.textContent = `${prot} / ${TARGET_PROTEIN}`;
-    }
-
-    // List Riwayat
-    const list = document.getElementById('ui-riwayat-list');
-    if (list) list.innerHTML = html || '<li style="text-align:center; color:#999; padding-top:10px;">Belum ada asupan hari ini</li>';
-}
-
-    // Bar Protein
-    const protBar = document.querySelectorAll('.progress-bar')[1];
-    const protText = document.querySelectorAll('.budget-item-header span:nth-child(2)')[1];
-    if (protBar) {
-        const percent = Math.min((prot / TARGET_PROTEIN) * 100, 100);
-        protBar.style.width = `${percent}%`;
-        protText.textContent = `${prot} / ${TARGET_PROTEIN}`;
-    }
-
-    // List Riwayat
-    const list = document.querySelector('.nutri-list');
-    if (list) list.innerHTML = html || '<li style="text-align:center; color:#999;">Belum ada asupan hari ini</li>';
-}
 
     // =========================================================
     // 7. RENDER PERSONAL UI (PERSONAL PAGE)
     // =========================================================
-    
     function renderPersonalUI() {
         if(document.getElementById('profile-name')) {
             document.getElementById('profile-name').textContent = personalData.profile.name;
@@ -737,15 +560,12 @@ function renderNutritionProgress(kal, prot, html) {
             document.getElementById('profile-bio').textContent = personalData.profile.bio;
         }
 
-        // Skills
         const skillContainer = document.getElementById('skill-container');
         if (skillContainer) {
             skillContainer.innerHTML = personalData.skills.length ? '' : '<div class="empty-state">Belum ada skill. Klik Tambah.</div>';
             personalData.skills.forEach((s, i) => {
-                const total = s.materials ? s.materials.length : 0;
-                const done = s.materials ? s.materials.filter(m => m.done).length : 0;
+                const total = s.materials ? s.materials.length : 0; const done = s.materials ? s.materials.filter(m => m.done).length : 0;
                 const progress = total === 0 ? (s.progress || 0) : Math.round((done / total) * 100);
-
                 skillContainer.innerHTML += `
                     <div class="skill-item" onclick="openSkillModal(${i})">
                         <div class="skill-head">
@@ -757,50 +577,35 @@ function renderNutritionProgress(kal, prot, html) {
             });
         }
 
-        // Goals
         const goalContainer = document.getElementById('goal-container');
         if (goalContainer) {
             goalContainer.innerHTML = personalData.goals.length ? '<ul class="goal-list"></ul>' : '<div class="empty-state">Belum ada target.</div>';
             const list = goalContainer.querySelector('ul');
             if(list) {
                 personalData.goals.forEach((g, i) => {
-                    const text = typeof g === 'object' ? g.text : g;
                     const isDone = typeof g === 'object' ? g.done : false;
-                    const checkClass = isDone ? 'checked' : '';
-                    const textClass = isDone ? 'done' : '';
                     list.innerHTML += `
                         <li class="goal-item" onclick="toggleGoal(${i})">
-                            <div class="goal-check ${checkClass}"><i class="fas fa-check" style="font-size: 10px; color:${isDone?'#fff':'#ccc'};"></i></div>
-                            <span class="goal-text ${textClass}">${text}</span>
+                            <div class="goal-check ${isDone ? 'checked' : ''}"><i class="fas fa-check" style="font-size: 10px; color:${isDone?'#fff':'#ccc'};"></i></div>
+                            <span class="goal-text ${isDone ? 'done' : ''}">${typeof g === 'object' ? g.text : g}</span>
                             <i class="fas fa-trash delete-item" onclick="event.stopPropagation(); deleteItem('goals', ${i})"></i>
                         </li>`;
                 });
             }
         }
 
-        // Books Grid
-        const bookContainer = document.getElementById('book-container');
-        if (bookContainer) renderGrid(bookContainer, personalData.books, 'books');
-
-        // Movies Grid
-        const movieContainer = document.getElementById('movie-container');
-        if (movieContainer) renderGrid(movieContainer, personalData.movies, 'movies');
+        if (document.getElementById('book-container')) renderGrid(document.getElementById('book-container'), personalData.books, 'books');
+        if (document.getElementById('movie-container')) renderGrid(document.getElementById('movie-container'), personalData.movies, 'movies');
     }
 
-    // Helper untuk render Grid Buku/Movie agar rapi
     function renderGrid(container, data, type) {
         container.innerHTML = data.length ? '' : `<div class="empty-state" style="width:100%;">Belum ada item.</div>`;
         data.forEach((item, i) => {
             const readClass = item.done ? 'read' : '';
             let coverStyle = item.img ? `background-image: url('${item.img}'); background-size: cover; background-position: center; color: transparent;` : 'background-color: #eee;';
-            let coverContent = item.img ? '' : item.title.charAt(0);
-            
-            // Tentukan fungsi toggle yang benar
-            const toggleFn = type === 'books' ? 'toggleBook' : 'toggleMovie';
-
             container.innerHTML += `
-                <div class="book-item" onclick="${toggleFn}(${i})">
-                    <div class="book-cover ${readClass}" style="${coverStyle}">${coverContent}</div>
+                <div class="book-item" onclick="${type === 'books' ? 'toggleBook' : 'toggleMovie'}(${i})">
+                    <div class="book-cover ${readClass}" style="${coverStyle}">${item.img ? '' : item.title.charAt(0)}</div>
                     <span class="book-title ${readClass}">${item.title}</span>
                     <div class="book-delete" onclick="event.stopPropagation(); deleteItem('${type}', ${i})">×</div>
                 </div>`;
@@ -810,7 +615,6 @@ function renderNutritionProgress(kal, prot, html) {
     // =========================================================
     // 8. MODAL & HELPER LAINNYA
     // =========================================================
-
     let tempMaterials = []; 
 
     function openModal(id) {
@@ -827,19 +631,15 @@ function renderNutritionProgress(kal, prot, html) {
     function closeModal(id) { const m=document.getElementById(id); if(m) m.classList.remove('show'); }
 
     function openSkillModal(index = -1) {
-        const modal = document.getElementById('modal-skill');
-        const title = document.getElementById('skill-modal-title');
-        const nameInput = document.getElementById('input-skill-name');
-        const indexInput = document.getElementById('edit-skill-index');
-        modal.classList.add('show');
-        indexInput.value = index;
+        document.getElementById('modal-skill').classList.add('show');
+        document.getElementById('edit-skill-index').value = index;
         if (index === -1) { 
-            title.textContent = "Tambah Skill"; nameInput.value = ""; tempMaterials = []; 
+            document.getElementById('skill-modal-title').textContent = "Tambah Skill"; 
+            document.getElementById('input-skill-name').value = ""; tempMaterials = []; 
         } else { 
-            title.textContent = "Edit Skill"; 
-            const s = personalData.skills[index]; 
-            nameInput.value = s.name; 
-            tempMaterials = s.materials ? JSON.parse(JSON.stringify(s.materials)) : []; 
+            document.getElementById('skill-modal-title').textContent = "Edit Skill"; 
+            document.getElementById('input-skill-name').value = personalData.skills[index].name; 
+            tempMaterials = personalData.skills[index].materials ? JSON.parse(JSON.stringify(personalData.skills[index].materials)) : []; 
         }
         renderMaterialList();
     }
@@ -867,21 +667,10 @@ function renderNutritionProgress(kal, prot, html) {
         saveData(); closeModal('modal-skill');
     }
 
-    // Helper Convert GDrive Link & Validation (PENTING!)
     function validateAndGetImgUrl(url) {
         if (!url) return '';
-        
-        // Cek Panjang Link (Mencegah Base64 masuk dan error 500)
-        if (url.length > 5000) {
-            alert("❌ Link gambar kepanjangan!\n\nJangan copy 'Image' langsung, tapi copy 'Image Address' (Salin Alamat Gambar).");
-            return null; // Gagal validasi
-        }
-
-        // Convert GDrive Link
-        if (url.includes('drive.google.com') && url.includes('/d/')) {
-            const id = url.split('/d/')[1].split('/')[0];
-            return `http://googleusercontent.com/profile/picture/${id}`;
-        }
+        if (url.length > 5000) { alert("❌ Link gambar kepanjangan!"); return null; }
+        if (url.includes('drive.google.com') && url.includes('/d/')) return `http://googleusercontent.com/profile/picture/${url.split('/d/')[1].split('/')[0]}`;
         return url;
     }
 
@@ -889,34 +678,16 @@ function renderNutritionProgress(kal, prot, html) {
     function toggleGoal(i) { const g=personalData.goals[i]; if(typeof g==='string') personalData.goals[i]={text:g, done:true}; else g.done=!g.done; saveData(); }
     
     function saveBook() { 
-        const t=document.getElementById('input-book-title').value; 
-        const imgInput=document.getElementById('input-book-img').value;
-        const finalImg = validateAndGetImgUrl(imgInput);
-
-        if(finalImg === null) return; // Stop jika gambar kepanjangan
-
-        if(t){ 
-            personalData.books.push({title:t, done:false, img:finalImg}); 
-            saveData(); closeModal('modal-book'); 
-            document.getElementById('input-book-title').value=''; 
-            document.getElementById('input-book-img').value='';
-        } 
+        const t=document.getElementById('input-book-title').value; const img = validateAndGetImgUrl(document.getElementById('input-book-img').value);
+        if(img === null) return;
+        if(t){ personalData.books.push({title:t, done:false, img:img}); saveData(); closeModal('modal-book'); document.getElementById('input-book-title').value=''; document.getElementById('input-book-img').value='';} 
     }
     window.toggleBook = function(i) { personalData.books[i].done = !personalData.books[i].done; saveData(); }
     
     function saveMovie() { 
-        const t=document.getElementById('input-movie-title').value; 
-        const imgInput=document.getElementById('input-movie-img').value;
-        const finalImg = validateAndGetImgUrl(imgInput);
-
-        if(finalImg === null) return; // Stop jika gambar kepanjangan
-
-        if(t){ 
-            personalData.movies.push({title:t, done:false, img:finalImg}); 
-            saveData(); closeModal('modal-movie'); 
-            document.getElementById('input-movie-title').value=''; 
-            document.getElementById('input-movie-img').value='';
-        } 
+        const t=document.getElementById('input-movie-title').value; const img = validateAndGetImgUrl(document.getElementById('input-movie-img').value);
+        if(img === null) return;
+        if(t){ personalData.movies.push({title:t, done:false, img:img}); saveData(); closeModal('modal-movie'); document.getElementById('input-movie-title').value=''; document.getElementById('input-movie-img').value='';} 
     }
     window.toggleMovie = function(i) { personalData.movies[i].done = !personalData.movies[i].done; saveData(); }
 
@@ -929,7 +700,6 @@ function renderNutritionProgress(kal, prot, html) {
     
     function deleteItem(type, index) { if(confirm("Hapus?")) { personalData[type].splice(index, 1); saveData(); } }
 
-    // --- UTILS HELPER ---
     function padZero(n){return n<10?'0'+n:n}
     function setDate(){const e=document.getElementById('current-date');if(e)e.innerHTML=`<i class="fas fa-calendar"></i> ${new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`}
     function setTime(){const e=document.getElementById('current-time');if(e)e.innerHTML=`<i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('id-ID')}`}
@@ -940,26 +710,22 @@ function renderNutritionProgress(kal, prot, html) {
         const ks=Object.keys(o);
         for(let key of ks){
             const ck=key.toLowerCase().replace(/[^a-z0-9]/g,'');
-            for(let kw of k){
-                if(ck.includes(kw.toLowerCase().replace(/[^a-z0-9]/g,''))) return o[key];
-            }
+            for(let kw of k){ if(ck.includes(kw.toLowerCase().replace(/[^a-z0-9]/g,''))) return o[key]; }
         }
         return undefined;
     }
 
-    // --- TRACKER (Water & Mood) ---
     window.updateWater = function(change) {
         const today = new Date().toDateString();
         if (personalData.tracker.water.date !== today) { personalData.tracker.water = { count: 0, date: today }; }
         let count = personalData.tracker.water.count + change;
         if (count < 0) count = 0; if (count > 8) count = 8;
         personalData.tracker.water.count = count; personalData.tracker.water.date = today;
-        saveData(true); // Silent update
+        saveData(true); 
     }
     window.setMood = function(mood) {
-        const today = new Date().toDateString();
-        personalData.tracker.mood = { status: mood, date: today };
-        saveData(true); // Silent update
+        personalData.tracker.mood = { status: mood, date: new Date().toDateString() };
+        saveData(true); 
     }
     function renderTracker() {
         const wEl = document.getElementById('water-count'); const wBar = document.getElementById('water-bar');
