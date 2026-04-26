@@ -249,62 +249,67 @@
     </div>
 
     <div id="nutrition-modal" class="modal">
-    <div class="modal-content" style="max-width: 450px; text-align: left; padding: 20px; overflow-y: auto; max-height: 90vh;">
-        <span class="close-btn" id="close-nutrition">&times;</span>
-        <div class="diagnostic-header" style="text-align: center; margin-bottom: 20px;">
-            <h2><i class="fas fa-apple-alt" style="color: #4caf50;"></i> Nutrition Tracking</h2>
-            <p style="font-weight: 500; color: #ff9800;">Fase Bulking 🚀</p>
+    <div class="nutrition-modal-box">
+        <button class="exit-button" id="close-nutrition" title="Tutup">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <div class="modal-header-nutri">
+            <h2>Nutrition Tracking</h2>
         </div>
 
-        <div class="nutri-section">
-            <h4>📝 Identitas & Kondisi</h4>
-            <p><strong>Tanggal:</strong> <span id="nutri-date">Hari Ini</span></p>
-            <p><strong>Nama:</strong> Biepoe</p>
-            <p><strong>Kondisi Saat Ini:</strong> <span id="nutri-kondisi">Normal</span></p>
-            <p><strong>Obat Terakhir:</strong> <span id="nutri-obat">-</span></p>
-        </div>
-
-        <div class="nutri-section">
-            <h4>📊 Status Tubuh</h4>
-            <div class="nutri-status-grid">
-                <div><small>Berat</small><br><strong>68 kg</strong></div>
-                <div><small>Tinggi</small><br><strong>170 cm</strong></div>
-                <div><small>BMI</small><br><strong>23.5</strong></div>
-                <div><small>Proyek</small><br><strong style="color: #ff9800;">Bulking</strong></div>
-            </div>
-        </div>
-
-        <div class="nutri-section">
-            <h4>🎯 Target Nutrisi Harian</h4>
-            <div class="budget-item">
-                <div class="budget-item-header"><span>Kalori (Kkal)</span><span>1550 / 2055</span></div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: 75%; background-color: #ff9800;"></div>
+        <div class="modal-body-nutri">
+            <div class="grid-row-nutri">
+                <div class="panel-nutri">
+                    <div class="panel-title-nutri">Identitas & Kondisi</div>
+                    <div class="panel-content-nutri">
+                        <div class="data-row-nutri"><span>Tanggal</span><span id="ui-tanggal">-</span></div>
+                        <div class="data-row-nutri"><span>Nama</span><span id="ui-nama">-</span></div>
+                        <div class="data-row-nutri"><span>Kondisi</span><span id="ui-kondisi">-</span></div>
+                        <div class="data-row-nutri"><span>Obat Terakhir</span><span id="ui-obat">-</span></div>
+                    </div>
+                </div>
+                <div class="panel-nutri">
+                    <div class="panel-title-nutri">Status Tubuh</div>
+                    <div class="panel-content-nutri" id="ui-status-grid">
+                        </div>
                 </div>
             </div>
-            <div class="budget-item" style="margin-top: 12px;">
-                <div class="budget-item-header"><span>Protein (g)</span><span>55 / 80</span></div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: 68%; background-color: #2196f3;"></div>
+
+            <div class="grid-row-nutri">
+                <div class="panel-nutri">
+                    <div class="panel-title-nutri">Riwayat Makan & Minum</div>
+                    <div class="panel-content-nutri scrollable-nutri">
+                        <ul id="ui-riwayat-list" class="nutri-list-baru"></ul>
+                    </div>
+                </div>
+                <div class="panel-nutri">
+                    <div class="panel-title-nutri">Target Nutrisi Harian</div>
+                    <div class="panel-content-nutri">
+                        <div class="progress-group-nutri">
+                            <div class="progress-label-nutri">
+                                <span>Kalori (Kkal)</span>
+                                <span id="ui-cal-text">0 / 2055</span>
+                            </div>
+                            <div class="progress-bg-nutri">
+                                <div class="progress-fill-nutri" id="ui-cal-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-group-nutri">
+                            <div class="progress-label-nutri">
+                                <span>Protein (g)</span>
+                                <span id="ui-prot-text">0 / 80</span>
+                            </div>
+                            <div class="progress-bg-nutri">
+                                <div class="progress-fill-nutri" id="ui-prot-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="nutri-section">
-            <h4>🍽️ Riwayat Makan & Minum</h4>
-            <ul class="nutri-list">
-                <li><span>Ayam Bakar + Nasi</span> <small>450 Kkal / 25g P</small></li>
-                <li><span>Susu Protein BSN</span> <small>150 Kkal / 20g P</small></li>
-                <li><span>Telur Rebus (2 Butir)</span> <small>140 Kkal / 10g P</small></li>
-            </ul>
-        </div>
-
-        <div class="nutri-section" style="margin-bottom: 0;">
-            <h4>💪 Workout Status</h4>
-            <div class="workout-status-box">
-                <span>Sesi Latihan Hari Ini</span>
-                <span class="stat-badge blue" style="font-size: 12px;"><i class="fas fa-check-circle"></i> Sudah Selesai</span>
-            </div>
+            <div class="workout-footer-nutri" id="ui-workout-box">
+                </div>
         </div>
     </div>
 </div>
