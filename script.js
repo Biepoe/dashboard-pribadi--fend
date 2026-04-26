@@ -553,18 +553,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initKesehatan() {
+    fetchHealthDataForHealthPage(); 
+    initDiagnosticFeature(); 
+    initMentalHealthChart(); 
+    simulateActivityData();  
+    loadPersonalData().then(renderTracker);
 
     const btnNutri = document.getElementById('btn-nutrition');
     const modNutri = document.getElementById('nutrition-modal');
-    const clNutri = document.getElementById('close-nutrition'); // kalau masih ada tombol close bawaan
 
+    // Mencegah error jika elemen tidak ditemukan
     if (btnNutri && modNutri) {
         btnNutri.addEventListener('click', () => {
             modNutri.classList.add('show');
             
-            // ==========================================
-            // INI LOKASI KODE 3 B (Pengaturan Identitas)
-            // ==========================================
+            // Pengaturan Identitas
             document.getElementById('ui-tanggal').textContent = new Date().toLocaleDateString('id-ID', { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
             });
@@ -572,20 +575,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (personalData && personalData.profile) {
                 document.getElementById('ui-nama').textContent = personalData.profile.name;
             }
-            // ==========================================
 
-            // Jalankan fetch data aktual ke backend
+            // Panggil data dari backend
             fetchNutritionData();
-        });
+        }); // <-- Tanda kurung ini yang sering hilang!
     }
 
-    // Logika tombol close modal
+    // Tombol close modal
     const exitBtn = document.querySelector('.exit-button');
     if (exitBtn) {
         exitBtn.addEventListener('click', () => modNutri.classList.remove('show'));
     }
 }
-
+    
     async function fetchNutritionData() {
     try {
         // Ambil semua data yang dibutuhkan secara paralel
@@ -609,9 +611,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const kondisi = findValue(latestMedical, ['kondisi']) || "Normal";
             const obat = findValue(latestMedical, ['obat']) || "-";
 
-            // ==========================================
-            // LOKASI KODE 3 C (BAGIAN STATUS TUBUH)
-            // ==========================================
             document.getElementById('ui-kondisi').textContent = kondisi;
             document.getElementById('ui-obat').textContent = obat;
 
@@ -626,10 +625,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             }
-            // ==========================================
         }
 
-        // --- 2. LOGIKA NUTRISI HARIAN (Log vs Database) ---
+        // --- 2. LOGIKA NUTRISI HARIAN ---
         const todayStr = new Date().toLocaleDateString('en-GB'); // Format DD/MM/YYYY
         const todayLogs = logs.filter(l => findValue(l, ['tanggal']) === todayStr);
         
@@ -655,11 +653,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         listHtml += `<li><span>${menu}</span> <small>(Data Gizi Belum Ada)</small></li>`;
                     }
                 }
-            });
+            }); // <-- Tanda kurung ini juga rawan terhapus!
 
-            // ==========================================
-            // LOKASI KODE 3 C (BAGIAN WORKOUT)
-            // ==========================================
+            // --- 3. LOGIKA WORKOUT ---
             const sudah = findValue(log, ['sudah']);
             const bagian = findValue(log, ['bagian_apa']);
             const workoutBox = document.getElementById('ui-workout-box');
@@ -674,8 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             }
-            // ==========================================
-        });
+        }); // <-- Tanda kurung ini jangan sampai hilang!
 
         // Update Progress Bar & List
         renderNutritionProgress(currentKal, currentProt, listHtml);
