@@ -672,13 +672,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function renderNutritionProgress(kal, prot, html) {
     // Bar Kalori
-    const calBar = document.querySelectorAll('.progress-bar')[0];
-    const calText = document.querySelectorAll('.budget-item-header span:nth-child(2)')[0];
-    if (calBar) {
+    const calBar = document.getElementById('ui-cal-bar');
+    const calText = document.getElementById('ui-cal-text');
+    if (calBar && calText) {
         const percent = Math.min((kal / TARGET_KALORI) * 100, 100);
         calBar.style.width = `${percent}%`;
         calText.textContent = `${kal} / ${TARGET_KALORI}`;
     }
+
+    // Bar Protein
+    const protBar = document.getElementById('ui-prot-bar');
+    const protText = document.getElementById('ui-prot-text');
+    if (protBar && protText) {
+        const percent = Math.min((prot / TARGET_PROTEIN) * 100, 100);
+        protBar.style.width = `${percent}%`;
+        protText.textContent = `${prot} / ${TARGET_PROTEIN}`;
+    }
+
+    // List Riwayat
+    const list = document.getElementById('ui-riwayat-list');
+    if (list) list.innerHTML = html || '<li style="text-align:center; color:#999; padding-top:10px;">Belum ada asupan hari ini</li>';
+}
 
     // Bar Protein
     const protBar = document.querySelectorAll('.progress-bar')[1];
