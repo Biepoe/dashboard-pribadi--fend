@@ -252,68 +252,187 @@
    GAYA KHUSUS NUTRITION TRACKING
    ========================================= */
 
-/* Hero Card Orange untuk Nutrisi */
-.sidebar-card.nutrition-hero {
-    background: linear-gradient(135deg, #ffe0b2 0%, #ffb74d 100%);
-    color: #e65100;
+.nutrition-modal-box {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    max-width: 650px;
+    margin: 5vh auto;
+    overflow: hidden;
+    position: relative;
+    width: 95%;
+    animation: slideIn 0.3s ease-out;
 }
 
-/* Bagian Modal Nutrisi */
-.nutri-section {
-    margin-bottom: 18px;
-    font-size: 13px;
-    color: #444;
-}
-.nutri-section h4 {
-    font-size: 14px;
-    color: #333;
-    margin-bottom: 8px;
-    border-bottom: 1px dashed #ddd;
-    padding-bottom: 5px;
+.exit-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 20px;
+    height: 36px;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    width: 36px;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    z-index: 2;
 }
-.nutri-section p { margin-bottom: 4px; }
 
-.nutri-status-grid {
+.exit-button:hover {
+    background: #ffffff;
+    color: #f97316;
+    transform: rotate(90deg);
+}
+
+.modal-header-nutri {
+    background: #f97316;
+    padding: 25px 20px;
+    text-align: center;
+}
+
+.modal-header-nutri h2 {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.modal-body-nutri {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #f1f5f9;
+}
+
+.grid-row-nutri {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.panel-nutri {
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    border: 1px solid #f1f5f9;
+}
+
+.panel-title-nutri {
+    background: #f97316;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.panel-content-nutri {
+    padding: 15px;
+    font-size: 13px;
+    color: #1e293b;
+}
+
+.data-row-nutri {
     display: flex;
     justify-content: space-between;
-    text-align: center;
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid #eee;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #f8fafc;
+    padding-bottom: 4px;
 }
-.nutri-status-grid div strong { font-size: 15px; color: #333; }
 
-.nutri-list {
-    list-style: none;
-    padding: 0;
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 10px 15px;
-    border: 1px solid #eee;
+.data-row-nutri span:first-child { color: #64748b; }
+.data-row-nutri span:last-child { font-weight: 600; text-align: right; }
+
+.status-grid-nutri {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
 }
-.nutri-list li {
+
+.status-item-nutri {
+    text-align: left;
+    padding: 5px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.status-item-nutri span { display: block; color: #64748b; font-size: 11px; }
+.status-item-nutri strong { display: block; font-size: 14px; color: #f97316; }
+
+.progress-group-nutri { margin-bottom: 15px; }
+.progress-label-nutri {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.progress-bg-nutri {
+    background: #e2e8f0;
+    border-radius: 10px;
+    height: 10px;
+    width: 100%;
+}
+
+.progress-fill-nutri {
+    background: linear-gradient(90deg, #fb923c, #f97316);
+    border-radius: 10px;
+    height: 100%;
+    transition: width 0.8s ease-in-out;
+}
+
+.workout-footer-nutri {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.workout-footer-nutri h4 {
+    background: #f97316;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 12px;
+    margin: 0 0 10px 0;
+    padding: 4px 15px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.workout-info-nutri {
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 13px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.scrollable-nutri { max-height: 150px; overflow-y: auto; }
+.nutri-list-baru { list-style: none; padding: 0; margin: 0; }
+.nutri-list-baru li {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px dashed #e2e8f0;
 }
-.nutri-list li:last-child { border-bottom: none; }
-.nutri-list li span { font-weight: 500; }
-.nutri-list li small { color: #888; }
-
-.workout-status-box {
-    background: #e8eff7;
-    padding: 12px 15px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-weight: 500;
-}
+.nutri-list-baru li:last-child { border-bottom: none; }
+.nutri-list-baru li span { font-weight: 500; color: #1e293b; }
+.nutri-list-baru li small { color: #64748b; }
 
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {
