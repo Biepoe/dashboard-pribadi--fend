@@ -3,72 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nutrition - Personal Dashboard</title>
+    <title>Menu Kesehatan - Personal Dashboard</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="nutrition.css"> 
+    <link rel="stylesheet" href="hub.css"> 
 </head>
-<body id="halaman-nutrition">
+<body id="halaman-hub">
 
     <div class="dashboard-container">
         <div id="content-wrapper">
             
-            <header class="header" style="background: linear-gradient(90deg, #fb923c, #f97316);">
-                <h1><i class="fas fa-utensils"></i> Nutrition Tracking</h1>
-                <p>Pantau target kalori dan riwayat makan harianmu</p>
+            <header class="header">
+                <h1>Kategori Kesehatan</h1>
+                <p>Pilih menu yang ingin kamu akses</p>
             </header>
 
-            <div class="nutrition-content-wrapper">
-                
-                <div class="grid-row-nutri">
-                    <div class="panel-nutri">
-                        <div class="panel-title-nutri">Riwayat Makan & Minum</div>
-                        <div class="panel-content-nutri scrollable-nutri">
-                            <ul id="ui-riwayat-list" class="nutri-list-baru">
-                                <li style="text-align:center; color:#999; padding-top:10px;">Memuat riwayat...</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="panel-nutri">
-                        <div class="panel-title-nutri">Target Nutrisi Harian</div>
-                        <div class="panel-content-nutri">
-                            <div class="progress-group-nutri">
-                                <div class="progress-label-nutri">
-                                    <span>Kalori (Kkal)</span>
-                                    <span id="ui-cal-text">0 / 2055</span>
-                                </div>
-                                <div class="progress-bg-nutri">
-                                    <div class="progress-fill-nutri" id="ui-cal-bar" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                            <div class="progress-group-nutri">
-                                <div class="progress-label-nutri">
-                                    <span>Protein (g)</span>
-                                    <span id="ui-prot-text">0 / 80</span>
-                                </div>
-                                <div class="progress-bg-nutri">
-                                    <div class="progress-fill-nutri" id="ui-prot-bar" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="health-hub-container">
+                <div class="menu-cards">
+                    <a href="nutrition.html" class="hub-card">
+                        <i class="fas fa-utensils" style="font-size: 40px; color: #ff9800; margin-bottom: 15px;"></i>
+                        <h2>Nutrition</h2>
+                        <p>Kelola jadwal dan catatan nutrisi harianmu di sini.</p>
+                    </a>
 
-                <div class="workout-footer-nutri" id="ui-workout-box">
-                    <h4>Workout Status</h4>
-                    <div class="workout-info-nutri">
-                        <span>Memuat status workout...</span>
-                    </div>
+                    <a href="kesehatan.html" class="hub-card">
+                        <i class="fas fa-heartbeat" style="font-size: 40px; color: #e91e63; margin-bottom: 15px;"></i>
+                        <h2>Health</h2>
+                        <p>Pantau rekam medis dan kesehatan fisikmu di sini.</p>
+                    </a>
                 </div>
-
             </div>
-            
-        </div>
-    </div>
+
+        </div> </div>
 
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item"><i class="fas fa-home"></i></a>
