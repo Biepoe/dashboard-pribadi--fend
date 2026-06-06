@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (bodyId === 'halaman-hub');
         else if (bodyId === 'halaman-kesehatan') initKesehatan();
         else if (bodyId === 'halaman-personal') initPersonal();
+        else if (bodyId === 'halaman-nutrition') fetchNutritionData();
     }
 
     async function loadPage(url) {
