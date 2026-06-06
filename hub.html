@@ -3,27 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Kesehatan</title>
-    <!-- Pastikan file CSS ini terhubung -->
+    <title>Menu Kesehatan - Personal Dashboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="hub.css"> 
 </head>
-<body>
-    <div class="health-hub-container">
-        <h1>Pilih Kategori Kesehatan</h1>
-        
-        <div class="menu-cards">
-            <!-- Tautan ke halaman Nutrition -->
-            <a href="nutrition.html" class="card">
-                <h2>Nutrition</h2>
-                <p>Kelola jadwal dan catatan nutrisi harianmu di sini.</p>
-            </a>
+<body id="halaman-hub">
 
-            <!-- Tautan ke halaman spesifik Health -->
-            <a href="kesehatan.html" class="card">
-                <h2>Health</h2>
-                <p>Pantau rekam medis dan kesehatan fisikmu di sini.</p>
-            </a>
+    <div class="dashboard-container">
+        
+        <header class="header">
+            <h1>Kategori Kesehatan</h1>
+            <p>Pilih menu yang ingin kamu akses</p>
+        </header>
+
+        <div class="health-hub-container">
+            <div class="menu-cards">
+                <a href="nutrition.html" class="hub-card">
+                    <i class="fas fa-utensils" style="font-size: 40px; color: #ff9800; margin-bottom: 15px;"></i>
+                    <h2>Nutrition</h2>
+                    <p>Kelola jadwal dan catatan nutrisi harianmu di sini.</p>
+                </a>
+
+                <a href="kesehatan.html" class="hub-card">
+                    <i class="fas fa-heartbeat" style="font-size: 40px; color: #e91e63; margin-bottom: 15px;"></i>
+                    <h2>Health</h2>
+                    <p>Pantau rekam medis dan kesehatan fisikmu di sini.</p>
+                </a>
+            </div>
         </div>
+
     </div>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="keuangan.html" class="nav-item"><i class="fas fa-wallet"></i></a>
+        <a href="hub.html" class="nav-item active"><i class="fas fa-heartbeat"></i></a>
+        <a href="personal.html" class="nav-item"><i class="fas fa-user"></i></a>
+    </nav>
+    
+    <script src="script.js"></script>
+
 </body>
 </html>
