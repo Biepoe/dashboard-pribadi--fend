@@ -1,1 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition - Personal Dashboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="nutrition.css"> 
+</head>
+<body id="halaman-nutrition">
 
+    <div class="dashboard-container">
+        <div id="content-wrapper">
+            
+            <header class="header" style="background: linear-gradient(90deg, #fb923c, #f97316);">
+                <h1><i class="fas fa-utensils"></i> Nutrition Tracking</h1>
+                <p>Pantau target kalori dan riwayat makan harianmu</p>
+            </header>
+
+            <div class="nutrition-content-wrapper">
+                
+                <div class="grid-row-nutri">
+                    <div class="panel-nutri">
+                        <div class="panel-title-nutri">Riwayat Makan & Minum</div>
+                        <div class="panel-content-nutri scrollable-nutri">
+                            <ul id="ui-riwayat-list" class="nutri-list-baru">
+                                <li style="text-align:center; color:#999; padding-top:10px;">Memuat riwayat...</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-nutri">
+                        <div class="panel-title-nutri">Target Nutrisi Harian</div>
+                        <div class="panel-content-nutri">
+                            <div class="progress-group-nutri">
+                                <div class="progress-label-nutri">
+                                    <span>Kalori (Kkal)</span>
+                                    <span id="ui-cal-text">0 / 2055</span>
+                                </div>
+                                <div class="progress-bg-nutri">
+                                    <div class="progress-fill-nutri" id="ui-cal-bar" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="progress-group-nutri">
+                                <div class="progress-label-nutri">
+                                    <span>Protein (g)</span>
+                                    <span id="ui-prot-text">0 / 80</span>
+                                </div>
+                                <div class="progress-bg-nutri">
+                                    <div class="progress-fill-nutri" id="ui-prot-bar" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workout-footer-nutri" id="ui-workout-box">
+                    <h4>Workout Status</h4>
+                    <div class="workout-info-nutri">
+                        <span>Memuat status workout...</span>
+                    </div>
+                </div>
+
+            </div>
+            
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="keuangan.html" class="nav-item"><i class="fas fa-wallet"></i></a>
+        <a href="hub.html" class="nav-item active"><i class="fas fa-heartbeat"></i></a>
+        <a href="personal.html" class="nav-item"><i class="fas fa-user"></i></a>
+    </nav>
+    
+    <script src="script.js"></script>
+
+</body>
+</html>
