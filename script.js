@@ -472,6 +472,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function fetchNutritionData() {
         try {
+            // Isi Tanggal Otomatis di Halaman Nutrition
+            const elTanggal = document.getElementById('ui-tanggal');
+            if (elTanggal) {
+                elTanggal.textContent = new Date().toLocaleDateString('id-ID', { 
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+                });
+            }
+
+            // Isi Nama Otomatis dari Data Profil
+            const elNama = document.getElementById('ui-nama');
+            if (elNama && personalData && personalData.profile) {
+                elNama.textContent = personalData.profile.name;
+            }
+
             const [healthRes, logRes, dbRes] = await Promise.all([
                 fetch(`${BACKEND_URL}/api/health`), fetch(`${BACKEND_URL}/api/nutrition-log`), fetch(`${BACKEND_URL}/api/nutrition-db`)
             ]);
@@ -484,8 +498,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tb = parseFloat(findValue(latestMedical, ['tinggi'])) || 0;
                 const bmi = (bb && tb) ? (bb / ((tb / 100) ** 2)).toFixed(1) : 0;
                 
-                document.getElementById('ui-kondisi').textContent = findValue(latestMedical, ['kondisi']) || "Normal";
-                document.getElementById('ui-obat').textContent = findValue(latestMedical, ['obat']) || "-";
+                const elKondisi = document.getElementById('ui-kondisi');
+                if (elKondisi) elKondisi.textContent = findValue(latestMedical, ['kondisi']) || "Normal";
+
+                const elObat = document.getElementById('ui-obat');
+                if (elObat) elObat.textContent = findValue(latestMedical, ['obat']) || "-";
 
                 const statusGrid = document.getElementById('ui-status-grid');
                 if (statusGrid) {
@@ -535,21 +552,6 @@ document.addEventListener('DOMContentLoaded', () => {
             renderNutritionProgress(currentKal, currentProt, listHtml);
 
         } catch (err) { console.error("Gagal sinkronisasi data nutrisi:", err); }
-    }
-
-    function renderNutritionProgress(kal, prot, html) {
-        const calBar = document.getElementById('ui-cal-bar'); const calText = document.getElementById('ui-cal-text');
-        if (calBar && calText) {
-            calBar.style.width = `${Math.min((kal / TARGET_KALORI) * 100, 100)}%`;
-            calText.textContent = `${kal} / ${TARGET_KALORI}`;
-        }
-        const protBar = document.getElementById('ui-prot-bar'); const protText = document.getElementById('ui-prot-text');
-        if (protBar && protText) {
-            protBar.style.width = `${Math.min((prot / TARGET_PROTEIN) * 100, 100)}%`;
-            protText.textContent = `${prot} / ${TARGET_PROTEIN}`;
-        }
-        const list = document.getElementById('ui-riwayat-list');
-        if (list) list.innerHTML = html || '<li style="text-align:center; color:#999; padding-top:10px;">Belum ada asupan hari ini</li>';
     }
 
     // =========================================================
