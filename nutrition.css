@@ -1,0 +1,121 @@
+/* =========================================
+   GAYA HALAMAN NUTRITION
+========================================= */
+
+.nutrition-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.grid-row-nutri {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* Responsif: Jadikan 1 kolom kalau dibuka di HP */
+@media (max-width: 768px) {
+    .grid-row-nutri {
+        grid-template-columns: 1fr; 
+    }
+}
+
+.panel-nutri {
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03); /* Disamakan dengan shadow dashboard */
+    border: 1px solid #eef2f7;
+}
+
+.panel-title-nutri {
+    background: #f97316; /* Warna khas Nutrition/Orange */
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.panel-content-nutri {
+    padding: 20px;
+    font-size: 14px;
+    color: #333;
+}
+
+.progress-group-nutri { margin-bottom: 15px; }
+.progress-label-nutri {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.progress-bg-nutri {
+    background: #e2e8f0;
+    border-radius: 10px;
+    height: 12px;
+    width: 100%;
+}
+
+.progress-fill-nutri {
+    background: linear-gradient(90deg, #fb923c, #f97316);
+    border-radius: 10px;
+    height: 100%;
+    transition: width 0.8s ease-in-out;
+}
+
+.workout-footer-nutri {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.workout-footer-nutri h4 {
+    background: #f97316;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 13px;
+    margin: 0 0 12px 0;
+    padding: 6px 18px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.workout-info-nutri {
+    color: #333;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Area Scroll untuk Riwayat Makanan */
+.scrollable-nutri { 
+    max-height: 200px; 
+    overflow-y: auto; 
+    padding-right: 5px;
+}
+.scrollable-nutri::-webkit-scrollbar { width: 6px; }
+.scrollable-nutri::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+
+.nutri-list-baru { list-style: none; padding: 0; margin: 0; }
+.nutri-list-baru li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed #eef2f7;
+}
+.nutri-list-baru li:last-child { border-bottom: none; }
+.nutri-list-baru li span { font-weight: 500; color: #333; }
+.nutri-list-baru li small { color: #64748b; font-weight: 500; }
