@@ -83,7 +83,7 @@ body {
 
 
 /* --- Tombol Navigasi Form --- */
-.footer-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+.footer-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; }
 .control-item { background-color: #f4f7fa; border-radius: 12px; padding: 20px 16px; text-align: center; border: 2px solid transparent; cursor: pointer; transition: all 0.2s ease-in-out; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .control-item:hover { background-color: #e8eff7; transform: translateY(-2px); }
 .control-item.active { background-color: #e9e7fd; border-color: #667eea; color: #667eea; }
