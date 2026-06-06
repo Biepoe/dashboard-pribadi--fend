@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const bodyId = document.body.id;
         if (bodyId === 'halaman-beranda') initBeranda();
         else if (bodyId === 'halaman-keuangan') initKeuangan();
-        else if (bodyId === 'halaman-kesehatan') initKesehatan();
+        else if (bodyId === 'halaman-hub');
         else if (bodyId === 'halaman-personal') initPersonal();
     }
 
