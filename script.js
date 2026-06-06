@@ -551,7 +551,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderNutritionProgress(currentKal, currentProt, listHtml);
 
-        } function renderNutritionProgress(kal, prot, html) {
+        } catch (err) { 
+            console.error("Gagal sinkronisasi data nutrisi:", err); 
+        }
+    }
+
+    function renderNutritionProgress(kal, prot, html) {
         const calBar = document.getElementById('ui-cal-bar'); 
         const calText = document.getElementById('ui-cal-text');
         if (calBar && calText) {
@@ -570,8 +575,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (list) {
             list.innerHTML = html || '<li style="text-align:center; color:#999; padding-top:10px;">Belum ada asupan hari ini</li>';
         }
-            
-        catch (err) { console.error("Gagal sinkronisasi data nutrisi:", err); }
     }
 
     // =========================================================
