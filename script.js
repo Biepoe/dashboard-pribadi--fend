@@ -551,7 +551,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderNutritionProgress(currentKal, currentProt, listHtml);
 
-        } catch (err) { console.error("Gagal sinkronisasi data nutrisi:", err); }
+        } function renderNutritionProgress(kal, prot, html) {
+        const calBar = document.getElementById('ui-cal-bar'); 
+        const calText = document.getElementById('ui-cal-text');
+        if (calBar && calText) {
+            calBar.style.width = `${Math.min((kal / TARGET_KALORI) * 100, 100)}%`;
+            calText.textContent = `${kal} / ${TARGET_KALORI}`;
+        }
+        
+        const protBar = document.getElementById('ui-prot-bar'); 
+        const protText = document.getElementById('ui-prot-text');
+        if (protBar && protText) {
+            protBar.style.width = `${Math.min((prot / TARGET_PROTEIN) * 100, 100)}%`;
+            protText.textContent = `${prot} / ${TARGET_PROTEIN}`;
+        }
+        
+        const list = document.getElementById('ui-riwayat-list');
+        if (list) {
+            list.innerHTML = html || '<li style="text-align:center; color:#999; padding-top:10px;">Belum ada asupan hari ini</li>';
+        }
+            
+        catch (err) { console.error("Gagal sinkronisasi data nutrisi:", err); }
     }
 
     // =========================================================
