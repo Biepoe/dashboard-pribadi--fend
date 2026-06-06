@@ -1,0 +1,44 @@
+/* Styling dasar untuk container */
+.health-hub-container {
+    text-align: center;
+    padding: 50px;
+    font-family: Arial, sans-serif;
+}
+
+/* Mengatur posisi card agar bersebelahan */
+.menu-cards {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+/* Tampilan utama tombol/card */
+.card {
+    display: block;
+    width: 250px;
+    padding: 30px;
+    background-color: #f4f4f9;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    text-decoration: none; /* Menghilangkan garis bawah pada link */
+    color: #333;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Efek saat tombol disorot/dipencet */
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    border-color: #007BFF; /* Ubah warna border saat di-hover */
+}
+
+.card h2 {
+    margin-top: 0;
+    color: #007BFF;
+}
+
+.card p {
+    color: #666;
+    font-size: 14px;
+}
