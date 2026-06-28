@@ -472,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function fetchNutritionData() {
         try {
-            // Isi Tanggal Otomatis di Halaman Nutrition
+            // 1. Isi Tanggal Otomatis di Halaman Nutrition
             const elTanggal = document.getElementById('ui-tanggal');
             if (elTanggal) {
                 elTanggal.textContent = new Date().toLocaleDateString('id-ID', { 
@@ -480,17 +480,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Isi Nama Otomatis dari Data Profil
+            // 2. Isi Nama Otomatis dari Data Profil
             const elNama = document.getElementById('ui-nama');
             if (elNama && personalData && personalData.profile) {
                 elNama.textContent = personalData.profile.name;
             }
 
-            const [healthRes, logRes, dbRes] = await Promise.all([
-                fetch(`${BACKEND_URL}/api/health`), fetch(`${BACKEND_URL}/api/nutrition-log`), fetch(`${BACKEND_URL}/api/nutrition-db`)
+            // 3. Fetch Data (Tidak perlu lagi nutrition-db)
+            const [healthRes, logRes] = await Promise.all([
+                fetch(`${BACKEND_URL}/api/health`), 
+                fetch(`${BACKEND_URL}/api/nutrition-log`) // Pastikan API ini sekarang mengambil data dari tab "Nutrition AI"
             ]);
 
-            const healthData = await healthRes.json(); const logs = await logRes.json(); const nutritionDb = await dbRes.json();
+            const healthData = await healthRes.json(); 
+            const logs = await logRes.json(); 
+            
+            // 4. Update UI Status Tubuh (BMI, Berat, dll)
             const latestMedical = [...healthData].reverse().find(i => findValue(i, ['berat', 'tinggi']));
             
             if (latestMedical) {
@@ -516,40 +521,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            const todayStr = new Date().toLocaleDateString('en-GB'); 
-            const todayLogs = logs.filter(l => findValue(l, ['tanggal']) === todayStr);
-            let currentKal = 0; let currentProt = 0; let listHtml = '';
-
-            todayLogs.forEach(log => {
-                ['makan_siang', 'makan_malam', 'extra_meal'].forEach(slot => {
-                    const menu = findValue(log, [slot]);
-                    if (menu && menu !== '-') {
-                        const info = nutritionDb.find(db => findValue(db, ['nama']).toLowerCase().trim() === menu.toLowerCase().trim());
-                        if (info) {
-                            const k = parseInt(findValue(info, ['kalori'])) || 0; const p = parseInt(findValue(info, ['protein'])) || 0;
-                            currentKal += k; currentProt += p;
-                            listHtml += `<li><span>${menu}</span> <small>${k} Kkal / ${p}g P</small></li>`;
-                        } else {
-                            listHtml += `<li><span>${menu}</span> <small>(Data Gizi Belum Ada)</small></li>`;
-                        }
-                    }
-                });
-
-                const sudah = findValue(log, ['sudah']); const bagian = findValue(log, ['bagian_apa']);
-                const workoutBox = document.getElementById('ui-workout-box');
-                if (workoutBox) {
-                    workoutBox.innerHTML = `
-                        <h4>Workout Status</h4>
-                        <div class="workout-info-nutri">
-                            <span>Sesi: ${bagian || 'Rest Day'}</span>
-                            <span class="stat-badge ${sudah === 'Sudah' ? 'blue' : 'orange'}" style="margin-left: 10px;">
-                                <i class="fas ${sudah === 'Sudah' ? 'fa-check-circle' : 'fa-clock'}"></i> ${sudah || 'Belum'}
-                            </span>
-                        </div>`;
-                }
+            // 5. LOGIKA BARU: Tarik Data Gizi dari AI
+            // Karena format tanggal di Sheet dari bot adalah "yyyy-MM-dd"
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${padZero(now.getMonth() + 1)}-${padZero(now.getDate())}`; 
+            
+            const todayLogs = logs.filter(l => {
+                const tgl = findValue(l, ['tanggal', 'date']);
+                return tgl === todayStr;
             });
 
+            let currentKal = 0; 
+            let currentProt = 0; 
+            let listHtml = '';
+
+            todayLogs.forEach(log => {
+                // Ambil data sesuai nama kolom baru di Sheet
+                const menu = findValue(log, ['menu', 'deskripsi']) || 'Makanan';
+                const kalStr = findValue(log, ['kalori']) || '0';
+                const protStr = findValue(log, ['protein']) || '0';
+                const karboStr = findValue(log, ['karbohidrat', 'karbo']) || '0';
+                const lemakStr = findValue(log, ['lemak']) || '0';
+                const jam = findValue(log, ['jam', 'waktu']) || '';
+
+                // Bersihkan string dari huruf "Kkal" atau "g" agar bisa dihitung (misal "600 Kkal" jadi 600)
+                const k = parseInt(kalStr.replace(/[^0-9]/g, '')) || 0;
+                const p = parseInt(protStr.replace(/[^0-9]/g, '')) || 0;
+                
+                currentKal += k; 
+                currentProt += p;
+
+                // Desain list menu yang lebih informatif (menampilkan Karbo & Lemak juga)
+                listHtml += `
+                    <li style="align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <span style="display: block; font-weight: 600;">${menu}</span>
+                            <small style="font-size:11px; color:#888;">⌚ ${jam} | Karbo: ${karboStr}, Lemak: ${lemakStr}</small>
+                        </div>
+                        <div style="text-align:right;">
+                            <strong style="color: #f97316;">${k} Kkal</strong><br>
+                            <small style="font-size:11px;">${p}g Protein</small>
+                        </div>
+                    </li>`;
+            });
+
+            // Tampilkan ke Progress Bar
             renderNutritionProgress(currentKal, currentProt, listHtml);
+
+            // Hide bagian Workout (karena tab AI khusus makanan)
+            const workoutBox = document.getElementById('ui-workout-box');
+            if (workoutBox) workoutBox.style.display = 'none';
 
         } catch (err) { 
             console.error("Gagal sinkronisasi data nutrisi:", err); 
