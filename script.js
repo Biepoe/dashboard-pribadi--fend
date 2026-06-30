@@ -521,11 +521,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // 5. LOGIKA BARU: Tarik Data Gizi dari AI
-            // Karena format tanggal di Sheet dari bot adalah "yyyy-MM-dd"
+            // 
+            // 5. LOGIKA BARU: Filter Tanggal Pintar & Mapping Kolom Sesuai Sheet
             const now = new Date();
-            const todayStr = `${now.getFullYear()}-${padZero(now.getMonth() + 1)}-${padZero(now.getDate())}`; 
-
+            
             const todayLogs = logs.filter(l => {
                 const tglObj = parseDate(findValue(l, ['tanggal', 'date']));
                 return tglObj && 
@@ -539,22 +538,21 @@ document.addEventListener('DOMContentLoaded', () => {
             let listHtml = '';
 
             todayLogs.forEach(log => {
-                // Ambil data sesuai nama kolom baru di Sheet
-                const menu = findValue(log, ['menu', 'deskripsi']) || 'Makanan';
+                // Ambil data sesuai format fotomu (Menu diambil dari kolom "Deskripsi")
+                const menu = findValue(log, ['deskripsi', 'menu']) || 'Makanan';
                 const kalStr = findValue(log, ['kalori']) || '0';
                 const protStr = findValue(log, ['protein']) || '0';
                 const karboStr = findValue(log, ['karbohidrat', 'karbo']) || '0';
                 const lemakStr = findValue(log, ['lemak']) || '0';
                 const jam = findValue(log, ['jam', 'waktu']) || '';
 
-                // Bersihkan string dari huruf "Kkal" atau "g" agar bisa dihitung (misal "600 Kkal" jadi 600)
-                const k = parseInt(kalStr.replace(/[^0-9]/g, '')) || 0;
-                const p = parseInt(protStr.replace(/[^0-9]/g, '')) || 0;
+                // Bersihkan string dari huruf "Kkal" atau "g" agar murni angka
+                const k = parseInt(String(kalStr).replace(/[^0-9]/g, '')) || 0;
+                const p = parseInt(String(protStr).replace(/[^0-9]/g, '')) || 0;
                 
                 currentKal += k; 
                 currentProt += p;
 
-                // Desain list menu yang lebih informatif (menampilkan Karbo & Lemak juga)
                 listHtml += `
                     <li style="align-items: center;">
                         <div style="flex-grow: 1;">
@@ -571,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Tampilkan ke Progress Bar
             renderNutritionProgress(currentKal, currentProt, listHtml);
 
-            // Hide bagian Workout (karena tab AI khusus makanan)
+            // Hide bagian Workout
             const workoutBox = document.getElementById('ui-workout-box');
             if (workoutBox) workoutBox.style.display = 'none';
 
