@@ -525,10 +525,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Karena format tanggal di Sheet dari bot adalah "yyyy-MM-dd"
             const now = new Date();
             const todayStr = `${now.getFullYear()}-${padZero(now.getMonth() + 1)}-${padZero(now.getDate())}`; 
-            
+
             const todayLogs = logs.filter(l => {
-                const tgl = findValue(l, ['tanggal', 'date']);
-                return tgl === todayStr;
+                const tglObj = parseDate(findValue(l, ['tanggal', 'date']));
+                return tglObj && 
+                       tglObj.getFullYear() === now.getFullYear() && 
+                       tglObj.getMonth() === now.getMonth() && 
+                       tglObj.getDate() === now.getDate();
             });
 
             let currentKal = 0; 
