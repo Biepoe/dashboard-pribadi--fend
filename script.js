@@ -489,11 +489,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // 3. Fetch Data (Tidak perlu lagi nutrition-db)
             const [healthRes, logRes] = await Promise.all([
                 fetch(`${BACKEND_URL}/api/health`), 
-                fetch(`${BACKEND_URL}/api/nutrition-log`) // Pastikan API ini sekarang mengambil data dari tab "Nutrition AI"
+                fetch(`${BACKEND_URL}/api/nutrition-log`)
             ]);
 
-            const healthData = await healthRes.json(); 
-            const logs = await logRes.json(); 
+            // Cek apakah response berhasil (status 200-299)
+            let healthData = healthRes.ok ? await healthRes.json() : []; 
+            let logs = logRes.ok ? await logRes.json() : []; 
+            
+            // Validasi keamanan ekstra: Pastikan datanya benar-benar Array
+            if (!Array.isArray(healthData)) healthData = [];
+            if (!Array.isArray(logs)) logs = [];
             
             // 4. Update UI Status Tubuh (BMI, Berat, dll)
             const latestMedical = [...healthData].reverse().find(i => findValue(i, ['berat', 'tinggi']));
