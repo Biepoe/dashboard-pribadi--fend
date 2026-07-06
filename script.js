@@ -363,6 +363,70 @@ document.addEventListener('DOMContentLoaded', () => {
         const ws=XLSX.utils.json_to_sheet(ex); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Lap"); XLSX.writeFile(wb,`Lap_${selM}.xlsx`);
     }
 
+    //==========================================
+    // UNTUK KESEHATAN DAN ACTIVITY DI BERANDA
+    //==========================================
+    async function fetchHealthData() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/health`); 
+            const data = await res.json();
+            if (!data.length) return;
+            const last = data[data.length - 1];
+            const cond = findValue(last, ['kondisi', 'tubuh', 'status']) || 'Sehat';
+            
+            if (document.getElementById('body-status')) document.getElementById('body-status').textContent = cond;
+            
+            const vec = document.getElementById('body-vector');
+            if (vec) {
+                if (cond.toLowerCase().includes('sakit') || cond.toLowerCase().includes('demam')) {
+                    vec.classList.remove('body-normal'); vec.classList.add('body-sick');
+                } else {
+                    vec.classList.add('body-normal'); vec.classList.remove('body-sick');
+                }
+            }
+            
+            const lastSleep = [...data].reverse().find(i => findValue(i, ['tidur']) && findValue(i, ['bangun']));
+            if(document.getElementById('sleep-duration') && lastSleep) {
+                const t = findValue(lastSleep, ['tidur']); const b = findValue(lastSleep, ['bangun']);
+                if(t && b) {
+                    let durasi = (parseInt(b.split(':')[0]) || 0) - (parseInt(t.split(':')[0]) || 0);
+                    if (durasi < 0) durasi += 24;
+                    document.getElementById('sleep-duration').textContent = `${durasi} Jam`;
+                }
+            }
+            
+            if(document.getElementById('last-medicine')) {
+                const lastMed = [...data].reverse().find(i => findValue(i, ['obat', 'medicine']) && findValue(i, ['obat', 'medicine']) !== '-');
+                document.getElementById('last-medicine').textContent = lastMed ? findValue(lastMed, ['obat', 'medicine']) : '-';
+            }
+        } catch (e) { console.error("Error fetchHealthData:", e); }
+    }
+
+    async function fetchActivityData() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/activities`); 
+            const data = await res.json();
+            const list = document.getElementById('activity-log-list');
+            if (list) {
+                list.innerHTML = '';
+                const recent = data.slice(-5).reverse();
+                if(recent.length === 0) { list.innerHTML = '<li class="placeholder">Belum ada aktivitas.</li>'; return; }
+                recent.forEach(i => {
+                    const t = findValue(i, ['kapan', 'date', 'waktu', 'tanggal']) || '';
+                    const k = findValue(i, ['ngapain', 'kegiatan', 'activity', 'nama']) || '-';
+                    const dObj = new Date(t);
+                    const dateDisplay = !isNaN(dObj.getTime()) ? `${dObj.toLocaleDateString('id-ID')} ${dObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}` : t;
+                    
+                    list.innerHTML += `
+                    <li class="activity-log-item">
+                        <div class="activity-log-time" style="font-size:11px;">${dateDisplay}</div>
+                        <div class="activity-log-details"><span class="title" style="font-size:14px;">${k}</span></div>
+                    </li>`;
+                });
+            }
+        } catch (e) { console.error("Error fetchActivityData:", e); }
+    }
+    
     // =========================================================
     // 6. KESEHATAN & REKAM MEDIS (VERSI BARU)
     // =========================================================
