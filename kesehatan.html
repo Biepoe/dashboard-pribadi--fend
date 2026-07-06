@@ -4,315 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kesehatan - Personal Dashboard</title>
-    <link rel="stylesheet" href="style.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="kesehatan.css">
 </head>
 <body id="halaman-kesehatan">
 
     <div class="dashboard-container">
         <div id="content-wrapper">
-            <header class="header">
-                <h1>Dasbor Kesehatan</h1>
-                <p>Analisis kesehatanmu!</p>
+            
+            <header class="header" style="background: linear-gradient(90deg, #e91e63, #9c27b0);">
+                <h1><i class="fas fa-heartbeat"></i> Rekam Medis</h1>
+                <p>Visualisasi data kesehatan dan log harian</p>
             </header>
 
-            <main class="health-layout">
-                <aside class="health-sidebar">
-                    <div class="sidebar-card health-hero">
-                        <div class="hero-header">
-                            <div class="icon-box"><i class="fas fa-heartbeat"></i></div>
-                            <h3>Kesehatan</h3>
-                            <p>Diagnosis terakhir<br>3 hari yang lalu</p>
-                        </div>
-                        <div class="hero-image">
-                            <i class="fas fa-heart pulse-anim-slow" style="font-size: 80px; color: rgba(255,255,255,0.8);"></i>
-                        </div>
-                        <button id="btn-diagnostic" class="btn-diagnostic">
-                            Diagnostik
-                        </button>
+            <main class="health-main-content">
+                
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h2>Status & Vitals Terkini</h2>
+                        <span class="pill-info" id="health-last-update">Memuat...</span>
                     </div>
-
-                    <div class="sidebar-section">
-                        <h4>Detail Laporan <i class="fas fa-ellipsis-v"></i></h4>
-                        <div class="report-score">
-                            <span class="big-percent">75%</span>
-                            <span class="label">dari batas sehat</span>
-                        </div>
-                        
-                        <div class="reminder-list">
-                            <div class="reminder-item">
-                                <i class="fas fa-calendar-check" style="color: #4caf50;"></i>
-                                <div>
-                                    <span>Cek berikutnya</span>
-                                    <strong>28 Feb 2025</strong>
+                    <div class="card-body">
+                        <div class="vitals-grid-baru">
+                            <div class="vital-item">
+                                <div class="v-icon" style="background: #e8f5e9; color: #4caf50;">
+                                    <i class="fas fa-user-md"></i>
                                 </div>
-                            </div>
-                            <div class="reminder-item">
-                                <i class="fas fa-tint" style="color: #2196f3;"></i>
-                                <div>
-                                    <span>Hidrasi</span>
-                                    <strong>3.5L / hari</strong>
-                                </div>
-                            </div>
-                            <div class="reminder-item">
-                                <i class="fas fa-running" style="color: #ff9800;"></i>
-                                <div>
-                                    <span>Olahraga</span>
-                                    <strong>30 menit jogging</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="sidebar-card nutrition-hero" style="margin-top: 20px;">
-                        <div class="hero-header">
-                            <div class="icon-box" style="color: #ff9800;"><i class="fas fa-utensils"></i></div>
-                            <h3>Nutrition Tracking</h3>
-                            <p>Bodygoals Project</p>
-                        </div>
-                        <div class="hero-image">
-                            <i class="fas fa-dumbbell pulse-anim-slow" style="font-size: 80px; color: rgba(255,255,255,0.6);"></i>
-                        </div>
-                        <button id="btn-nutrition" class="btn-diagnostic" style="background: #ff9800; color: white;">
-                        Selengkapnya
-                        </button>
-                    </div>
-                </aside>
-
-                <section class="health-main">
-                    
-                    <div class="section-header">
-                        <h2><i class="fab fa-gratipay" style="color: #9c27b0;"></i> Aktivitas Saya</h2>
-                    </div>
-                    <div class="activity-grid">
-                        <div class="stat-card">
-                            <div class="stat-top">
-                                <span class="stat-title">Langkah Hari Ini</span>
-                                <span class="stat-badge blue"><i class="fas fa-clock"></i> 45 mnt</span>
-                            </div>
-                            <div class="stat-value">
-                                <span id="dummy-steps">8.200</span> <small>langkah</small>
-                            </div>
-                            <p class="stat-desc">Rute: Rumah → Taman Kota</p>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-top">
-                                <span class="stat-title">Latihan</span>
-                                <span class="stat-badge orange"><i class="fas fa-fire"></i> 30 mnt</span>
-                            </div>
-                            <div class="stat-value">
-                                <span id="dummy-cal">450</span> <small>Kkal terbakar</small>
-                            </div>
-                            <p class="stat-desc">Tipe: Latihan HIIT</p>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-top">
-                                <span class="stat-title">Tidur & Pemulihan</span>
-                                <span class="stat-badge purple"><i class="fas fa-moon"></i> 7j 45m</span>
-                            </div>
-                            <div class="stat-value">
-                                <span id="dummy-sleep-score">85</span><span style="font-size:20px; color:#999;">/100</span>
-                            </div>
-                            <p class="stat-desc">Tidur Nyenyak: 2j 10m</p>
-                        </div>
-                    </div>
-
-                    <div class="activity-grid" style="margin-top: 20px;">
-    <div class="stat-card water-card">
-        <div class="stat-top">
-            <span class="stat-title">Hidrasi (Gelas)</span>
-            <span class="stat-badge blue"><i class="fas fa-tint"></i> Hari Ini</span>
-        </div>
-        <div class="water-controls">
-            <button class="btn-water" onclick="updateWater(-1)">-</button>
-            <div class="water-display">
-                <span id="water-count">0</span><small>/8</small>
-            </div>
-            <button class="btn-water" onclick="updateWater(1)">+</button>
-        </div>
-        <div class="water-bar-bg"><div class="water-bar-fill" id="water-bar"></div></div>
-    </div>
-
-    <div class="stat-card mood-card">
-        <div class="stat-top">
-            <span class="stat-title">Mood Hari Ini</span>
-            <span class="stat-badge purple"><i class="fas fa-smile"></i> Check-in</span>
-        </div>
-        <div class="mood-selector">
-            <button class="btn-mood" onclick="setMood('happy')">😄</button>
-            <button class="btn-mood" onclick="setMood('neutral')">😐</button>
-            <button class="btn-mood" onclick="setMood('sad')">😔</button>
-            <button class="btn-mood" onclick="setMood('tired')">😫</button>
-        </div>
-        <p id="mood-status" style="font-size: 12px; margin-top: 10px; color: #777;">Bagaimana perasaanmu?</p>
-    </div>
-</div>
-
-                    <div class="middle-grid">
-                        <div class="wide-card">
-                            <div class="card-head">
-                                <h3><i class="fas fa-smile" style="color: #4caf50;"></i> Skor Kesehatan Mental</h3>
-                                <i class="fas fa-arrow-up" style="color: #ccc;"></i>
-                            </div>
-                            <div class="chart-wrapper">
-                                <canvas id="mentalHealthChart"></canvas>
-                                <div class="chart-center-text">
-                                    <span id="mental-score">78</span>
-                                    <small>/100</small>
-                                </div>
-                            </div>
-                            <div class="mental-stats">
-                                <span>Kesadaran <strong>82%</strong></span>
-                                <span>Manajemen Stres <strong>68%</strong></span>
-                            </div>
-                        </div>
-
-                        <div class="right-column-stack">
-                            <div class="wide-card body-comp">
-                                <div class="card-head">
-                                    <h3><i class="fas fa-weight" style="color: #ff9800;"></i> Komposisi Tubuh</h3>
-                                    <i class="fas fa-arrow-up" style="color: #ccc;"></i>
-                                </div>
-                                <div class="body-stats-row">
-                                    <div class="body-stat">
-                                        <div class="icon-circle pink"><i class="fas fa-weight-hanging"></i></div>
-                                        <div>
-                                            <span class="val">68 Kg</span>
-                                            <p>Berat (Sehat)</p>
-                                        </div>
-                                    </div>
-                                    <div class="body-stat">
-                                        <div class="icon-circle red"><i class="fas fa-percentage"></i></div>
-                                        <div>
-                                            <span class="val">22%</span>
-                                            <p>Lemak Tubuh (Ideal)</p>
-                                        </div>
-                                    </div>
+                                <div class="vital-info">
+                                    <span class="v-label">Kondisi Saat Ini</span>
+                                    <strong class="v-value" id="ui-kondisi">Sehat</strong>
                                 </div>
                             </div>
 
-                            <div class="wide-card goals-card-dark">
-                                <div class="goals-content">
-                                    <h3>Tetapkan dan Capai<br>Target Kesehatanmu!</h3>
-                                    <p>Target: Turun 3kg dalam 1 bulan</p>
-                                    <button class="btn-goal">Atur Target <i class="fas fa-chevron-right"></i></button>
+                            <div class="vital-item">
+                                <div class="v-icon" style="background: #e3f2fd; color: #2196f3;">
+                                    <i class="fas fa-bed"></i>
                                 </div>
-                                <div class="goals-decor">
-                                    <i class="fas fa-bullseye"></i>
+                                <div class="vital-info">
+                                    <span class="v-label">Tidur Terakhir</span>
+                                    <strong class="v-value" id="ui-sleep-duration">- Jam - Menit</strong>
+                                </div>
+                            </div>
+
+                            <div class="vital-item">
+                                <div class="v-icon" style="background: #fff3e0; color: #ff9800;">
+                                    <i class="fas fa-weight"></i>
+                                </div>
+                                <div class="vital-info">
+                                    <span class="v-label">Fisik (BB/TB)</span>
+                                    <strong class="v-value" id="ui-fisik">-- kg / -- cm</strong>
+                                </div>
+                            </div>
+
+                            <div class="vital-item">
+                                <div class="v-icon" style="background: #fce4ec; color: #e91e63;">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="vital-info">
+                                    <span class="v-label">Tensi Darah</span>
+                                    <strong class="v-value" id="ui-tensi">-- / --</strong>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                </section>
+                <div class="card full-width" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h2><i class="fas fa-notes-medical" style="color: #667eea;"></i> Riwayat Medis</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="medical-timeline-container">
+                            <ul class="medical-timeline" id="ui-medical-list">
+                                <li style="text-align:center; color:#999; padding:20px;">Memuat data dari Google Sheets...</li>
+                                
+                                </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card full-width" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h2><i class="fas fa-coffee" style="color: #8d6e63;"></i> Log Aktivitas Harian</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="health-log-container">
+                            <table class="health-log-table">
+                                <thead>
+                                    <tr>
+                                        <th>Waktu</th>
+                                        <th>Kategori</th>
+                                        <th>Item</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ui-health-log-list">
+                                    <tr>
+                                        <td colspan="3" style="text-align:center; color:#999; padding:15px;">Memuat log harian...</td>
+                                    </tr>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
-
-    <div id="diagnostic-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <div class="diagnostic-header">
-                <h2><i class="fas fa-heartbeat" style="color: #e91e63;"></i> Diagnostik Langsung</h2>
-                <p>Memindai kondisi vital secara real-time...</p>
-            </div>
-            <div class="diagnostic-grid-modal">
-                <div class="diag-item">
-                    <span class="diag-label"><i class="fas fa-heart"></i> Detak Jantung</span>
-                    <div class="diag-value-box heart">
-                        <span id="live-heart-rate">--</span> <small>bpm</small>
-                    </div>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-label"><i class="fas fa-lungs"></i> SpO2</span>
-                    <div class="diag-value-box">
-                        <span id="live-spo2">--</span> <small>%</small>
-                    </div>
-                </div>
-                <div class="diag-item">
-                    <span class="diag-label"><i class="fas fa-thermometer-half"></i> Suhu</span>
-                    <div class="diag-value-box">
-                        <span id="live-temp">--</span> <small>°C</small>
-                    </div>
-                </div>
-            </div>
-            <div class="diagnostic-footer">
-                <div class="scan-line"></div>
-                <p>Status: <strong style="color: #4caf50;">Memindai...</strong></p>
-            </div>
-        </div>
-    </div>
-
-    <div id="nutrition-modal" class="modal">
-    <div class="nutrition-modal-box">
-        <button class="exit-button" id="close-nutrition" title="Tutup">
-            <i class="fas fa-times"></i>
-        </button>
-
-        <div class="modal-header-nutri">
-            <h2>Nutrition Tracking</h2>
-        </div>
-
-        <div class="modal-body-nutri">
-            <div class="grid-row-nutri">
-                <div class="panel-nutri">
-                    <div class="panel-title-nutri">Identitas & Kondisi</div>
-                    <div class="panel-content-nutri">
-                        <div class="data-row-nutri"><span>Tanggal</span><span id="ui-tanggal">-</span></div>
-                        <div class="data-row-nutri"><span>Nama</span><span id="ui-nama">-</span></div>
-                        <div class="data-row-nutri"><span>Kondisi</span><span id="ui-kondisi">-</span></div>
-                        <div class="data-row-nutri"><span>Obat Terakhir</span><span id="ui-obat">-</span></div>
-                    </div>
-                </div>
-                <div class="panel-nutri">
-                    <div class="panel-title-nutri">Status Tubuh</div>
-                    <div class="panel-content-nutri" id="ui-status-grid">
-                        </div>
-                </div>
-            </div>
-
-            <div class="grid-row-nutri">
-                <div class="panel-nutri">
-                    <div class="panel-title-nutri">Riwayat Makan & Minum</div>
-                    <div class="panel-content-nutri scrollable-nutri">
-                        <ul id="ui-riwayat-list" class="nutri-list-baru"></ul>
-                    </div>
-                </div>
-                <div class="panel-nutri">
-                    <div class="panel-title-nutri">Target Nutrisi Harian</div>
-                    <div class="panel-content-nutri">
-                        <div class="progress-group-nutri">
-                            <div class="progress-label-nutri">
-                                <span>Kalori (Kkal)</span>
-                                <span id="ui-cal-text">0 / 2055</span>
-                            </div>
-                            <div class="progress-bg-nutri">
-                                <div class="progress-fill-nutri" id="ui-cal-bar" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="progress-group-nutri">
-                            <div class="progress-label-nutri">
-                                <span>Protein (g)</span>
-                                <span id="ui-prot-text">0 / 80</span>
-                            </div>
-                            <div class="progress-bg-nutri">
-                                <div class="progress-fill-nutri" id="ui-prot-bar" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="workout-footer-nutri" id="ui-workout-box">
-                </div>
-        </div>
-    </div>
-</div>
 
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item"><i class="fas fa-home"></i></a>
@@ -320,7 +121,8 @@
         <a href="hub.html" class="nav-item active"><i class="fas fa-heartbeat"></i></a>
         <a href="personal.html" class="nav-item"><i class="fas fa-user"></i></a>
     </nav>
-
+    
     <script src="script.js"></script>
+
 </body>
 </html>
