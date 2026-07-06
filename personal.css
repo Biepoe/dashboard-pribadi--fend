@@ -172,6 +172,7 @@
 
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) { 
+
     .personal-layout { grid-template-columns: 1fr; } 
     
     /* Di HP, container bisa full width */
@@ -182,5 +183,40 @@
         flex: 0 0 120px;
         width: 120px;
         min-width: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* 1. Paksa main-content di index.html turun ke bawah (1 kolom) */
+    .main-content {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 2. Jadikan tombol form 2 kolom di HP (lebih rapi & hemat ruang) */
+    .footer-controls { 
+        grid-template-columns: 1fr 1fr; 
+        gap: 12px;
+    }
+
+    /* 3. Sesuaikan ukuran font header utama agar tidak kepotong di HP */
+    .header {
+        padding: 20px;
+    }
+    .header h1 {
+        font-size: 22px;
+    }
+
+   .personal-layout { 
+      grid-template-columns: 1fr; } 
+    
+    /* Di HP, container bisa full width */
+   .book-grid { 
+      max-width: 100%; }
+    
+    /* Item sedikit lebih kecil di HP */
+   .book-item {
+      flex: 0 0 120px;
+      width: 120px;
+      min-width: 120px;
     }
 }
