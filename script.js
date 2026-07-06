@@ -1,5 +1,5 @@
 // =========================================================
-// SCRIPT.JS (ULTIMATE FULL VERSION: NO FEATURE LEFT BEHIND)
+// SCRIPT.JS
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -589,10 +589,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // 2. Isi Nama Otomatis dari Data Profil
+            // 2. Set Nama Permanen
             const elNama = document.getElementById('ui-nama');
-            if (elNama && personalData && personalData.profile) {
-                elNama.textContent = personalData.profile.name;
+            if (elNama) {
+                elNama.textContent = "Aulia Biepoe";
             }
 
             // 3. Fetch Data (Tidak perlu lagi nutrition-db)
@@ -609,29 +609,36 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.isArray(healthData)) healthData = [];
             if (!Array.isArray(logs)) logs = [];
             
-            // 4. Update UI Status Tubuh (BMI, Berat, dll)
-            const latestMedical = [...healthData].reverse().find(i => findValue(i, ['berat', 'tinggi']));
-            
-            if (latestMedical) {
-                const bb = parseFloat(findValue(latestMedical, ['berat'])) || 0;
-                const tb = parseFloat(findValue(latestMedical, ['tinggi'])) || 0;
-                const bmi = (bb && tb) ? (bb / ((tb / 100) ** 2)).toFixed(1) : 0;
+            // 4. Update UI Status Tubuh (Sinkronisasi dari Data Health)
+            if (healthData.length > 0) {
+                const latestMedical = healthData[healthData.length - 1];
                 
+                // Update Kondisi
                 const elKondisi = document.getElementById('ui-kondisi');
-                if (elKondisi) elKondisi.textContent = findValue(latestMedical, ['kondisi']) || "Normal";
+                if (elKondisi) elKondisi.textContent = findValue(latestMedical, ['kondisi', 'tubuh', 'status']) || "Normal";
 
+                // Update Obat Terakhir (cari mundur dari bawah)
+                const lastMed = [...healthData].reverse().find(i => findValue(i, ['obat', 'medicine']) && findValue(i, ['obat', 'medicine']) !== '-');
                 const elObat = document.getElementById('ui-obat');
-                if (elObat) elObat.textContent = findValue(latestMedical, ['obat']) || "-";
+                if (elObat) elObat.textContent = lastMed ? findValue(lastMed, ['obat', 'medicine']) : "-";
 
-                const statusGrid = document.getElementById('ui-status-grid');
-                if (statusGrid) {
-                    statusGrid.innerHTML = `
-                        <div class="status-grid-nutri">
-                            <div class="status-item-nutri"><span>Berat</span><strong>${bb} kg</strong></div>
-                            <div class="status-item-nutri"><span>Tinggi</span><strong>${tb} cm</strong></div>
-                            <div class="status-item-nutri"><span>BMI</span><strong>${bmi}</strong></div>
-                            <div class="status-item-nutri"><span>Proyek</span><strong style="color: #f97316;">Bulking</strong></div>
-                        </div>`;
+                // Update BB, TB, BMI
+                const lastFisik = [...healthData].reverse().find(i => findValue(i, ['berat']) && findValue(i, ['tinggi']));
+                if (lastFisik) {
+                    const bb = parseFloat(findValue(lastFisik, ['berat'])) || 0;
+                    const tb = parseFloat(findValue(lastFisik, ['tinggi'])) || 0;
+                    const bmi = (bb && tb) ? (bb / ((tb / 100) ** 2)).toFixed(1) : 0;
+                    
+                    const statusGrid = document.getElementById('ui-status-grid');
+                    if (statusGrid) {
+                        statusGrid.innerHTML = `
+                            <div class="status-grid-nutri">
+                                <div class="status-item-nutri"><span>Berat</span><strong>${bb} kg</strong></div>
+                                <div class="status-item-nutri"><span>Tinggi</span><strong>${tb} cm</strong></div>
+                                <div class="status-item-nutri"><span>BMI</span><strong>${bmi}</strong></div>
+                                <div class="status-item-nutri"><span>Proyek</span><strong style="color: #f97316;">Bulking</strong></div>
+                            </div>`;
+                    }
                 }
             }
 
