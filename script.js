@@ -364,112 +364,157 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // 6. KESEHATAN, NUTRISI & AKTIVITAS (YANG TADI ERROR)
+    // 6. KESEHATAN & REKAM MEDIS (VERSI BARU)
     // =========================================================
     
-    async function fetchHealthData() {
+    async function initKesehatan() {
+        // Hanya jalankan jika berada di halaman kesehatan
+        if (!document.getElementById('halaman-kesehatan')) return;
+
+        const uiUpdate = document.getElementById('health-last-update');
+        if (uiUpdate) uiUpdate.textContent = 'Memuat data...';
+
         try {
-            const res = await fetch(`${BACKEND_URL}/api/health`); const data = await res.json();
-            if (!data.length) return;
-            const last = data[data.length - 1];
-            const cond = findValue(last, ['kondisi', 'tubuh', 'status']) || 'Sehat';
-            if (document.getElementById('body-status')) document.getElementById('body-status').textContent = cond;
-            const vec = document.getElementById('body-vector');
-            if (vec) {
-                if (cond.toLowerCase().includes('sakit') || cond.toLowerCase().includes('demam')) {
-                    vec.classList.remove('body-normal'); vec.classList.add('body-sick');
+            // Mengambil data dari Backend Render (sesuaikan endpoint jika nama tab-nya berbeda di backend)
+            // Asumsi: /api/health mengarah ke "Medical Record Tracker"
+            // Asumsi: /api/health-database mengarah ke "Health Database" (Log Kafein)
+            const [healthRes, logRes] = await Promise.all([
+                fetch(`${BACKEND_URL}/api/health`),
+                fetch(`${BACKEND_URL}/api/health-database`).catch(() => null) // Fallback jika endpoint belum ada
+            ]);
+
+            const healthData = healthRes.ok ? await healthRes.json() : [];
+            const logData = (logRes && logRes.ok) ? await logRes.json() : [];
+
+            // 1. UPDATE KARTU VITALS & STATUS
+            if (healthData.length > 0) {
+                // Ambil data terbaru (baris paling bawah di sheet)
+                const latest = healthData[healthData.length - 1];
+                
+                // Set Kondisi Saat Ini
+                const kondisi = findValue(latest, ['kondisi', 'tubuh', 'status']) || 'Sehat';
+                document.getElementById('ui-kondisi').textContent = kondisi;
+
+                // Cari data BB/TB terakhir (mundur dari bawah ke atas mencari yang tidak kosong)
+                const lastFisik = [...healthData].reverse().find(i => findValue(i, ['berat']) || findValue(i, ['tinggi']));
+                if (lastFisik) {
+                    const bb = findValue(lastFisik, ['berat']) ? `${findValue(lastFisik, ['berat'])} kg` : '-- kg';
+                    const tb = findValue(lastFisik, ['tinggi']) ? `${findValue(lastFisik, ['tinggi'])} cm` : '-- cm';
+                    document.getElementById('ui-fisik').textContent = `${bb} / ${tb}`;
+                }
+
+                // Cari data Tidur terakhir
+                const lastSleep = [...healthData].reverse().find(i => findValue(i, ['tidur']) && findValue(i, ['bangun']));
+                if (lastSleep) {
+                    const t = findValue(lastSleep, ['tidur']);
+                    const b = findValue(lastSleep, ['bangun']);
+                    if (t && b) {
+                        const tJam = parseInt(t.split(':')[0]) || 0;
+                        const bJam = parseInt(b.split(':')[0]) || 0;
+                        let durasi = bJam - tJam;
+                        if (durasi < 0) durasi += 24; // Koreksi jika tidur melewati tengah malam
+                        document.getElementById('ui-sleep-duration').textContent = `${durasi} Jam`;
+                    }
+                }
+
+                // Cari data Tensi terakhir (dari kolom 'Apa yang ingin dilaporkan' atau 'Detailkan')
+                const lastTensi = [...healthData].reverse().find(i => {
+                    const detail = String(findValue(i, ['detailkan', 'lapor'])).toLowerCase();
+                    return detail.includes('tensi') || detail.includes('sys');
+                });
+                if (lastTensi) {
+                    // Ekstrak angka tensi dari string panjang (contoh: "SYS 114 mmHg... DIA 85 mmHg")
+                    const detailStr = String(findValue(lastTensi, ['detailkan', 'lapor']));
+                    const sysMatch = detailStr.match(/(\d+)\s*mmHg/i); // Cari angka pertama sebelum mmHg
+                    // Parsing manual sederhana:
+                    document.getElementById('ui-tensi').textContent = sysMatch ? `${sysMatch[1]} / --` : 'Cek Detail';
+                }
+            }
+
+            // 2. UPDATE TIMELINE REKAM MEDIS
+            const timelineList = document.getElementById('ui-medical-list');
+            if (timelineList) {
+                timelineList.innerHTML = '';
+                if (healthData.length === 0) {
+                    timelineList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada riwayat medis.</li>';
                 } else {
-                    vec.classList.add('body-normal'); vec.classList.remove('body-sick');
+                    // Tampilkan 10 data terakhir, diurutkan dari yang paling baru (reverse)
+                    const recentRecords = healthData.slice(-10).reverse();
+                    
+                    recentRecords.forEach(rec => {
+                        const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
+                        const wkt = findValue(rec, ['waktu']) || '';
+                        const tindakan = findValue(rec, ['tindakan']) || 'Catatan Medis';
+                        const keluhan = findValue(rec, ['deskripsi', 'keluhan']) || '-';
+                        const obat = findValue(rec, ['obat', 'suplemen']) || '';
+                        
+                        let borderClass = 'status-info-border';
+                        const kondisiStr = String(findValue(rec, ['kondisi'])).toLowerCase();
+                        if (kondisiStr.includes('sehat')) borderClass = 'status-sehat-border';
+                        else if (kondisiStr.includes('sakit')) borderClass = 'status-sakit-border';
+
+                        const obatHTML = obat && obat !== '-' ? `<p class="meds"><i class="fas fa-capsules"></i> ${obat}</p>` : '';
+
+                        timelineList.innerHTML += `
+                            <li class="timeline-item">
+                                <div class="timeline-date">${tgl} <span>${wkt}</span></div>
+                                <div class="timeline-content ${borderClass}">
+                                    <h4>${tindakan}</h4>
+                                    <p class="desc">${keluhan}</p>
+                                    ${obatHTML}
+                                </div>
+                            </li>
+                        `;
+                    });
                 }
             }
-            const lastSleep = [...data].reverse().find(i => findValue(i, ['tidur']));
-            if(document.getElementById('sleep-duration') && lastSleep) {
-                const t = findValue(lastSleep, ['tidur']); const b = findValue(lastSleep, ['bangun']);
-                if(t && b) document.getElementById('sleep-duration').textContent = `${(parseInt(b.split(':')[0]) - parseInt(t.split(':')[0]) + 24) % 24} Jam`;
-            }
-            if(document.getElementById('last-medicine')) {
-                const lastMed = [...data].reverse().find(i => findValue(i, ['obat', 'medicine']));
-                document.getElementById('last-medicine').textContent = lastMed ? findValue(lastMed, ['obat', 'medicine']) : '-';
-            }
-        } catch (e) { console.error(e); }
-    }
 
-    async function fetchHealthDataForHealthPage() {
-        try {
-            const res = await fetch(`${BACKEND_URL}/api/health`); const data = await res.json();
-            if (!data.length) return;
-            const mental = findValue(data[data.length - 1], ['mental', 'jiwa']);
-            if (mental && document.getElementById('mental-score')) document.getElementById('mental-score').textContent = mental;
-        } catch (e) { console.error(e); }
-    }
+            // 3. UPDATE TABEL LOG HARIAN (HEALTH DATABASE)
+            const logTable = document.getElementById('ui-health-log-list');
+            if (logTable) {
+                logTable.innerHTML = '';
+                if (logData.length === 0) {
+                    logTable.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Belum ada log harian.</td></tr>';
+                } else {
+                    // Tampilkan 7 data terakhir
+                    const recentLogs = logData.slice(-7).reverse();
+                    
+                    recentLogs.forEach(log => {
+                        const tgl = findValue(log, ['tanggal']) || '-';
+                        const wkt = findValue(log, ['waktu']) || '';
+                        const kat = findValue(log, ['kategori']) || '-';
+                        const item = findValue(log, ['catatan', 'jumlah']) || '-'; // Gabungan jumlah dan catatan
+                        const jumlah = findValue(log, ['jumlah']) || '';
+                        
+                        const badgeClass = String(kat).toLowerCase().includes('kafein') ? 'badge-kafein' : 'badge-umum';
+                        const formatTanggal = typeof tgl === 'string' && tgl.includes('202') ? tgl.substring(0, 10) : tgl; // Potong format ISO jika perlu
 
-    async function fetchActivityData() {
-        try {
-            const res = await fetch(`${BACKEND_URL}/api/activities`); const data = await res.json();
-            const list = document.getElementById('activity-log-list');
-            if (list) {
-                list.innerHTML = '';
-                const recent = data.slice(-5).reverse();
-                if(recent.length === 0) { list.innerHTML = '<li class="placeholder">Belum ada aktivitas.</li>'; return; }
-                recent.forEach(i => {
-                    const t = findValue(i, ['kapan', 'date', 'waktu', 'tanggal']) || '';
-                    const k = findValue(i, ['ngapain', 'kegiatan', 'activity', 'nama']) || '-';
-                    const dObj = new Date(t);
-                    const dateDisplay = !isNaN(dObj.getTime()) ? `${dObj.toLocaleDateString('id-ID')} ${dObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}` : t;
-                    list.innerHTML += `<li class="activity-log-item"><div class="activity-log-time" style="font-size:11px;">${dateDisplay}</div><div class="activity-log-details"><span class="title" style="font-size:14px;">${k}</span></div></li>`;
-                });
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    let diagInterval = null;
-    function initDiagnosticFeature(){
-        const btn=document.getElementById('btn-diagnostic'); const mod=document.getElementById('diagnostic-modal'); const cl=document.querySelector('.close-btn');
-        if(btn&&mod) btn.addEventListener('click',()=>{mod.classList.add('show'); diagInterval=setInterval(()=>{
-            if(document.getElementById('live-heart-rate')) document.getElementById('live-heart-rate').textContent=Math.floor(Math.random()*(95-65+1))+65;
-            if(document.getElementById('live-spo2')) document.getElementById('live-spo2').textContent=Math.floor(Math.random()*(99-96+1))+96;
-            if(document.getElementById('live-temp')) document.getElementById('live-temp').textContent=(Math.random()*(36.8-36.3)+36.3).toFixed(1);
-        },1500); activeIntervals.push(diagInterval);});
-        if(cl) cl.addEventListener('click',()=>{mod.classList.remove('show'); if(diagInterval)clearInterval(diagInterval);});
-    }
-
-    function initMentalHealthChart(){
-        const ctx=document.getElementById('mentalHealthChart'); if(!ctx)return;
-        if(window.mChart) window.mChart.destroy();
-        window.mChart=new Chart(ctx,{type:'doughnut',data:{labels:['Skor','Sisa'],datasets:[{data:[78,22],backgroundColor:['#4caf50','#e0e0e0'],borderWidth:0,circumference:180,rotation:270}]},options:{responsive:true,cutout:'85%',plugins:{legend:{display:false}}}});
-    }
-    
-    function simulateActivityData(){
-        if(document.getElementById('dummy-steps')){ let s=8200; activeIntervals.push(setInterval(()=>{s+=Math.floor(Math.random()*5); document.getElementById('dummy-steps').textContent=s.toLocaleString()},3000)); }
-    }
-
-    function initKesehatan() {
-        fetchHealthDataForHealthPage(); 
-        initDiagnosticFeature(); 
-        initMentalHealthChart(); 
-        simulateActivityData();  
-        loadPersonalData().then(renderTracker);
-
-        const btnNutri = document.getElementById('btn-nutrition');
-        const modNutri = document.getElementById('nutrition-modal');
-
-        if (btnNutri && modNutri) {
-            btnNutri.addEventListener('click', () => {
-                modNutri.classList.add('show');
-                document.getElementById('ui-tanggal').textContent = new Date().toLocaleDateString('id-ID', { 
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-                });
-                if (personalData && personalData.profile) {
-                    document.getElementById('ui-nama').textContent = personalData.profile.name;
+                        logTable.innerHTML += `
+                            <tr>
+                                <td><small>${formatTanggal}<br>${wkt}</small></td>
+                                <td><span class="${badgeClass}">${kat}</span></td>
+                                <td>${jumlah} ${item}</td>
+                            </tr>
+                        `;
+                    });
                 }
-                fetchNutritionData();
-            });
+            }
+
+            // Update waktu sinkronisasi
+            if (uiUpdate) {
+                const now = new Date();
+                uiUpdate.textContent = `Diperbarui: ${now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}`;
+            }
+
+        } catch (error) {
+            console.error('Error fetching health data:', error);
+            if (uiUpdate) uiUpdate.textContent = 'Gagal sinkronisasi';
         }
-
-        const exitBtn = document.querySelector('.exit-button');
-        if (exitBtn) exitBtn.addEventListener('click', () => modNutri.classList.remove('show'));
     }
     
+    //=====================================
+    // NUTRISI
+    //=====================================
     async function fetchNutritionData() {
         try {
             // 1. Isi Tanggal Otomatis di Halaman Nutrition
