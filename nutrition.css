@@ -119,3 +119,61 @@
 .nutri-list-baru li:last-child { border-bottom: none; }
 .nutri-list-baru li span { font-weight: 500; color: #333; }
 .nutri-list-baru li small { color: #64748b; font-weight: 500; }
+
+/* =========================================
+   TAMBAHAN UNTUK PANEL IDENTITAS & STATUS
+========================================= */
+
+.data-row-nutri {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #eef2f7;
+    padding-bottom: 8px;
+}
+
+.data-row-nutri span:first-child { 
+    color: #64748b; 
+    font-size: 13px;
+}
+
+.data-row-nutri span:last-child { 
+    font-weight: 600; 
+    text-align: right; 
+    color: #333;
+    font-size: 13px;
+    max-width: 65%; /* Biar teks yang panjang nggak nabrak label di kirinya */
+    line-height: 1.4;
+}
+
+.status-grid-nutri {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Bikin 2 kolom untuk Berat, Tinggi, dll */
+    gap: 12px;
+}
+
+.status-item-nutri {
+    text-align: left;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #eef2f7;
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Kasih jarak antara tulisan (misal: 'Berat') dan angkanya ('41 kg') */
+}
+
+.status-item-nutri span { 
+    display: block; 
+    color: #64748b; 
+    font-size: 11px; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-item-nutri strong { 
+    display: block; 
+    font-size: 15px; 
+    color: #f97316; 
+}
