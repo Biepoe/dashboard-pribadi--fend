@@ -301,6 +301,27 @@ body {
     .middle-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
-    .finance-grid-container { grid-template-columns: 1fr; }
-    .footer-controls { grid-template-columns: 1fr; }
+    /* 1. Paksa main-content di index.html turun ke bawah (1 kolom) */
+    .main-content {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 2. Jadikan tombol form 2 kolom di HP (lebih rapi & hemat ruang) */
+    .footer-controls { 
+        grid-template-columns: 1fr 1fr; 
+        gap: 12px;
+    }
+
+    /* 3. Sesuaikan ukuran font header utama agar tidak kepotong di HP */
+    .header {
+        padding: 20px;
+    }
+    .header h1 {
+        font-size: 22px;
+    }
+
+    /* 4. Sesuaikan finance grid (meski ini sudah ada, pastikan bentuknya begini) */
+    .finance-grid-container { 
+        grid-template-columns: 1fr; 
+    }
 }
