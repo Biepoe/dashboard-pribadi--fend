@@ -513,16 +513,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (!rec) return false;
                             const tindakan = String(findValue(rec, ['tindakan']) || '').toLowerCase();
                             return tindakan.includes('obat') || tindakan.includes('suplemen');
-                        }).slice(-10).reverse();
+                        }).slice(-5).reverse();
 
                         // Filter 2: Penyakit 
                         const dataPenyakit = healthData.filter(rec => {
                             if (!rec) return false;
-                            const tindakan = String(findValue(rec, ['tindakan']) || '').toLowerCase();
-                            const laporDetail = String(findValue(rec, ['detailkan', 'dilaporkan', 'lapor', 'penyakit']) || '').toLowerCase();
-                            // Cek jika tindakan adalah "laporan" atau mengandung kata penyakit
-                            return tindakan.includes('lapor') || laporDetail.includes('penyakit');
-                        }).slice(-10).reverse();
+                            const tindakan = String(findValue(rec, ['tindakan', 'tindakan yang dilakukan']) || '').toLowerCase();
+                            const kolomK = String(findValue(rec, ['apa yang ingin dilaporkan', 'kategori laporan', 'dilaporkan', 'k']) || '').toLowerCase();
+                            
+                            // Harus memenuhi KEDUA syarat ini
+                            return tindakan.includes('laporan') && kolomK.includes('penyakit yang dialami');
+                        }).slice(-5).reverse();
 
                         // --- RENDER RIWAYAT OBAT ---
                         if (dataObat.length === 0) {
