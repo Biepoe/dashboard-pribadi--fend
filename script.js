@@ -557,38 +557,41 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
                                 const wkt = findValue(rec, ['waktu']) || '';
                                 
-                                // 1. Tarik Data Sesuai Nama Kolom Baru di Sheet
-                                const diag = String(findValue(rec, ['didiagnosa oleh?']) || '').toLowerCase();
-                                const bagian = String(findValue(rec, ['bagian tubuh yang sakit', 'bagian tubuh']) || '').toLowerCase();
-                                const detail = findValue(rec, ['penjelasan lebih detail', 'penjelasan']) || '-';
-                                const hasilDiagnosa = findValue(rec, ['diagnosa', 'hasil diagnosa']) || '-'; // Menarik data dari kolom Diagnosa
+                                // 1. Tarik Data Pakai Kata yang PASTI (Exact Match)
+                                // Tembak langsung nama kolomnya (mengakomodasi huruf besar/kecil dari backend)
+                                const diag = rec['Didiagnosa Oleh?'] || rec['didiagnosa oleh?'] || '-';
+                                const bagian = rec['Bagian Tubuh yang Sakit'] || rec['bagian tubuh yang sakit'] || '-';
+                                const detail = rec['Penjelasan lebih detail'] || rec['penjelasan lebih detail'] || '-';
+                                const hasilDiagnosa = rec['Diagnosa'] || rec['diagnosa'] || '-';
                                 
-                                // 2. Logika Judul (Keluhan) - Diperbaiki agar tidak error deklarasi ganda
+                                // 2. Logika Judul (Keluhan)
                                 let keluhan = findValue(rec, ['deskripsi / keluhan', 'deskripsi', 'keluhan']) || '';
                                 if (!keluhan || keluhan === '-') {
-                                    keluhan = bagian !== '' ? (bagian.charAt(0).toUpperCase() + bagian.slice(1)) : 'Laporan Penyakit';
+                                    keluhan = bagian !== '' && bagian !== '-' ? (bagian.charAt(0).toUpperCase() + bagian.slice(1)) : 'Laporan Penyakit';
                                 }
 
                                 // 3. Logika Ikon Dinamis
                                 let iconClass = 'fa-viruses';
-                                if (bagian.includes('mata')) iconClass = 'fa-eye';
-                                else if (bagian.includes('tangan') || bagian.includes('jari')) iconClass = 'fa-hand-paper';
-                                else if (bagian.includes('kepala') || bagian.includes('pusing')) iconClass = 'fa-head-side-virus';
-                                else if (bagian.includes('gigi') || bagian.includes('mulut')) iconClass = 'fa-tooth';
-                                else if (bagian.includes('kaki') || bagian.includes('lutut')) iconClass = 'fa-shoe-prints';
-                                else if (bagian.includes('perut') || bagian.includes('lambung')) iconClass = 'fa-x-ray';
-                                else if (bagian.includes('telinga')) iconClass = 'fa-ear-listen';
-                                else if (bagian.includes('dada') || bagian.includes('jantung')) iconClass = 'fa-heartbeat';
-                                else if (bagian !== '' && bagian !== '-') iconClass = 'fa-band-aid'; 
+                                const bagianLower = String(bagian).toLowerCase();
+                                if (bagianLower.includes('mata')) iconClass = 'fa-eye';
+                                else if (bagianLower.includes('tangan') || bagianLower.includes('jari')) iconClass = 'fa-hand-paper';
+                                else if (bagianLower.includes('kepala') || bagianLower.includes('pusing')) iconClass = 'fa-head-side-virus';
+                                else if (bagianLower.includes('gigi') || bagianLower.includes('mulut')) iconClass = 'fa-tooth';
+                                else if (bagianLower.includes('kaki') || bagianLower.includes('lutut')) iconClass = 'fa-shoe-prints';
+                                else if (bagianLower.includes('perut') || bagianLower.includes('lambung')) iconClass = 'fa-x-ray';
+                                else if (bagianLower.includes('telinga')) iconClass = 'fa-ear-listen';
+                                else if (bagianLower.includes('dada') || bagianLower.includes('jantung')) iconClass = 'fa-heartbeat';
+                                else if (bagianLower !== '' && bagianLower !== '-') iconClass = 'fa-band-aid'; 
 
                                 // 4. Logika Coret (Strikethrough)
                                 let textSelf = "Self-diagnose / with AI Support";
                                 let textNakes = "Tenaga Kesehatan";
+                                const diagLower = String(diag).toLowerCase();
 
-                                if (diag.includes('tenaga') || diag.includes('kesehatan') || diag.includes('nakes') || diag.includes('dokter')) {
+                                if (diagLower.includes('tenaga') || diagLower.includes('kesehatan') || diagLower.includes('nakes') || diagLower.includes('dokter')) {
                                     textSelf = `<del style="opacity: 0.4;">${textSelf}</del>`;
                                     textNakes = `<strong style="color: #059669;">${textNakes} <i class="fas fa-check-circle"></i></strong>`;
-                                } else if (diag.includes('self') || diag.includes('ai') || diag.includes('support')) {
+                                } else if (diagLower.includes('self') || diagLower.includes('ai') || diagLower.includes('support')) {
                                     textSelf = `<strong style="color: #2563eb;">${textSelf} <i class="fas fa-check-circle"></i></strong>`;
                                     textNakes = `<del style="opacity: 0.4;">${textNakes}</del>`;
                                 }
@@ -604,7 +607,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 ${keluhan}
                                             </h4>
                                             
-                                            <!-- Menampilkan Hasil Diagnosa -->
                                             <div style="margin-top: 10px; margin-bottom: 10px; padding-left: 2px;">
                                                 <span style="font-size: 11px; font-weight: bold; color: #ef4444;"><i class="fas fa-stethoscope"></i> Diagnosa:</span>
                                                 <span style="font-size: 13px; font-weight: 700; color: #1e293b; display: block; margin-top: 2px;">${hasilDiagnosa}</span>
