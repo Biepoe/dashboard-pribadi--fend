@@ -557,19 +557,30 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
                                 const wkt = findValue(rec, ['waktu']) || '';
                                 
-                                // 1. Tarik Data dengan findValue (Aman dari perbedaan format backend)
-                                const diag = String(findValue(rec, ['didiagnosa oleh', 'oleh', 'didiagnosis']) || '').toLowerCase();
-                                const bagian = String(findValue(rec, ['bagian tubuh', 'bagian']) || '').toLowerCase();
-                                const detail = findValue(rec, ['penjelasan lebih detail', 'penjelasan', 'detailkan']) || '-';
-                                
-                                // KHUSUS DIAGNOSA: Filter super ketat biar gak nyomot isi "Didiagnosa Oleh"
+                                // 1. EKSTRAKSI SUPER KETAT (Mengecek semua nama kolom satu per satu)
+                                let diag = '-';
+                                let bagian = '-';
+                                let detail = '-';
                                 let hasilDiagnosa = '-';
+                                
                                 for (let key in rec) {
                                     let cleanKey = key.toLowerCase().trim();
-                                    // Harus SAMA PERSIS dengan kata "diagnosa" atau "hasil diagnosa"
-                                    if (cleanKey === 'diagnosa' || cleanKey === 'hasil diagnosa') {
+                                    
+                                    // Tarik Diagnosa
+                                    if (cleanKey === 'diagnosa' || cleanKey === 'Diagnosa') {
                                         hasilDiagnosa = rec[key];
-                                        break;
+                                    } 
+                                    // Tarik Didiagnosa Oleh
+                                    else if (cleanKey.includes('didiagnosa oleh?') || cleanKey.includes('Diagnosis Oleh?')) {
+                                        diag = rec[key];
+                                    } 
+                                    // Tarik Bagian Tubuh
+                                    else if (cleanKey.includes('bagian tubuh yang sakit') || cleanKey.includes('Bagian Tubuh yang Sakit')) {
+                                        bagian = rec[key];
+                                    } 
+                                    // Tarik Penjelasan Lebih Detail
+                                    else if (cleanKey.includes('penjelasan') || cleanKey.includes('Penjelasan')) {
+                                        detail = rec[key];
                                     }
                                 }
                                 
