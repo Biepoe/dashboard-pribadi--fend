@@ -556,22 +556,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             dataPenyakit.forEach(rec => {
                                 const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
                                 const wkt = findValue(rec, ['waktu']) || '';
-                                const keluhan = findValue(rec, ['deskripsi', 'keluhan']) || '-';
                                 
-                                // 1. Tarik Data dengan Nama Header Sheet yang Sangat Spesifik (termasuk tanda baca)
-                                const diag = String(findValue(rec, ['didiagnosis oleh?', 'didiagnosis oleh', 'diagnosis']) || '').toLowerCase();
+                                // 1. Tarik Data Sesuai Nama Kolom Baru di Sheet
+                                const diag = String(findValue(rec, ['didiagnosa oleh?', 'didiagnosa', 'diagnosis']) || '').toLowerCase();
                                 const bagian = String(findValue(rec, ['bagian tubuh yang sakit', 'bagian tubuh', 'bagian']) || '').toLowerCase();
-                                const detail = findValue(rec, ['detailkan!', 'detailkan', 'detail']) || '-';
+                                const detail = findValue(rec, ['penjelasan lebih detail', 'penjelasan']) || '-';
+                                const hasilDiagnosa = findValue(rec, ['diagnosa', 'hasil diagnosa']) || '-'; // Menarik data dari kolom Diagnosa
                                 
-                                // 2. Logika Judul (Keluhan): Jika Kolom E kosong, pakai Kolom P (Bagian Tubuh)
+                                // 2. Logika Judul (Keluhan) - Diperbaiki agar tidak error deklarasi ganda
                                 let keluhan = findValue(rec, ['deskripsi / keluhan', 'deskripsi', 'keluhan']) || '';
                                 if (!keluhan || keluhan === '-') {
-                                    // Bikin huruf depannya kapital
                                     keluhan = bagian !== '' ? (bagian.charAt(0).toUpperCase() + bagian.slice(1)) : 'Laporan Penyakit';
                                 }
-                                
-                                // Logika Ikon Dinamis berdasarkan Bagian Tubuh
-                                let iconClass = 'fa-viruses'; // Default
+
+                                // 3. Logika Ikon Dinamis
+                                let iconClass = 'fa-viruses';
                                 if (bagian.includes('mata')) iconClass = 'fa-eye';
                                 else if (bagian.includes('tangan') || bagian.includes('jari')) iconClass = 'fa-hand-paper';
                                 else if (bagian.includes('kepala') || bagian.includes('pusing')) iconClass = 'fa-head-side-virus';
@@ -582,16 +581,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 else if (bagian.includes('dada') || bagian.includes('jantung')) iconClass = 'fa-heartbeat';
                                 else if (bagian !== '' && bagian !== '-') iconClass = 'fa-band-aid'; 
 
-                                // Logika Coret (Strikethrough) Diagnosis
+                                // 4. Logika Coret (Strikethrough)
                                 let textSelf = "Self-diagnose / with AI Support";
                                 let textNakes = "Tenaga Kesehatan";
 
-                                if (diag.includes('tenaga') || diag.includes('kesehatan') || diag.includes('dokter')) {
-                                    // Jika dari Nakes, coret Self-diagnose
+                                if (diag.includes('tenaga') || diag.includes('kesehatan') || diag.includes('nakes') || diag.includes('dokter')) {
                                     textSelf = `<del style="opacity: 0.4;">${textSelf}</del>`;
                                     textNakes = `<strong style="color: #059669;">${textNakes} <i class="fas fa-check-circle"></i></strong>`;
-                                } else if (diag.includes('self') || diag.includes('ai') || diag.includes('sendiri')) {
-                                    // Jika dari AI/Self, coret Nakes
+                                } else if (diag.includes('self') || diag.includes('ai') || diag.includes('support')) {
                                     textSelf = `<strong style="color: #2563eb;">${textSelf} <i class="fas fa-check-circle"></i></strong>`;
                                     textNakes = `<del style="opacity: 0.4;">${textNakes}</del>`;
                                 }
@@ -600,20 +597,26 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <li class="timeline-item">
                                         <div class="timeline-date">${tgl} <span>${wkt}</span></div>
                                         <div class="timeline-content status-sakit-border">
-                                            <h4 style="display: flex; align-items: center; gap: 10px;">
+                                            <h4 style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                                                 <div style="background: #fee2e2; color: #ef4444; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0;">
                                                     <i class="fas ${iconClass}"></i>
                                                 </div>
                                                 ${keluhan}
                                             </h4>
                                             
-                                            <div class="desc" style="margin-top: 10px; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                                <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">Detail Penyakit:</span><br>
+                                            <!-- Menampilkan Hasil Diagnosa -->
+                                            <div style="margin-top: 10px; margin-bottom: 10px; padding-left: 2px;">
+                                                <span style="font-size: 11px; font-weight: bold; color: #ef4444;"><i class="fas fa-stethoscope"></i> Diagnosa:</span>
+                                                <span style="font-size: 13px; font-weight: 700; color: #1e293b; display: block; margin-top: 2px;">${hasilDiagnosa}</span>
+                                            </div>
+
+                                            <div class="desc" style="background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                                <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">Penjelasan Detail:</span><br>
                                                 <span style="color: #334155;">${detail}</span>
                                             </div>
 
                                             <div style="margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; font-size: 11px;">
-                                                <span style="display: block; color: #64748b; margin-bottom: 6px; font-weight: 600;">Didiagnosis Oleh:</span>
+                                                <span style="display: block; color: #64748b; margin-bottom: 6px; font-weight: 600;">Didiagnosa Oleh:</span>
                                                 <div style="display: flex; flex-direction: column; gap: 4px;">
                                                     <span>${textSelf}</span>
                                                     <span>${textNakes}</span>
