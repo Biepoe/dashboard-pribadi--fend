@@ -495,41 +495,75 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // 2. UPDATE TIMELINE REKAM MEDIS
-            const timelineList = document.getElementById('ui-medical-list');
-            if (timelineList) {
-                timelineList.innerHTML = '';
+            // 2. UPDATE TIMELINE RIWAYAT OBAT & PENYAKIT
+            const obatList = document.getElementById('ui-obat-list');
+            const penyakitList = document.getElementById('ui-penyakit-list');
+            
+            if (obatList && penyakitList) {
+                obatList.innerHTML = '';
+                penyakitList.innerHTML = '';
+                
                 if (healthData.length === 0) {
-                    timelineList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada riwayat medis.</li>';
+                    obatList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada data.</li>';
+                    penyakitList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada data.</li>';
                 } else {
-                    // Tampilkan 10 data terakhir, diurutkan dari yang paling baru (reverse)
-                    const recentRecords = healthData.slice(-10).reverse();
-                    
-                    recentRecords.forEach(rec => {
-                        const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
-                        const wkt = findValue(rec, ['waktu']) || '';
-                        const tindakan = findValue(rec, ['tindakan']) || 'Catatan Medis';
-                        const keluhan = findValue(rec, ['deskripsi', 'keluhan']) || '-';
-                        const obat = findValue(rec, ['obat', 'suplemen']) || '';
-                        
-                        let borderClass = 'status-info-border';
-                        const kondisiStr = String(findValue(rec, ['kondisi'])).toLowerCase();
-                        if (kondisiStr.includes('sehat')) borderClass = 'status-sehat-border';
-                        else if (kondisiStr.includes('sakit')) borderClass = 'status-sakit-border';
+                    // Filter 1: Minum Obat (Cek kolom D / Tindakan)
+                    const dataObat = healthData.filter(rec => {
+                        const tindakan = String(findValue(rec, ['tindakan', 'tindakan yang dilakukan']) || '').toLowerCase();
+                        return tindakan.includes('minum obat');
+                    }).slice(-10).reverse(); // Ambil 10 terbaru
 
-                        const obatHTML = obat && obat !== '-' ? `<p class="meds"><i class="fas fa-capsules"></i> ${obat}</p>` : '';
+                    // Filter 2: Penyakit (Cek kolom D = Laporan & kolom K = Penyakit)
+                    const dataPenyakit = healthData.filter(rec => {
+                        const tindakan = String(findValue(rec, ['tindakan', 'tindakan yang dilakukan']) || '').toLowerCase();
+                        const detail = String(findValue(rec, ['detailkan', 'apa yang ingin dilaporkan', 'lapor']) || '').toLowerCase();
+                        return tindakan.includes('laporan') && detail.includes('penyakit');
+                    }).slice(-10).reverse(); // Ambil 10 terbaru
 
-                        timelineList.innerHTML += `
-                            <li class="timeline-item">
-                                <div class="timeline-date">${tgl} <span>${wkt}</span></div>
-                                <div class="timeline-content ${borderClass}">
-                                    <h4>${tindakan}</h4>
-                                    <p class="desc">${keluhan}</p>
-                                    ${obatHTML}
-                                </div>
-                            </li>
-                        `;
-                    });
+                    // --- RENDER RIWAYAT OBAT ---
+                    if (dataObat.length === 0) {
+                        obatList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada riwayat obat.</li>';
+                    } else {
+                        dataObat.forEach(rec => {
+                            const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
+                            const wkt = findValue(rec, ['waktu']) || '';
+                            const keluhan = findValue(rec, ['deskripsi', 'keluhan']) || '-';
+                            const obat = findValue(rec, ['obat', 'suplemen']) || '';
+                            const obatHTML = obat && obat !== '-' ? `<p class="meds"><i class="fas fa-capsules"></i> ${obat}</p>` : '';
+
+                            obatList.innerHTML += `
+                                <li class="timeline-item">
+                                    <div class="timeline-date">${tgl} <span>${wkt}</span></div>
+                                    <div class="timeline-content status-sehat-border">
+                                        <h4>Konsumsi Obat/Suplemen</h4>
+                                        <p class="desc">${keluhan}</p>
+                                        ${obatHTML}
+                                    </div>
+                                </li>
+                            `;
+                        });
+                    }
+
+                    // --- RENDER RIWAYAT PENYAKIT ---
+                    if (dataPenyakit.length === 0) {
+                        penyakitList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada riwayat penyakit.</li>';
+                    } else {
+                        dataPenyakit.forEach(rec => {
+                            const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
+                            const wkt = findValue(rec, ['waktu']) || '';
+                            const keluhan = findValue(rec, ['deskripsi', 'keluhan']) || '-';
+
+                            penyakitList.innerHTML += `
+                                <li class="timeline-item">
+                                    <div class="timeline-date">${tgl} <span>${wkt}</span></div>
+                                    <div class="timeline-content status-sakit-border">
+                                        <h4>Laporan Penyakit</h4>
+                                        <p class="desc">${keluhan}</p>
+                                    </div>
+                                </li>
+                            `;
+                        });
+                    }
                 }
             }
 
