@@ -564,22 +564,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                 let hasilDiagnosa = '-';
                                 
                                 for (let key in rec) {
-                                    let cleanKey = key.toLowerCase().trim();
+                                    // Hilangkan semua spasi & tanda baca dari nama kolom di backend
+                                    let cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
                                     
-                                    // Tarik Diagnosa
+                                    // Pengecekan SANGAT KETAT (Pake ===, bukan includes) buat Diagnosa
                                     if (cleanKey === 'diagnosa' || cleanKey === 'Diagnosa') {
                                         hasilDiagnosa = rec[key];
                                     } 
-                                    // Tarik Didiagnosa Oleh
-                                    else if (cleanKey.includes('didiagnosa oleh?') || cleanKey.includes('Diagnosis Oleh?')) {
+                                    // Pengecekan SANGAT KETAT buat Didiagnosa Oleh
+                                    else if (cleanKey === 'didiagnosaoleh?' || cleanKey === 'DiagnosaOleh?' || cleanKey === 'didiagnosisoleh') {
                                         diag = rec[key];
                                     } 
-                                    // Tarik Bagian Tubuh
-                                    else if (cleanKey.includes('bagian tubuh yang sakit') || cleanKey.includes('Bagian Tubuh yang Sakit')) {
+                                    else if (cleanKey.includes('bagiantubuh') || cleanKey === 'BagianagianTubuh') {
                                         bagian = rec[key];
                                     } 
-                                    // Tarik Penjelasan Lebih Detail
-                                    else if (cleanKey.includes('penjelasan') || cleanKey.includes('Penjelasan')) {
+                                    else if (cleanKey.includes('penjelasanlebihdetail') || cleanKey.includes('Penjelasan')) {
                                         detail = rec[key];
                                     }
                                 }
