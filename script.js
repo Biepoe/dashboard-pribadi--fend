@@ -572,10 +572,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                         hasilDiagnosa = rec[key];
                                     } 
                                     // Pengecekan SANGAT KETAT buat Didiagnosa Oleh
-                                    else if (cleanKey === 'didiagnosaoleh?' || cleanKey === 'DiagnosaOleh?' || cleanKey === 'didiagnosisoleh') {
+                                    else if (cleanKey === 'didiagnosaoleh?' || cleanKey === 'DidiagnosaOleh?' || cleanKey === 'didiagnosaoleh') {
                                         diag = rec[key];
                                     } 
-                                    else if (cleanKey.includes('bagiantubuh') || cleanKey === 'BagianagianTubuh') {
+                                    else if (cleanKey.includes('bagiantubuh') || cleanKey === 'BagianTubuh') {
                                         bagian = rec[key];
                                     } 
                                     else if (cleanKey.includes('penjelasanlebihdetail') || cleanKey.includes('Penjelasan')) {
