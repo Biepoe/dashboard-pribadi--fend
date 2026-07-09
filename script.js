@@ -558,11 +558,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const wkt = findValue(rec, ['waktu']) || '';
                                 const keluhan = findValue(rec, ['deskripsi', 'keluhan']) || '-';
                                 
-                                // Tarik Data Kolom O, P, Q
-                                const diag = String(findValue(rec, ['didiagnosis oleh']) || '').toLowerCase();
-                                const bagian = String(findValue(rec, ['bagian tubuh yang sakit']) || '').toLowerCase();
-                                const detail = findValue(rec, ['detailkan']) || '-';
-
+                                // 1. Tarik Data dengan Nama Header Sheet yang Sangat Spesifik (termasuk tanda baca)
+                                const diag = String(findValue(rec, ['didiagnosis oleh?', 'didiagnosis oleh', 'diagnosis']) || '').toLowerCase();
+                                const bagian = String(findValue(rec, ['bagian tubuh yang sakit', 'bagian tubuh', 'bagian']) || '').toLowerCase();
+                                const detail = findValue(rec, ['detailkan!', 'detailkan', 'detail']) || '-';
+                                
+                                // 2. Logika Judul (Keluhan): Jika Kolom E kosong, pakai Kolom P (Bagian Tubuh)
+                                let keluhan = findValue(rec, ['deskripsi / keluhan', 'deskripsi', 'keluhan']) || '';
+                                if (!keluhan || keluhan === '-') {
+                                    // Bikin huruf depannya kapital
+                                    keluhan = bagian !== '' ? (bagian.charAt(0).toUpperCase() + bagian.slice(1)) : 'Laporan Penyakit';
+                                }
+                                
                                 // Logika Ikon Dinamis berdasarkan Bagian Tubuh
                                 let iconClass = 'fa-viruses'; // Default
                                 if (bagian.includes('mata')) iconClass = 'fa-eye';
