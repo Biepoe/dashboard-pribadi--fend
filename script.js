@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 // Tarik Data Kolom O, P, Q
                                 const diag = String(findValue(rec, ['didiagnosis oleh']) || '').toLowerCase();
                                 const bagian = String(findValue(rec, ['bagian tubuh yang sakit']) || '').toLowerCase();
-                                const detail = findValue(rec, ['detailkan]) || '-';
+                                const detail = findValue(rec, ['detailkan']) || '-';
 
                                 // Logika Ikon Dinamis berdasarkan Bagian Tubuh
                                 let iconClass = 'fa-viruses'; // Default
