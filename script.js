@@ -558,8 +558,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const wkt = findValue(rec, ['waktu']) || '';
                                 
                                 // 1. Tarik Data Sesuai Nama Kolom Baru di Sheet
-                                const diag = String(findValue(rec, ['didiagnosa oleh?', 'didiagnosa', 'diagnosis']) || '').toLowerCase();
-                                const bagian = String(findValue(rec, ['bagian tubuh yang sakit', 'bagian tubuh', 'bagian']) || '').toLowerCase();
+                                const diag = String(findValue(rec, ['didiagnosa oleh?']) || '').toLowerCase();
+                                const bagian = String(findValue(rec, ['bagian tubuh yang sakit', 'bagian tubuh']) || '').toLowerCase();
                                 const detail = findValue(rec, ['penjelasan lebih detail', 'penjelasan']) || '-';
                                 const hasilDiagnosa = findValue(rec, ['diagnosa', 'hasil diagnosa']) || '-'; // Menarik data dari kolom Diagnosa
                                 
