@@ -557,12 +557,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
                                 const wkt = findValue(rec, ['waktu']) || '';
                                 
-                                // 1. Tarik Data Pakai Kata yang PASTI (Exact Match)
-                                // Tembak langsung nama kolomnya (mengakomodasi huruf besar/kecil dari backend)
-                                const diag = rec['Didiagnosa Oleh?'] || rec['didiagnosa oleh?'] || '-';
-                                const bagian = rec['Bagian Tubuh yang Sakit'] || rec['bagian tubuh yang sakit'] || '-';
-                                const detail = rec['Penjelasan lebih detail'] || rec['penjelasan lebih detail'] || '-';
-                                const hasilDiagnosa = rec['Diagnosa'] || rec['diagnosa'] || '-';
+                                // 1. Tarik Data dengan findValue (Aman dari perbedaan format backend)
+                                const diag = String(findValue(rec, ['didiagnosa oleh', 'oleh', 'didiagnosis']) || '').toLowerCase();
+                                const bagian = String(findValue(rec, ['bagian tubuh', 'bagian']) || '').toLowerCase();
+                                const detail = findValue(rec, ['penjelasan lebih detail', 'penjelasan', 'detailkan']) || '-';
+                                
+                                // KHUSUS DIAGNOSA: Filter super ketat biar gak nyomot isi "Didiagnosa Oleh"
+                                let hasilDiagnosa = '-';
+                                for (let key in rec) {
+                                    let cleanKey = key.toLowerCase().trim();
+                                    // Harus SAMA PERSIS dengan kata "diagnosa" atau "hasil diagnosa"
+                                    if (cleanKey === 'diagnosa' || cleanKey === 'hasil diagnosa') {
+                                        hasilDiagnosa = rec[key];
+                                        break;
+                                    }
+                                }
                                 
                                 // 2. Logika Judul (Keluhan)
                                 let keluhan = findValue(rec, ['deskripsi / keluhan', 'deskripsi', 'keluhan']) || '';
