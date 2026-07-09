@@ -509,20 +509,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         penyakitList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada data.</li>';
                     } else {
                         // Filter 1: Minum Obat 
-                        // Mencari yang kolom Tindakan mengandung kata "obat" atau "suplemen"
                         const dataObat = healthData.filter(rec => {
-                            if (!rec) return false; // Abaikan baris kosong
+                            if (!rec) return false;
                             const tindakan = String(findValue(rec, ['tindakan']) || '').toLowerCase();
                             return tindakan.includes('obat') || tindakan.includes('suplemen');
-                        }).slice(-10).reverse(); // Ambil 10 terbaru
+                        }).slice(-10).reverse();
 
                         // Filter 2: Penyakit 
-                        // Mencari Tindakan yang mengandung "lapor" DAN kolom K (Detailkan) mengandung "penyakit"
                         const dataPenyakit = healthData.filter(rec => {
                             if (!rec) return false;
                             const tindakan = String(findValue(rec, ['tindakan']) || '').toLowerCase();
-                            const detail = String(findValue(rec, ['detailkan', 'dilaporkan', 'lapor', 'kolom k']) || '').toLowerCase();
-                            return tindakan.includes('lapor') && detail.includes('penyakit');
+                            const laporDetail = String(findValue(rec, ['detailkan', 'dilaporkan', 'lapor', 'penyakit']) || '').toLowerCase();
+                            // Cek jika tindakan adalah "laporan" atau mengandung kata penyakit
+                            return tindakan.includes('lapor') || laporDetail.includes('penyakit');
                         }).slice(-10).reverse();
 
                         // --- RENDER RIWAYAT OBAT ---
@@ -557,13 +556,61 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
                                 const wkt = findValue(rec, ['waktu']) || '';
                                 const keluhan = findValue(rec, ['deskripsi', 'keluhan']) || '-';
+                                
+                                // Tarik Data Kolom O, P, Q
+                                const diag = String(findValue(rec, ['diagnosis', 'didiagnosis', 'oleh']) || '').toLowerCase();
+                                const bagian = String(findValue(rec, ['bagian', 'tubuh', 'sakit']) || '').toLowerCase();
+                                const detail = findValue(rec, ['detailkan', 'detail', 'q']) || '-';
+
+                                // Logika Ikon Dinamis berdasarkan Bagian Tubuh
+                                let iconClass = 'fa-viruses'; // Default
+                                if (bagian.includes('mata')) iconClass = 'fa-eye';
+                                else if (bagian.includes('tangan') || bagian.includes('jari')) iconClass = 'fa-hand-paper';
+                                else if (bagian.includes('kepala') || bagian.includes('pusing')) iconClass = 'fa-head-side-virus';
+                                else if (bagian.includes('gigi') || bagian.includes('mulut')) iconClass = 'fa-tooth';
+                                else if (bagian.includes('kaki') || bagian.includes('lutut')) iconClass = 'fa-shoe-prints';
+                                else if (bagian.includes('perut') || bagian.includes('lambung')) iconClass = 'fa-x-ray';
+                                else if (bagian.includes('telinga')) iconClass = 'fa-ear-listen';
+                                else if (bagian.includes('dada') || bagian.includes('jantung')) iconClass = 'fa-heartbeat';
+                                else if (bagian !== '' && bagian !== '-') iconClass = 'fa-band-aid'; 
+
+                                // Logika Coret (Strikethrough) Diagnosis
+                                let textSelf = "Self-diagnose / with AI Support";
+                                let textNakes = "Tenaga Kesehatan";
+
+                                if (diag.includes('tenaga') || diag.includes('kesehatan') || diag.includes('dokter')) {
+                                    // Jika dari Nakes, coret Self-diagnose
+                                    textSelf = `<del style="opacity: 0.4;">${textSelf}</del>`;
+                                    textNakes = `<strong style="color: #059669;">${textNakes} <i class="fas fa-check-circle"></i></strong>`;
+                                } else if (diag.includes('self') || diag.includes('ai') || diag.includes('sendiri')) {
+                                    // Jika dari AI/Self, coret Nakes
+                                    textSelf = `<strong style="color: #2563eb;">${textSelf} <i class="fas fa-check-circle"></i></strong>`;
+                                    textNakes = `<del style="opacity: 0.4;">${textNakes}</del>`;
+                                }
 
                                 penyakitList.innerHTML += `
                                     <li class="timeline-item">
                                         <div class="timeline-date">${tgl} <span>${wkt}</span></div>
                                         <div class="timeline-content status-sakit-border">
-                                            <h4>Laporan Penyakit</h4>
-                                            <p class="desc">${keluhan}</p>
+                                            <h4 style="display: flex; align-items: center; gap: 10px;">
+                                                <div style="background: #fee2e2; color: #ef4444; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0;">
+                                                    <i class="fas ${iconClass}"></i>
+                                                </div>
+                                                ${keluhan}
+                                            </h4>
+                                            
+                                            <div class="desc" style="margin-top: 10px; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                                <span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">Detail Penyakit:</span><br>
+                                                <span style="color: #334155;">${detail}</span>
+                                            </div>
+
+                                            <div style="margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; font-size: 11px;">
+                                                <span style="display: block; color: #64748b; margin-bottom: 6px; font-weight: 600;">Didiagnosis Oleh:</span>
+                                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                                    <span>${textSelf}</span>
+                                                    <span>${textNakes}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </li>
                                 `;
