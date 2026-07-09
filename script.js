@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const dataPenyakit = healthData.filter(rec => {
                             if (!rec) return false;
                             const tindakan = String(findValue(rec, ['tindakan', 'tindakan yang dilakukan']) || '').toLowerCase();
-                            const kolomK = String(findValue(rec, ['apa yang ingin dilaporkan', 'kategori laporan', 'dilaporkan', 'k']) || '').toLowerCase();
+                            const kolomK = String(findValue(rec, ['apa yang ingin dilaporkan']) || '').toLowerCase();
                             
                             // Harus memenuhi KEDUA syarat ini
                             return tindakan.includes('laporan') && kolomK.includes('penyakit yang dialami');
@@ -559,9 +559,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const keluhan = findValue(rec, ['deskripsi', 'keluhan']) || '-';
                                 
                                 // Tarik Data Kolom O, P, Q
-                                const diag = String(findValue(rec, ['diagnosis', 'didiagnosis', 'oleh']) || '').toLowerCase();
-                                const bagian = String(findValue(rec, ['bagian', 'tubuh', 'sakit']) || '').toLowerCase();
-                                const detail = findValue(rec, ['detailkan', 'detail', 'q']) || '-';
+                                const diag = String(findValue(rec, ['didiagnosis oleh']) || '').toLowerCase();
+                                const bagian = String(findValue(rec, ['bagian tubuh yang sakit']) || '').toLowerCase();
+                                const detail = findValue(rec, ['detailkan]) || '-';
 
                                 // Logika Ikon Dinamis berdasarkan Bagian Tubuh
                                 let iconClass = 'fa-viruses'; // Default
