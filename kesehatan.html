@@ -75,6 +75,45 @@
                                     <strong class="v-value" id="ui-tensi">-- / --</strong>
                                 </div>
                             </div>
+                            <!-- Tombol/Item Vital Baru untuk Anatomi -->
+                            <div class="vital-item" id="btn-anatomi" style="cursor: pointer;">
+                                <div class="vital-icon">🧍</div>
+                                <div class="vital-info">
+                                    <h3>Struktur Anatomi</h3>
+                                    <p>Klik untuk melihat cetak biru dimensi tubuh</p>
+                                </div>
+                            </div>
+
+<!-- Modal / Pop-up Anatomi -->
+                            <div id="modal-anatomi" class="modal-anatomi-overlay">
+                                <div class="modal-anatomi-content">
+                                    <span class="close-anatomi-btn" id="close-anatomi">&times;</span>
+                                    <h2>Cetak Biru Anatomi Tubuh</h2>
+                                    <div class="anatomi-layout">
+                                        <!-- Bagian Gambar Kiri -->
+                                        <div class="anatomi-image-container">
+                                            <!-- Ganti src dengan path gambar anatomi dari Laporan Analisis Anatomi.pdf jika sudah disimpan lokal -->
+                                            <img src="https://dummyimage.com/350x700/e0e0e0/000000.png&text=Ilustrasi+Tubuh" alt="Tubuh" class="body-img">
+                
+                                            <!-- Titik-titik interaktif yang bisa dipencet (disesuaikan dengan posisi gambar) -->
+                                            <div class="body-dot" style="top: 8%; left: 50%;" data-part="kepala" title="Kepala"></div>
+                                            <div class="body-dot" style="top: 15%; left: 50%;" data-part="leher" title="Leher"></div>
+                                            <div class="body-dot" style="top: 35%; left: 50%;" data-part="torso" title="Badan (Torso)"></div>
+                                            <div class="body-dot" style="top: 30%; left: 30%;" data-part="lengan-atas" title="Lengan Atas"></div>
+                                            <div class="body-dot" style="top: 45%; left: 20%;" data-part="lengan-bawah" title="Lengan Bawah"></div>
+                                            <div class="body-dot" style="top: 60%; left: 10%;" data-part="tangan" title="Telapak Tangan"></div>
+                                            <div class="body-dot" style="top: 60%; left: 40%;" data-part="paha" title="Paha"></div>
+                                            <div class="body-dot" style="top: 85%; left: 40%;" data-part="matakaki" title="Mata Kaki"></div>
+                                            <div class="body-dot" style="top: 95%; left: 40%;" data-part="kaki" title="Telapak Kaki"></div>
+                                        </div>
+            
+                                        <!-- Bagian Kanan untuk Informasi -->
+                                        <div class="anatomi-info-panel" id="anatomi-info-panel">
+                                            <h3>Pilih Bagian Tubuh</h3>
+                                            <p>Silakan klik titik biru pada gambar di samping untuk melihat rincian ukuran anatomi.</p>
+                                        </div>
+                                    </div>
+                            </div>
                         </div>
                     </div>
                 </div>
