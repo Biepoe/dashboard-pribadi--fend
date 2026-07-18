@@ -7,6 +7,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
+    // 1. Fungsi untuk mencari kolom data meskipun nama kolomnya beda spasi/huruf besar
+    function findValue(obj, keys) {
+        if (!obj) return null;
+        const objKeys = Object.keys(obj);
+        for (let targetKey of keys) {
+            const cleanTarget = targetKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+            for (let actualKey of objKeys) {
+                const cleanActual = actualKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (cleanActual === cleanTarget || cleanActual.includes(cleanTarget)) {
+                    if (obj[actualKey] !== undefined && obj[actualKey] !== null && obj[actualKey] !== "") {
+                        return obj[actualKey];
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // 2. Fungsi untuk memastikan tanggal bisa dibaca oleh sistem
+    function parseDate(dateStr) {
+        if (!dateStr) return null;
+        return new Date(dateStr);
+    }
+
     // =========================================================
     // 6. KESEHATAN & REKAM MEDIS (VERSI BARU)
     // =========================================================
