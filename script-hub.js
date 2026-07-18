@@ -493,3 +493,4 @@ document.addEventListener('DOMContentLoaded', () => {
             list.innerHTML = html || '<li style="text-align:center; color:#999; padding-top:10px;">Belum ada asupan hari ini</li>';
         }
     }
+}
