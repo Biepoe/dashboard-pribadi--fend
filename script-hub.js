@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const BACKEND_URL = 'https://dashboard-dpp-backend.onrender.com';
 
-
     // =========================================================
     // 6. KESEHATAN & REKAM MEDIS (VERSI BARU)
     // =========================================================
@@ -19,29 +18,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const uiUpdate = document.getElementById('health-last-update');
         if (uiUpdate) uiUpdate.textContent = 'Memuat data...';
 
+        let anatomiData = {}; // KITA BUAT PENAMPUNG DATA ANATOMINYA DISINI
+
         try {
-            // Mengambil data dari Backend Render (sesuaikan endpoint jika nama tab-nya berbeda di backend)
-            // Asumsi: /api/health mengarah ke "Medical Record Tracker"
-            // Asumsi: /api/health-database mengarah ke "Health Database" (Log Kafein)
-            const [healthRes, logRes] = await Promise.all([
+            // PERBAIKAN 1: Tangkap 3 response sekaligus (tambahkan anatomiRes)
+            const [healthRes, logRes, anatomiRes] = await Promise.all([
                 fetch(`${BACKEND_URL}/api/health`),
-                fetch(`${BACKEND_URL}/api/health-database`), // Fallback jika endpoint belum ada
+                fetch(`${BACKEND_URL}/api/health-database`), 
                 fetch(`${BACKEND_URL}/api/anatomy-database`)
             ]);
 
             const healthData = healthRes.ok ? await healthRes.json() : [];
             const logData = (logRes && logRes.ok) ? await logRes.json() : [];
+            
+            // PERBAIKAN 2: Olah data dari backend anatomy
+            const rawAnatomi = (anatomiRes && anatomiRes.ok) ? await anatomiRes.json() : [];
+            
+            // Format data dari array JSON backend menjadi Object agar gampang dibaca logika klik
+            if (Array.isArray(rawAnatomi)) {
+                rawAnatomi.forEach(row => {
+                    // Fleksibilitas baca key dari JSON Backend (kolom 1=ID, 2=Nama, 3=Detail)
+                    let keys = Object.keys(row);
+                    if (keys.length >= 3) {
+                        let id = row[keys[0]];
+                        let title = row[keys[1]];
+                        let detail = row[keys[2]];
+                        
+                        if(id) {
+                            anatomiData[String(id).toLowerCase().trim()] = {
+                                title: title,
+                                items: detail
+                            };
+                        }
+                    }
+                });
+            } else {
+                anatomiData = rawAnatomi;
+            }
 
             // 1. UPDATE KARTU VITALS & STATUS
             if (healthData.length > 0) {
-                // Ambil data terbaru (baris paling bawah di sheet)
                 const latest = healthData[healthData.length - 1];
-                
-                // Set Kondisi Saat Ini
                 const kondisi = findValue(latest, ['kondisi', 'tubuh', 'status']) || 'Sehat';
                 document.getElementById('ui-kondisi').textContent = kondisi;
 
-                // Cari data BB/TB terakhir (mundur dari bawah ke atas mencari yang tidak kosong)
                 const lastFisik = [...healthData].reverse().find(i => findValue(i, ['berat']) || findValue(i, ['tinggi']));
                 if (lastFisik) {
                     const bb = findValue(lastFisik, ['berat']) ? `${findValue(lastFisik, ['berat'])} kg` : '-- kg';
@@ -49,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('ui-fisik').textContent = `${bb} / ${tb}`;
                 }
 
-                // Cari data Tidur terakhir
                 const lastSleep = [...healthData].reverse().find(i => findValue(i, ['tidur']) && findValue(i, ['bangun']));
                 if (lastSleep) {
                     const t = findValue(lastSleep, ['tidur']);
@@ -58,21 +77,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         const tJam = parseInt(t.split(':')[0]) || 0;
                         const bJam = parseInt(b.split(':')[0]) || 0;
                         let durasi = bJam - tJam;
-                        if (durasi < 0) durasi += 24; // Koreksi jika tidur melewati tengah malam
+                        if (durasi < 0) durasi += 24; 
                         document.getElementById('ui-sleep-duration').textContent = `${durasi} Jam`;
                     }
                 }
 
-                // Cari data Tensi terakhir (dari kolom 'Apa yang ingin dilaporkan' atau 'Detailkan')
                 const lastTensi = [...healthData].reverse().find(i => {
                     const detail = String(findValue(i, ['detailkan', 'lapor'])).toLowerCase();
                     return detail.includes('tensi') || detail.includes('sys');
                 });
                 if (lastTensi) {
-                    // Ekstrak angka tensi dari string panjang (contoh: "SYS 114 mmHg... DIA 85 mmHg")
                     const detailStr = String(findValue(lastTensi, ['detailkan', 'lapor']));
-                    const sysMatch = detailStr.match(/(\d+)\s*mmHg/i); // Cari angka pertama sebelum mmHg
-                    // Parsing manual sederhana:
+                    const sysMatch = detailStr.match(/(\d+)\s*mmHg/i); 
                     document.getElementById('ui-tensi').textContent = sysMatch ? `${sysMatch[1]} / --` : 'Cek Detail';
                 }
             }
@@ -90,24 +106,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         obatList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada data.</li>';
                         penyakitList.innerHTML = '<li style="text-align:center; color:#999; padding:20px;">Belum ada data.</li>';
                     } else {
-                        // Filter 1: Minum Obat 
                         const dataObat = healthData.filter(rec => {
                             if (!rec) return false;
                             const tindakan = String(findValue(rec, ['tindakan']) || '').toLowerCase();
                             return tindakan.includes('obat') || tindakan.includes('suplemen');
                         }).slice(-5).reverse();
 
-                        // Filter 2: Penyakit 
                         const dataPenyakit = healthData.filter(rec => {
                             if (!rec) return false;
                             const tindakan = String(findValue(rec, ['tindakan', 'tindakan yang dilakukan']) || '').toLowerCase();
                             const kolomK = String(findValue(rec, ['apa yang ingin dilaporkan']) || '').toLowerCase();
-                            
-                            // Harus memenuhi KEDUA syarat ini
                             return tindakan.includes('laporan') && kolomK.includes('penyakit yang dialami');
                         }).slice(-5).reverse();
 
-                        // --- RENDER RIWAYAT OBAT ---
                         if (dataObat.length === 0) {
                             obatList.innerHTML = '<li style="text-align:center; color:#999; padding:15px;">Belum ada riwayat obat.</li>';
                         } else {
@@ -131,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                         }
 
-                        // --- RENDER RIWAYAT PENYAKIT ---
                         if (dataPenyakit.length === 0) {
                             penyakitList.innerHTML = '<li style="text-align:center; color:#999; padding:15px;">Belum ada riwayat penyakit terbaru.</li>';
                         } else {
@@ -139,39 +149,27 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const tgl = findValue(rec, ['tanggal', 'kejadian']) || '-';
                                 const wkt = findValue(rec, ['waktu']) || '';
                                 
-                                // 1. EKSTRAKSI SUPER KETAT (Mengecek semua nama kolom satu per satu)
-                                let diag = '-';
-                                let bagian = '-';
-                                let detail = '-';
-                                let hasilDiagnosa = '-';
+                                let diag = '-', bagian = '-', detail = '-', hasilDiagnosa = '-';
                                 
                                 for (let key in rec) {
-                                    // Hilangkan semua spasi & tanda baca dari nama kolom di backend
                                     let cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
                                     
-                                    // Pengecekan SANGAT KETAT (Pake ===, bukan includes) buat Diagnosa
                                     if (cleanKey === 'diagnosa' || cleanKey === 'Diagnosa') {
                                         hasilDiagnosa = rec[key];
-                                    } 
-                                    // Pengecekan SANGAT KETAT buat Didiagnosa Oleh
-                                    else if (cleanKey === 'didiagnosaoleh?' || cleanKey === 'DidiagnosaOleh?' || cleanKey === 'didiagnosaoleh') {
+                                    } else if (cleanKey === 'didiagnosaoleh?' || cleanKey === 'DidiagnosaOleh?' || cleanKey === 'didiagnosaoleh') {
                                         diag = rec[key];
-                                    } 
-                                    else if (cleanKey.includes('bagiantubuh') || cleanKey === 'BagianTubuh') {
+                                    } else if (cleanKey.includes('bagiantubuh') || cleanKey === 'BagianTubuh') {
                                         bagian = rec[key];
-                                    } 
-                                    else if (cleanKey.includes('penjelasanlebihdetail') || cleanKey.includes('Penjelasan')) {
+                                    } else if (cleanKey.includes('penjelasanlebihdetail') || cleanKey.includes('Penjelasan')) {
                                         detail = rec[key];
                                     }
                                 }
                                 
-                                // 2. Logika Judul (Keluhan)
                                 let keluhan = findValue(rec, ['deskripsi / keluhan', 'deskripsi', 'keluhan']) || '';
                                 if (!keluhan || keluhan === '-') {
                                     keluhan = bagian !== '' && bagian !== '-' ? (bagian.charAt(0).toUpperCase() + bagian.slice(1)) : 'Laporan Penyakit';
                                 }
 
-                                // 3. Logika Ikon Dinamis
                                 let iconClass = 'fa-viruses';
                                 const bagianLower = String(bagian).toLowerCase();
                                 if (bagianLower.includes('mata')) iconClass = 'fa-eye';
@@ -184,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 else if (bagianLower.includes('dada') || bagianLower.includes('jantung')) iconClass = 'fa-heartbeat';
                                 else if (bagianLower !== '' && bagianLower !== '-') iconClass = 'fa-band-aid'; 
 
-                                // 4. Logika Coret (Strikethrough)
                                 let textSelf = "Self-diagnose / with AI Support";
                                 let textNakes = "Tenaga Kesehatan";
                                 const diagLower = String(diag).toLowerCase();
@@ -234,10 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 console.error("Error merender timeline obat/penyakit:", err);
-                const obatList = document.getElementById('ui-obat-list');
-                const penyakitList = document.getElementById('ui-penyakit-list');
-                if(obatList) obatList.innerHTML = '<li style="text-align:center; color:#ef4444; padding:15px;">Terjadi kesalahan memuat data.</li>';
-                if(penyakitList) penyakitList.innerHTML = '<li style="text-align:center; color:#ef4444; padding:15px;">Terjadi kesalahan memuat data.</li>';
             }
 
             // 3. UPDATE TABEL LOG HARIAN (HEALTH DATABASE)
@@ -247,18 +240,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (logData.length === 0) {
                     logTable.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Belum ada log harian.</td></tr>';
                 } else {
-                    // Tampilkan 7 data terakhir
                     const recentLogs = logData.slice(-7).reverse();
                     
                     recentLogs.forEach(log => {
                         const tgl = findValue(log, ['tanggal']) || '-';
                         const wkt = findValue(log, ['waktu']) || '';
                         const kat = findValue(log, ['kategori']) || '-';
-                        const item = findValue(log, ['catatan', 'jumlah']) || '-'; // Gabungan jumlah dan catatan
+                        const item = findValue(log, ['catatan', 'jumlah']) || '-'; 
                         const jumlah = findValue(log, ['jumlah']) || '';
                         
                         const badgeClass = String(kat).toLowerCase().includes('kafein') ? 'badge-kafein' : 'badge-umum';
-                        const formatTanggal = typeof tgl === 'string' && tgl.includes('202') ? tgl.substring(0, 10) : tgl; // Potong format ISO jika perlu
+                        const formatTanggal = typeof tgl === 'string' && tgl.includes('202') ? tgl.substring(0, 10) : tgl;
 
                         logTable.innerHTML += `
                             <tr>
@@ -271,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Update waktu sinkronisasi
             if (uiUpdate) {
                 const now = new Date();
                 uiUpdate.textContent = `Diperbarui: ${now.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}`;
@@ -282,13 +273,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (uiUpdate) uiUpdate.textContent = 'Gagal sinkronisasi';
         }
 
+        // ============================================
+        // LOGIKA MODAL & TITIK ANATOMI (Sudah Benar)
+        // ============================================
         const btnAnatomi = document.getElementById('btn-anatomi');
         const modalAnatomi = document.getElementById('modal-anatomi');
         const closeAnatomi = document.getElementById('close-anatomi');
         const dots = document.querySelectorAll('.body-dot');
         const infoPanel = document.getElementById('anatomi-info-panel');
     
-    // 1. Logika Buka/Tutup Modal
         if(btnAnatomi && modalAnatomi) {
             btnAnatomi.addEventListener('click', () => {
                 modalAnatomi.style.display = 'block';
@@ -307,24 +300,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-    // 2. Logika Interaksi Titik Anatomi
         if (dots.length > 0) {
             dots.forEach(dot => {
                 dot.addEventListener('click', (e) => {
-                // Reset status aktif (warna berubah saat diklik)
                     dots.forEach(d => d.classList.remove('active'));
                     e.target.classList.add('active');
 
-                // Ambil id bagian tubuh dari atribut HTML
                     const part = e.target.getAttribute('data-part');
-                
-                // Panggil data dari variabel yang disiapkan backend
-                    const data = typeof anatomiData !== 'undefined' ? anatomiData[part] : null;
+                    const data = anatomiData[part]; // Sekarang data ini terisi dari fetch!
 
                     if(data) {
                         let htmlOutput = `<h3>${data.title}</h3><ul class="anatomi-data-list">`;
-                    
-                    // Handle format data dari backend (apakah sudah array atau masih string dengan \n)
+                        
                         let itemsArray = [];
                         if (Array.isArray(data.items)) {
                             itemsArray = data.items;
@@ -332,7 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             itemsArray = data.items.split('\n');
                         }
                     
-                    // Render ke list HTML
                         itemsArray.forEach(item => {
                             if(item && item.trim() !== "") {
                                 htmlOutput += `<li>${item}</li>`;
@@ -347,15 +333,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         }
-        
     }
     
     //=====================================
     // NUTRISI
     //=====================================
     async function fetchNutritionData() {
+        if (!document.getElementById('ui-kalori') && !document.getElementById('ui-cal-bar')) return;
+
         try {
-            // 1. Isi Tanggal Otomatis di Halaman Nutrition
             const elTanggal = document.getElementById('ui-tanggal');
             if (elTanggal) {
                 elTanggal.textContent = new Date().toLocaleDateString('id-ID', { 
@@ -363,40 +349,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // 2. Set Nama Permanen
             const elNama = document.getElementById('ui-nama');
             if (elNama) {
                 elNama.textContent = "Aulia Biepoe";
             }
 
-            // 3. Fetch Data (Tidak perlu lagi nutrition-db)
             const [healthRes, logRes] = await Promise.all([
                 fetch(`${BACKEND_URL}/api/health`), 
                 fetch(`${BACKEND_URL}/api/nutrition-log`)
             ]);
 
-            // Cek apakah response berhasil (status 200-299)
             let healthData = healthRes.ok ? await healthRes.json() : []; 
             let logs = logRes.ok ? await logRes.json() : []; 
             
-            // Validasi keamanan ekstra: Pastikan datanya benar-benar Array
             if (!Array.isArray(healthData)) healthData = [];
             if (!Array.isArray(logs)) logs = [];
             
-            // 4. Update UI Status Tubuh (Sinkronisasi dari Data Health)
             if (healthData.length > 0) {
                 const latestMedical = healthData[healthData.length - 1];
                 
-                // Update Kondisi
                 const elKondisi = document.getElementById('ui-kondisi');
                 if (elKondisi) elKondisi.textContent = findValue(latestMedical, ['kondisi', 'tubuh', 'status']) || "Normal";
 
-                // Update Obat Terakhir (cari mundur dari bawah)
                 const lastMed = [...healthData].reverse().find(i => findValue(i, ['obat', 'medicine']) && findValue(i, ['obat', 'medicine']) !== '-');
                 const elObat = document.getElementById('ui-obat');
                 if (elObat) elObat.textContent = lastMed ? findValue(lastMed, ['obat', 'medicine']) : "-";
 
-                // Update BB, TB, BMI
                 const lastFisik = [...healthData].reverse().find(i => findValue(i, ['berat']) && findValue(i, ['tinggi']));
                 if (lastFisik) {
                     const bb = parseFloat(findValue(lastFisik, ['berat'])) || 0;
@@ -416,8 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // 
-            // 5. LOGIKA BARU: Filter Tanggal Pintar & Mapping Kolom Sesuai Sheet
             const now = new Date();
             
             const todayLogs = logs.filter(l => {
@@ -433,7 +409,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let listHtml = '';
 
             todayLogs.forEach(log => {
-                // Ambil data sesuai format fotomu (Menu diambil dari kolom "Deskripsi")
                 const menu = findValue(log, ['deskripsi', 'menu']) || 'Makanan';
                 const kalStr = findValue(log, ['kalori']) || '0';
                 const protStr = findValue(log, ['protein']) || '0';
@@ -441,7 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lemakStr = findValue(log, ['lemak']) || '0';
                 const jam = findValue(log, ['jam', 'waktu']) || '';
 
-                // Bersihkan string dari huruf "Kkal" atau "g" agar murni angka
                 const k = parseInt(String(kalStr).replace(/[^0-9]/g, '')) || 0;
                 const p = parseInt(String(protStr).replace(/[^0-9]/g, '')) || 0;
                 
@@ -461,10 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </li>`;
             });
 
-            // Tampilkan ke Progress Bar
             renderNutritionProgress(currentKal, currentProt, listHtml);
 
-            // Hide bagian Workout
             const workoutBox = document.getElementById('ui-workout-box');
             if (workoutBox) workoutBox.style.display = 'none';
 
@@ -474,6 +446,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderNutritionProgress(kal, prot, html) {
+        // Asumsi TARGET_KALORI dkk. didefinisikan di utils.js atau global
+        const TARGET_KALORI = typeof window.TARGET_KALORI !== 'undefined' ? window.TARGET_KALORI : 2500;
+        const TARGET_PROTEIN = typeof window.TARGET_PROTEIN !== 'undefined' ? window.TARGET_PROTEIN : 120;
+
         const calBar = document.getElementById('ui-cal-bar'); 
         const calText = document.getElementById('ui-cal-text');
         if (calBar && calText) {
@@ -493,5 +469,12 @@ document.addEventListener('DOMContentLoaded', () => {
             list.innerHTML = html || '<li style="text-align:center; color:#999; padding-top:10px;">Belum ada asupan hari ini</li>';
         }
     }
+
+    // =========================================================
+    // 🔥 PERBAIKAN 3: EKSEKUSI FUNGSI-FUNGSINYA!
+    // =========================================================
+    // Tanpa dua baris sakti ini, script kamu cuma numpang lewat
+    initKesehatan();
+    fetchNutritionData();
 
 });
