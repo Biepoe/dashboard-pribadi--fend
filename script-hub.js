@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const [healthRes, logRes] = await Promise.all([
                 fetch(`${BACKEND_URL}/api/health`),
                 fetch(`${BACKEND_URL}/api/health-database`), // Fallback jika endpoint belum ada
-                fetch(`${BACKEND_URL}/api/anatomy-database`).
+                fetch(`${BACKEND_URL}/api/anatomy-database`)
             ]);
 
             const healthData = healthRes.ok ? await healthRes.json() : [];
