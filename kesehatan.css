@@ -235,6 +235,10 @@
 }
 
 /* Gaya untuk Modal/Pop-up Anatomi */
+/* =========================================================
+   GAYA MODAL & ANATOMI (Revisi Desain)
+   ========================================================= */
+
 .modal-anatomi-overlay {
     display: none; 
     position: fixed; 
@@ -243,33 +247,40 @@
     top: 0; 
     width: 100%; 
     height: 100%; 
-    background-color: rgba(0,0,0,0.6); 
-    backdrop-filter: blur(4px);
+    background-color: rgba(15, 23, 42, 0.7); /* Overlay lebih gelap elegan */
+    backdrop-filter: blur(5px);
 }
 
 .modal-anatomi-content {
     background-color: #ffffff;
     margin: 5% auto;
-    padding: 25px;
-    border-radius: 16px;
-    width: 85%;
-    max-width: 900px;
+    padding: 25px 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 800px;
     position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .close-anatomi-btn {
     position: absolute;
-    top: 15px;
+    top: 20px;
     right: 25px;
-    font-size: 32px;
-    font-weight: bold;
-    color: #555;
+    font-size: 28px;
+    color: #94a3b8;
     cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
 }
 
 .close-anatomi-btn:hover {
-    color: #e74c3c;
+    color: #ef4444;
 }
 
 .anatomi-layout {
@@ -277,64 +288,81 @@
     flex-wrap: wrap;
     gap: 30px;
     margin-top: 20px;
+    align-items: flex-start;
 }
 
+/* KUNCI: Wrapper agar titik mengikat ke gambar, bukan ke layar lebar */
 .anatomi-image-container {
-    position: relative;
     flex: 1;
-    min-width: 300px;
+    min-width: 280px;
     display: flex;
     justify-content: center;
 }
 
-.body-img {
+.image-map-wrapper {
+    position: relative;
+    display: inline-block; /* Membungkus gambar dengan ketat */
     max-width: 100%;
-    height: auto;
-    border-radius: 12px;
-    object-fit: contain;
 }
 
-/* Titik yang bisa di-klik pada gambar */
+.body-img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    max-height: 600px; /* Mencegah gambar terlalu raksasa di desktop */
+    border-radius: 12px;
+}
+
+/* Titik Interaktif */
 .body-dot {
     position: absolute;
-    width: 22px;
-    height: 22px;
-    background-color: #3498db;
+    width: 18px;
+    height: 18px;
+    background-color: #3b82f6;
     border: 3px solid #ffffff;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-    animation: pulse 2s infinite;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    animation: pulse-blue 2s infinite;
 }
 
 .body-dot:hover, .body-dot.active {
-    background-color: #e74c3c;
-    transform: translate(-50%, -50%) scale(1.3);
+    background-color: #e91e63;
+    animation: none;
+    transform: translate(-50%, -50%) scale(1.4);
+    box-shadow: 0 4px 10px rgba(233, 30, 99, 0.4);
+    z-index: 10;
 }
 
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+@keyframes pulse-blue {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); }
+    70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
 }
 
+/* Panel Informasi Kanan */
 .anatomi-info-panel {
     flex: 1;
-    min-width: 300px;
+    min-width: 280px;
+    background-color: #f8fafc;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
     padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 12px;
-    border: 1px solid #eaeaea;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .anatomi-info-panel h3 {
     margin-top: 0;
-    color: #2c3e50;
-    border-bottom: 2px solid #3498db;
+    color: #1e293b;
+    font-size: 16px;
+    border-bottom: 2px dashed #cbd5e1;
     padding-bottom: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .anatomi-data-list {
@@ -344,11 +372,14 @@
 }
 
 .anatomi-data-list li {
-    background: #fff;
-    margin-bottom: 12px;
+    background: #ffffff;
+    margin-bottom: 10px;
     padding: 12px 15px;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    border-left: 4px solid #3498db;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #667eea;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     line-height: 1.5;
 }
